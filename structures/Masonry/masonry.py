@@ -207,7 +207,7 @@ Forces: KN\n"""
             / (W_left + W_direct + W_right),
             0.05 * self.thickness,
         )
-        e2 = 0
+        e2 = e1
         return e1, e2
 
     def refined_compression(

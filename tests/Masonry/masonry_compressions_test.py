@@ -8,6 +8,9 @@ class TestUnreinforcedMasonryCompression:
 class TestUnreinforcedMasonryRefinedCompression:
     def test_refined_compression(self):
         """
+        Scenario:
+        A masonry wall 600W x 2700H x 110Thick is supporting an eccentric load due to an RC slab.
+
         Fd <= kFo
 
         Fo = phi * fm * Ab
@@ -26,7 +29,9 @@ class TestUnreinforcedMasonryRefinedCompression:
 
         """
         wall = masonry.UnreinforcedMasonry(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4)
-        #assert(round(wall.refined_compression(simple_av=0.75, kt = 1, Ab =0 )) == 152)
+        capacity = wall.refined_compression(refined_av=0.75, Ab=0, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
+        assert(capacity['Buckling'] == 151.59)
+        assert(capacity['Crushing'] == 295.16)
     
     def test_refined_compression_2(self):
         """
