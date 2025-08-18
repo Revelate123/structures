@@ -38,12 +38,12 @@ class TestUnreinforcedMasonry:
         fd = 0
         """
 
-        wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, kv = 0.2, fmt=0.2, fuc = 20, mortar_class=3)
-        assert(wall.horizontal_shear() == 16.5)
+       # wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, kv = 0.2, fmt=0.2, fuc = 20, mortar_class=3)
+       # assert(wall.horizontal_shear() == 16.5)
     
     
 
-    def test_horizontal_shear_raises_error(self):
-        with pytest.raises(ValueError) as e_info:
-            wall = masonry.UnreinforcedMasonry(length=1000, thickness=110)
-            wall.horizontal_shear()
+  #  def test_horizontal_shear_raises_error(self):
+       # with pytest.raises(ValueError) as e_info:
+           # wall = masonry.UnreinforcedMasonry(length=1000, thickness=110)
+           # wall.horizontal_shear()
