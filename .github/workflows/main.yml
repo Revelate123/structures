@@ -25,6 +25,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install build hatch hatch-vcs build wheel
 
+      - name: List dist directory
+        run: ls -la dist/
+        
       - name: Build project 1
         run: |
           python -m build || (echo "Build failed" && exit 1)
