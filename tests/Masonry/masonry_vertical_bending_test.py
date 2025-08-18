@@ -12,7 +12,6 @@ class TestUnreinforcedMasonryBending:
         phi = 0.6
         fmt = 0.2 MPa
         fd = 0
-
         if fmt > 0:
         Lowest of:
         Mcv = phi * fmt * Zd + fd * Zd = 0.6 * 0.2MPa * 20126666.667 = 0.242MPa
