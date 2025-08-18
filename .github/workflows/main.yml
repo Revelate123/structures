@@ -27,7 +27,7 @@ jobs:
 
       - name: Build project 1
         run: |
-          python -m build
+          python -m build || (echo "Build failed" && exit 1)
         
       - name: Upload github artifacts
         id: create_release
