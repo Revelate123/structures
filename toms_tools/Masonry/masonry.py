@@ -186,6 +186,7 @@ Forces: KN\n"""
             k = min(0.067 - 0.002 * (Srs - 14), 0.067)
             if verbose: print("Load type: Load applied to face of wall (Table 7.1)")
 
+
         # Buckling capacity
         kFo = k * Fo * effective_length * self.thickness * 1e-3
         if verbose:
