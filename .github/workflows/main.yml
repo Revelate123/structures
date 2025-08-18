@@ -25,6 +25,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install build hatch hatch-vcs build
 
+      - name: Run tests
+        run: |
+          pytest tests/  # or the path to your tests
       - name: Build project
         run: |
           python -m build
