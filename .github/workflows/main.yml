@@ -2,8 +2,6 @@ name: Build Python Package
 
 on:
   push:
-    tags-ignore:
-      - 'v*'  # Runs only when pushing version tags like v1.0.0
 permissions:
   contents: write
 jobs:
