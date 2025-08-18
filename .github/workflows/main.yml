@@ -25,9 +25,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install build hatch hatch-vcs build
 
-      - name: Run tests
-        run: |
-          pytest tests/  # or the path to your tests
       - name: Build project
         run: |
           python -m build
+          
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/structures-*.whl
+          asset_name: structures-${{ github.ref_name }}.whl
+          asset_content_type: application/octet-stream
+
+      - name: Upload source distribution
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/structures-*.tar.gz
+          asset_name: structures-${{ github.ref_name }}.tar.gz
+          asset_content_type: application/gzip
