@@ -30,6 +30,13 @@ jobs:
         run: |
           python -m build || (echo "Build failed" && exit 1)
         
+      - name: Install built package
+        run: |
+          pip install dist/*.whl
+          pip install pytest
+
+      - name: Run tests
+        run: pytest
 
       - name: Create GitHub Release and Upload Artifacts
         uses: softprops/action-gh-release@v1
