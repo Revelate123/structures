@@ -81,6 +81,7 @@ class TestUnreinforcedMasonryBending:
         Mcv = phi * fmt * Zd + fd * Zd = 0.6 * 0.2MPa * 1008333.333 mm3 = 0.121MPa
         Mcv =  3 * phi * fmt * Zd = 3 * 0.6 * 0.2MPa * 1008333.333 = 0.363MPa
         Mcv = 0.121 KNm
+        
         """
 
         wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110, fmt=0.2, fuc = 20, mortar_class=3)
