@@ -193,7 +193,6 @@ Forces: KN\n"""
             print(f"Effective length of wall: {effective_length} mm")
             print(f"Simple compression capacity kFo: {kFo:.2f}")
 
-
         for N in loads:
             if N > kbFo or N > kFo:
                 print(f"FAIL: {N} KN > {kbFo} KN or {kFo} KN")
