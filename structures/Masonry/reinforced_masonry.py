@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 import structures.Masonry.masonry as masonry
-from structures import __version__
+
 
 @dataclass
 class ReinforcedMasonry(masonry.Masonry):

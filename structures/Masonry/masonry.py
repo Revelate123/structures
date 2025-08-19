@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass
+from structures import __version__
 
 @dataclass
 class Masonry:
@@ -13,7 +14,7 @@ class Masonry:
 
     def __post_init__(self):
             print(
-                """Version 0.0.1
+                f"""Version {__version__}
     All calculations are based on AS3700:2018
     Units unless specified otherwise, are:
     Pressure: MPa 
