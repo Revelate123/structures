@@ -47,4 +47,7 @@ jobs:
             dist/structures-*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/v') == true
+        uses: pypa/gh-action-pypi-publish@release/v1
