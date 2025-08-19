@@ -9,7 +9,6 @@ source = "vcs"
 name = "structures"
 dynamic = ["version"]
 dependencies = [
-
 ]
 authors = [
   { name="Thomas Duffett", email="thomasduffett4@gmail.com" },
