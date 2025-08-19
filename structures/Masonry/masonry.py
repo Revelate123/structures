@@ -50,6 +50,14 @@ Forces: KN\n"""
         self.Zu_horz = self.Zp_horz = self.Zd_horz
         self._set_masonry_properties()
 
+    def basic_compressive_capacity(self,verbose):
+        """ Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)"""
+        Fo = round(self.φ_compression * self.fmb,2)
+        if verbose:
+            print("Simplified Compression capacity")
+            print("Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))")
+        return Fo
+
     def _set_masonry_properties(self):
         if self.fuc == -1:
             raise ValueError(
@@ -114,14 +122,14 @@ Forces: KN\n"""
         self, loads=[], simple_av=None, kt=None, Ab=None, compression_load_type=None, verbose=False
     ):
         """
-        Computes the simplified compression capacity of a masonry wall element,
-        based on AS 3700.
+        Computes the compression capacity of a masonry wall element using the simplified method,
+        described in AS 3700.
 
         Args:
             loads: List of applied loads in kN.
             simple_av: Coefficient (1 or 2.5) based on lateral support.
             kt: Coefficient for engaged piers (1 if none).
-            Ab: Bearing area in mm². If 0 or None, full wall bearing is assumed.
+            Ab: Bearing area in mm². If 0, full wall bearing is assumed.
             compression_load_type: Type of compression loading (1, 2, or 3).
             verbose: If True, print internal calculation details.
 
@@ -155,12 +163,7 @@ Forces: KN\n"""
         else:
             raise ValueError("Ab not implemented")
 
-        # Basic Compressive strength
-        Fo = self.φ_compression * self.fmb
-        if verbose:
-            print("Simplified Compression capacity")
-            print("Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))")
-
+        Fo = self.basic_compressive_capacity(verbose)
         
         # Crushing capacity
         kbFo = kb * Fo * Ab * 1e-3
@@ -225,11 +228,83 @@ Forces: KN\n"""
         dist_to_return=None,
         dist_to_bearing=None,
         bearing_length=None,
+        verbose=True
     ):
-        self._refined_compression_warnings(
-            **{k: v for k, v in locals().items() if k != "self"}
-        )
+        """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
 
+    Parameters:
+        loads (list): Axial loads (kN) to check against capacities.
+        refined_av (float): Coefficient for vertical restraint.
+        refined_ah (float): Coefficient for horizontal restraint.
+        kt (float): Coefficient for engaged piers.
+        Ab (float): Bearing area (mm²).
+        W_left, W_direct, W_right (float): Applied loads (kN) from left, right and center based on applied slab loading. May be overriden by setting e1, e2.
+        e1, e2 (float): End eccentricities (mm).
+        dist_to_return (float): Distance to return wall (mm).
+        dist_to_bearing (float): Distance from edge of bearing area to wall edge (mm).
+        bearing_length (float): Length of bearing (mm). Use 0 to auto-compute.
+        verbose (bool): Whether to print outputs.
+
+    Returns:
+        dict: {
+            'Fo': φ * f'm,
+            'Sr': refined slenderness ratio,
+            'e1': end eccentricity e1,
+            'e2': end eccentricity e2,
+            'Crushing Capacity (kbFo)': kbFo,
+            'Buckling Capacity (kFo)': kFo,
+            'Results': {N: 'PASS'/'FAIL' for N in loads}
+        }
+    """
+        
+        if refined_av == None:
+            raise ValueError(
+                "refined_av undefined, refer AS 3700 Cl 7.3.4.3, \n0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom"
+                "0.85 for a wall laterally supported at top and bottom and partially rotationally restrained at one end\n"
+                "1.0 for a wall laterally supported at both top and bottom\n"
+                "1.5 for a wall laterally supported and partially rotationally restrained at the bottom and partially laterally supported at the top\n"
+                "2.5 for freestanding walls"
+            )
+        if kt == None:
+            raise ValueError(
+                "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
+            )
+        if Ab == None:
+            raise ValueError(
+                "Bearing area Ab is not defined, refer AS 3700, set to 0 to use entire wall"
+            )
+        if (
+            W_direct == None
+            or W_left == None
+            or W_right == None
+        ) and (e1 == None and e2 == None):
+            raise ValueError(
+                "W_direct, W_left, W_right undefined, refer AS 3700 Cl 7.3.4.4. Where W_direct is load applied with eccentricity of 0"
+                " W_left and W_right is load applied with eccentricity of 1/3 bearing area of the depth of the bearing area, assuming bearing is across the full "
+                "thickness of the wall. Alternatively, provide values of e1 and e2"
+            )
+        elif not (e1 == None and e2 == None):
+            raise ValueError("e1 or e2 defined but not the other")
+        elif not (
+            W_direct == None
+            and W_left == None
+            and W_right == None
+        ) and not (e1 == None and e2 == None):
+            raise ValueError(
+                "W_direct/W_left/W_right and e1/e2 defined, use only one system"
+            )
+        if refined_ah == None:
+            raise ValueError(
+                "refined_ah undefined, refer AS3700 Cl 7.3.4.3, 1.0 for a wall laterally supported along both vertical edges, 2.5 for one edge. If no vertical edges supported set as 0"
+            )
+        elif refined_ah != 0 and dist_to_return == None:
+            raise ValueError(
+                "dist_to_return undefined, for one edge restrained, this is the distance to the return wall. If both edges restrained, it is the"
+                " distance between return walls"
+            )
+
+
+        #Step 1: Handle bearing geometry
         if bearing_length == 0 and Ab == None:
             raise ValueError("bearing_length set to 0 but Ab not defined")
         elif bearing_length == 0:
@@ -256,11 +331,10 @@ Forces: KN\n"""
                 + min(self.height / 2, self.length - dist_to_bearing - bearing_length),
             )
 
-        self.fm = self.fmb
+        # Step 2: Basic compressive capacity
+        Fo = self.basic_compressive_capacity(verbose)
 
-        Fo = self.φ_compression * self.fm
-        print("Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))")
-
+        #Step 3: Slenderness ratio
         Sr_vertical = (refined_av * self.height) / (kt * self.thickness)
         Sr_horizontal = (
             0.7
@@ -270,29 +344,34 @@ Forces: KN\n"""
             else float("inf")
         )
         Sr = min(Sr_vertical, Sr_horizontal)
-        print("Srs =", Sr, "(Refined slenderness ratio Cl 7.3.4.3)")
+        if verbose:
+            print("Srs =", Sr, "(Refined slenderness ratio Cl 7.3.4.3)")
 
         e1, e2 = self.calc_e1_e2(e1, e2, W_left, W_direct, W_right)
-        print(f"End eccentricity, e1: {e1} mm, e2: {e2} mm, refer AS3700 Cl 7.3.4.4")
+        if verbose:
+            print(f"End eccentricity, e1: {e1} mm, e2: {e2} mm, refer AS3700 Cl 7.3.4.4")
 
-        print("\nCrushing capacity:")
+        # Step 5: Crushing capacity
         k_local_crushing = 1 - 2 * e1 / self.thickness
-        print(f"k crushing: {k_local_crushing}")
         kbFo = round(Fo * k_local_crushing * Ab * 1e-3, 2)
-        print(f"Crushing load capacity, kbFo = {kbFo} KN")
+        if verbose:
+            print("\nCrushing capacity:")
+            print(f"  k (crushing): {k_local_crushing:.3f}")
+            print(f"  kbFo = {kbFo} kN")
 
-        print("\nBuckling capacity:")
+        # Step 6: Buckling capacity
         k_lateral = 0.5 * (1 + e2 / e1) * (
             (1 - 2.083 * e1 / self.thickness)
             - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * Sr - 8)
         ) + 0.5 * (1 - 0.6 * e1 / self.thickness) * (1 - e2 / e1) * (1.18 - 0.03 * Sr)
-        print(f"k buckling: {k_lateral}")
-
-        print(f"Effective length: {effective_length} mm")
         kFo = round(Fo * k_lateral * effective_length * self.thickness * 1e-3, 2)
-        print(f"Buckling load capacity, kFo = {kFo} KN")
+        if verbose:
+            print("\nBuckling capacity:")
+            print(f"  k (buckling): {k_lateral:.3f}")
+            print(f"  Effective length: {effective_length:.1f} mm")
+            print(f"  kFo = {kFo} kN")
 
-        print("")
+        # Step 7: Load checks
         for N in loads:
             if N > kbFo or N > kFo:
                 print(f"FAIL: {N} KN > {kbFo} KN or {kFo} KN")
@@ -367,52 +446,6 @@ Forces: KN\n"""
     def self_weight_masonry(self):
         return self.density * self.length * self.height * self.thickness
 
-    def _refined_compression_warnings(self, **kwargs):
-        if kwargs["refined_av"] == None:
-            raise ValueError(
-                "refined_av undefined, refer AS 3700 Cl 7.3.4.3, \n0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom"
-                "0.85 for a wall laterally supported at top and bottom and partially rotationally restrained at one end\n"
-                "1.0 for a wall laterally supported at both top and bottom\n"
-                "1.5 for a wall laterally supported and partially rotationally restrained at the bottom and partially laterally supported at the top\n"
-                "2.5 for freestanding walls"
-            )
-        if kwargs["kt"] == None:
-            raise ValueError(
-                "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
-            )
-        if kwargs["Ab"] == None:
-            raise ValueError(
-                "Bearing area Ab is not defined, refer AS 3700, set to 0 to use entire wall"
-            )
-        if (
-            kwargs["W_direct"] == None
-            or kwargs["W_left"] == None
-            or kwargs["W_right"] == None
-        ) and (kwargs["e1"] == None and kwargs["e2"] == None):
-            raise ValueError(
-                "W_direct, W_left, W_right undefined, refer AS 3700 Cl 7.3.4.4. Where W_direct is load applied with eccentricity of 0"
-                " W_left and W_right is load applied with eccentricity of 1/3 bearing area of the depth of the bearing area, assuming bearing is across the full "
-                "thickness of the wall. Alternatively, provide values of e1 and e2"
-            )
-        elif not (kwargs["e1"] == None and kwargs["e2"] == None):
-            raise ValueError("e1 or e2 defined but not the other")
-        elif not (
-            kwargs["W_direct"] == None
-            and kwargs["W_left"] == None
-            and kwargs["W_right"] == None
-        ) and not (kwargs["e1"] == None and kwargs["e2"] == None):
-            raise ValueError(
-                "W_direct/W_left/W_right and e1/e2 defined, use only one system"
-            )
-        if kwargs["refined_ah"] == None:
-            raise ValueError(
-                "refined_ah undefined, refer AS3700 Cl 7.3.4.3, 1.0 for a wall laterally supported along both vertical edges, 2.5 for one edge. If no vertical edges supported set as 0"
-            )
-        elif kwargs["refined_ah"] != 0 and kwargs["dist_to_return"] == None:
-            raise ValueError(
-                "dist_to_return undefined, for one edge restrained, this is the distance to the return wall. If both edges restrained, it is the"
-                " distance between return walls"
-            )
 
 
 class ReinforcedMasonry(UnreinforcedMasonry):

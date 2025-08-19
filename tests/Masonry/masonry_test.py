@@ -2,6 +2,21 @@ import pytest
 import structures.Masonry.masonry as masonry
 
 
+class TestBasicCompressiveCapacity:
+    def test_basic_compressive_strength(self):
+        """
+        fuc = 20 MPa
+        mortar class = 3
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
+        fm = kh * fmb = 1 * fmb = 6.261 MPa
+        phi = 0.75
+        Fo = 0.75 * 6.261 = 4.70 MPa
+        """
+
+        wall = masonry.UnreinforcedMasonry(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3)
+        Fo = wall.basic_compressive_capacity(verbose=False)
+        assert(Fo == 4.70)
+
 class TestUnreinforcedMasonry:
 
     #def test_default_masonry_properties(self):

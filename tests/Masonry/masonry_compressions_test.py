@@ -1,11 +1,11 @@
 import pytest
 import structures.Masonry.masonry as masonry
 
-class TestUnreinforcedMasonryCompression:
+class TestCompression:
     def test_compression(self):
         pass
 
-class TestUnreinforcedMasonryRefinedCompression:
+class TestRefinedCompression:
     def test_refined_compression(self):
         """
         Scenario:
