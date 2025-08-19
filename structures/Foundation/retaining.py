@@ -1,11 +1,11 @@
 import math
-import Masonry.masonry as masonry
+import structures.Masonry.unreinforced_masonry as unreinforced_masonry
 import Concrete.concrete as concrete
 
 class RetainingWall:
     def __init__(self,  footing_length, footing_depth, heel, wall_thickness, wall_height, soil_density = 18, ka = 0.41, kp = 2.4):
 
-        self.wall = masonry.ReinforcedMasonry(thickness = wall_thickness, height = wall_height, length = 1000)
+        self.wall = unreinforced_masonry.ReinforcedMasonry(thickness = wall_thickness, height = wall_height, length = 1000)
         self.footing = concrete.ConcreteBeam(length = footing_length, depth = footing_depth)
         self.footing_length = footing_length
         self.footing_toe_incl_wall = footing_length - heel

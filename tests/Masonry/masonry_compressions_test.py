@@ -1,5 +1,5 @@
 import pytest
-import structures.Masonry.masonry as masonry
+import structures.Masonry.unreinforced_masonry as unreinforced_masonry
 
 class TestCompression:
     def test_compression(self):
@@ -28,7 +28,7 @@ class TestRefinedCompression:
         kFo = 440.55 KN * 0.34255 = 150.91KN
 
         """
-        wall = masonry.UnreinforcedMasonry(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4)
+        wall = unreinforced_masonry.UnreinforcedMasonry(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4)
         capacity = wall.refined_compression(refined_av=0.75, Ab=0, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
         #assert(capacity['Buckling'] == 150.91)
         #assert(capacity['Crushing'] == 295.16)

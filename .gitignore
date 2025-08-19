@@ -103,3 +103,6 @@ desktop.ini
 *.tmp
 *.swp
 *~
+
+#Working related files
+work/

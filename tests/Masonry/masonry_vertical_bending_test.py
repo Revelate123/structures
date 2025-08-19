@@ -1,5 +1,5 @@
 import pytest
-from structures.Masonry import masonry
+from structures.Masonry import unreinforced_masonry
 
 class TestUnreinforcedMasonryBending:
     def test_vertical_bending_1(self):

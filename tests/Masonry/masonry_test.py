@@ -1,5 +1,5 @@
 import pytest
-import structures.Masonry.masonry as masonry
+import structures.Masonry.unreinforced_masonry as unreinforced_masonry
 
 
 class TestBasicCompressiveCapacity:
@@ -13,7 +13,7 @@ class TestBasicCompressiveCapacity:
         Fo = 0.75 * 6.261 = 4.70 MPa
         """
 
-        wall = masonry.UnreinforcedMasonry(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3)
+        wall = unreinforced_masonry.UnreinforcedMasonry(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3)
         Fo = wall.basic_compressive_capacity(verbose=False)
         assert(Fo == 4.70)
 
