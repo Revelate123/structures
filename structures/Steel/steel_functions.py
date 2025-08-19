@@ -1,66 +1,7 @@
 from openpyxl import load_workbook
 import math
-import FreeSimpleGUI as Sg
 
 wb = load_workbook(filename='Steel Design Calculator.xlsx')
-
-def steel_gui(SectionSize):
-        SectionType = ['Universal_Beam', 'Universal_Column', 'PFC', 'RHS', 'SHS', 'CHS', 'T-section']
-        layout = [
-            [Sg.Column([
-                [Sg.Text("Steel calculator", key='title')],
-                [Sg.Text('This calculator is not finished yet', key='t1')],
-                [Sg.Text('Available section types are Universal Columns, Universal Beams, and PFC\'s and RHS')],
-                [Sg.Text('Choose Section Type:')],
-                [Sg.Combo(SectionType, key='SectionType', enable_events=True, default_value=SectionType[0], size=(30, 1))],
-                [Sg.Text('Choose Section Size:')],
-                [Sg.Combo(SectionSize, key='SectionSize', default_value=SectionSize[0], size=(30, 1))],
-                [Sg.Text('Input segment Length in metres below:')],
-                [Sg.Input(default_text='1', key='segment length', size=(5, 1))],
-                [Sg.Text('Input alpha m below:', key='t3')],
-                [Sg.Input(key='alpha_m', size=(5, 1), default_text='1')],
-                [Sg.Combo(['FF', 'FP', 'FL', 'PP', 'PL', 'LL', 'FU', 'PU'], key='restraint', default_value='FP',
-                        enable_events=True)],
-                [Sg.Combo(['Shear centre', 'Top flange'], key='load_height_position', default_value='Shear centre',
-                        size=(15, 1))],
-                [Sg.Combo(['Within segment', 'At segment end'], key='longitudinal_position', default_value='Within segment',
-                        size=(15, 1)), Sg.Text('Load height')],
-                [Sg.Combo(['Any', 'None', 'One', 'Both'], key='ends_with_restraint', default_value='One'),
-                Sg.Text('Ends with Lateral restraint')],
-                [Sg.Text('M*x:')],
-                [Sg.Input(default_text='0', key='M*x', size=(5, 1))],
-                [Sg.Text('M*y:')],
-                [Sg.Input(default_text='0', key='M*y', size=(5, 1))],
-                [Sg.Text('V*x:')],
-                [Sg.Input(default_text='0', key='V*x', size=(5, 1))],
-                [Sg.Text('V*y:')],
-                [Sg.Input(default_text='0', key='V*y', size=(5, 1))],
-                [Sg.Text('N*:')],
-                [Sg.Input(default_text='0', key='N*', size=(5, 1))],
-                [Sg.Button('Calculate', key='calculate', use_ttk_buttons=True)],
-                [Sg.Button('Back', key='back'), Sg.Button('quit', key='b2', use_ttk_buttons=True)],
-                [Sg.Column([
-                    [Sg.Text('\u03A6Msx = '), Sg.Text('', key='PhiMsx')],
-                    [Sg.Text('\u03A6Mbx = '), Sg.Text('', key='PhiMbx')],
-                    [Sg.Text('\u03A6Msy = '), Sg.Text('', key='PhiMsy')],
-                    [Sg.Text('\u03A6Mby = '), Sg.Text('', key='PhiMby')],
-                    [Sg.Text('\u03A6Mox = '), Sg.Text('', key='PhiMox')],
-                    [Sg.Text('\u03A6Mix = '), Sg.Text('', key='PhiMix')],
-                    [Sg.Text('\u03A6Moy = '), Sg.Text('', key='PhiMoy')],
-                    [Sg.Text('\u03A6Miy = '), Sg.Text('', key='PhiMiy')]
-                ]), Sg.Column([
-                    [Sg.Text('\u03A6Nsx = '), Sg.Text('', key='PhiNsx')],
-                    [Sg.Text('\u03A6Ncx = '), Sg.Text('', key='PhiNcx')],
-                    [Sg.Text('\u03A6Nsy = '), Sg.Text(key='PhiNsy')],
-                    [Sg.Text('\u03A6Ncy = '), Sg.Text(key='PhiNcy')]
-
-                ]), Sg.Column([
-                    [Sg.Text('\u03A6Vu = '), Sg.Text('', key='PhiVu')],
-                    [Sg.Text('\u03A6Vvm = '), Sg.Text('', key='PhiVvm')]
-                ])],
-            ])
-            ]]
-        return layout
 
 def steel_data(string,wb):
         SectionSize = []
