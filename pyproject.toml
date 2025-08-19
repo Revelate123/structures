@@ -22,8 +22,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
 ]
-license = ""
-license-files = ["LICEN[CS]E*"]
 
 [project.urls]
 Homepage = "https://github.com/pypa/sampleproject"
