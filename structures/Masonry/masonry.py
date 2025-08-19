@@ -1,6 +1,5 @@
 import math
 from dataclasses import dataclass
-from structures import __version__
 
 @dataclass
 class Masonry:
@@ -14,7 +13,7 @@ class Masonry:
 
     def __post_init__(self):
             print(
-                f"""Version {__version__}
+                """
     All calculations are based on AS3700:2018
     Units unless specified otherwise, are:
     Pressure: MPa 
@@ -30,11 +29,11 @@ class Masonry:
             self._set_masonry_properties()
 
     def _set_masonry_properties(self):
-        if self.fuc == -1:
+        if self.fuc == None:
             raise ValueError(
                 "fuc undefined, for new structures the value is typically 20 MPa, and for existing 10 to 12MPa"
             )
-        if self.mortar_class == -1:
+        if self.mortar_class == None:
             raise ValueError("mortar_class undefined, typically 3")
         if self.mortar_class == 4:
             self.km = 2

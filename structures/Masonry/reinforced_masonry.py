@@ -14,6 +14,13 @@ class ReinforcedMasonry(masonry.Masonry):
     φ_compression: float = 0.75
 
 
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.mortar_class != 3:
+            raise ValueError("Concrete masonry units undefined for mortar class M4, adopt M3")
+
+
     def _bending(self, loads=[], fsy = None, d = None, Ast = None, b = None, verbose = True):
         """
         Computes the bending capacity of a reinforced masonry wall element using the methods
@@ -60,10 +67,17 @@ class ReinforcedMasonry(masonry.Masonry):
         if verbose == True:
             print(f"Md: {Md:.2f} KNm")
 
-    def vertical_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
+    def out_of_plane_vertical_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
         Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.length, verbose=verbose)
         return Md
     
-    def horizontal_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
+    def out_of_plane_horizontal_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
         Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.height, verbose=verbose)
         return Md
+    
+    def in_plane_vertical_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
+        Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.thickness, verbose=verbose)
+        return Md
+
+class BondBeam(ReinforcedMasonry):
+    pass
