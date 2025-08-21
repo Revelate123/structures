@@ -13,9 +13,11 @@ class TimberBeam:
     fb: float| None = None
     
 
-    
+    def __post_init__(self):
+        self.Zxx = self.breadth*self.depth**2/6
+        self.Zyy = self.depth*self.breadth**2/6
 
-    def _bending(self, loads=[],seasoned=None, moisture_content=None,latitude = None, ncom=None, nmem = None, verbose=True):
+    def _bending(self, loads=[],seasoned=None, moisture_content=None,latitude = None, ncom=None, nmem = None, spacing = None, span = None, verbose=True):
         """
         Computes the bending capacity of a timber element using the methods
         described in AS 1720 Cl 3.2
@@ -33,11 +35,14 @@ class TimberBeam:
 
         k4 = self._calc_k4(seasoned=seasoned,moisture_content=moisture_content,verbose=verbose)
         k6 = self._calc_k6(latitude=latitude,verbose=verbose)
-        k9 = 1
+        k9 = self._calc_k9(ncom=ncom, nmem=nmem,spacing=spacing,span=span)
         k12 = 1
         Z = 1
 
-        Md = self.φ_bending * k4 * k6 * k9 * k12 * fb * Z
+        Md = self.φ_bending * k4 * k6 * k9 * k12 * self.fb * Z
+        if verbose == True:
+            print(f"Md: {Md} KNm")
+        return Md
 
     def in_plane_bending(self):
         pass
@@ -92,15 +97,48 @@ class TimberBeam:
             print(f"k6: {k6}, refer Cl 2.4.3")
         return k6
 
-    def _calc_k9(self,ncom,nmem,verbose):
+    def _calc_k9(self,ncom,nmem,spacing,span,verbose):
         """Computes k9 using AS1720.1-2010 Cl 2.4.5.3"""
 
         if not ncom:
-            raise ValueError("")
+            raise ValueError("ncom not set, this is the number of elements that are effectively fastened together to form a single group")
+        elif verbose:
+            print(f"ncom: {ncom}, number of members per group")
         
         if not nmem:
-            raise ValueError("")
+            raise ValueError("nmem not set, this is the number of members that are discretely spaced parallel to each other")
+        elif verbose:
+            print(f"nmem: {nmem}, number of groups of members")
         
-        k9 = g31 + (g32 - g31)* (1 - 2*s/L)
+        if nmem > 1 and not spacing:
+            raise ValueError("nmem greater than 1 but spacing between groups not set. This should be in mm.")
+        elif verbose:
+            print(f"spacing: {spacing} mm")
+        
+        if nmem > 1 and not span:
+            raise ValueError("nmem greater than 1 but span of members not set. This should be in mm.")
+        elif verbose:
+            print(f"span: {span} mm")
+
+        table_2_7 = [0,1,1.14,1.2,1.24,1.26,1.28,1.3,1.31,1.32,1.33]
+
+        g31 = table_2_7[ncom if ncom < 10 else 10]
+        if verbose:
+            print(f"g31: {g31}")
+        g32 = table_2_7[ncom*nmem if ncom*nmem < 10 else 10]
+        if verbose:
+            print(f"g32: {g32}")
+        k9 = g31 + (g32 - g31)* (1 - 2*spacing/span)
         k9 = max(k9, 1)
+        if verbose:
+            print(f"k9: {k9}")
         return k9
+    
+    def _calc_k12(self, pb:float|None = None, verbose:bool = True):
+        """Computes k12 using AS1720.1-2010 Cl """
+        if not pb:
+            raise ValueError("pb not defined")
+        elif verbose:
+            print(f"pb: {pb}")
+
+        S1

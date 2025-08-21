@@ -13,8 +13,6 @@ class ReinforcedMasonry(masonry.Masonry):
     φ_bending: float = 0.75
     φ_compression: float = 0.75
 
-
-
     def __post_init__(self):
         super().__post_init__()
         if self.mortar_class != 3:

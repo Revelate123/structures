@@ -103,7 +103,7 @@ class UnreinforcedMasonry(masonry.Masonry):
             effective_length = self.length
             if verbose: print("Note: Assumed bearing area is entire length of wall\n")
         else:
-            raise ValueError("Ab not implemented")
+            raise NotImplementedError("Ab not implemented")
 
         Fo = self.basic_compressive_capacity(verbose)
         

@@ -13,25 +13,26 @@ from concreteproperties.design_codes import AS3600
 from concreteproperties.post import si_kn_m, si_n_mm
 from concreteproperties.results import BiaxialBendingResults, MomentInteractionResults
 
-class ConcreteBeam2:
-    def __init__(self,fc):
-        self.design_code = AS3600()
-        self.concrete = self.design_code.create_concrete_material(compressive_strength=fc)
-        self.steel = self.design_code.create_steel_material()
-        print(self.concrete. name)
-        print(f"Density = {self.concrete. density} kg/mm^3")
-        self.concrete. stress_strain_profile.plot_stress_strain(
-            title="Service Profile", eng=True, units=si_n_mm
-        )
-        self.concrete. ultimate_stress_strain_profile.plot_stress_strain(
-            title="Ultimate Profile", eng=True, units=si_n_mm
-        )
-        print(
-            f"Concrete Flexural Tensile Strength: {self.concrete. flexural_tensile_strength:.2f} MPa"
-        )
-
 @dataclass
 class ConcreteBeam:
+    fc:float = 32
+        
+@dataclass
+class OneWaySlab(ConcreteBeam):
+    """
+    Constructs an object used for calculating one way slab properties
+
+    Args:
+        Lx: 
+        Ly:
+     
+    """
+    Lx:float|None = None
+    Ly:float|None = None
+
+
+@dataclass
+class ConcreteBeam_depracated:
     fc:float = 32
     b:float = 1000
     cover:float = 65
@@ -75,8 +76,6 @@ class ConcreteBeam:
         Mu = Cc *(dn - 0.5*gamma*dn)*10**-6 + sum([abs(self.Ast[i]*steel_strains[i]*200*10**-3*(self.d[i] - dn)) for i in range(len(self.Ast))])
         return Mu, dn 
 
-
-
     def shear(fc,bv,d, D,Ast,Ec,M,V,N):
         dv = max(0.9*d, 0.72*D)
         dg = 20
@@ -85,52 +84,6 @@ class ConcreteBeam:
         kv = (0.4/(1 + 1500*ex))*(1300/(1000 + kdg*dv))
         Vuc = kv * math.sqrt(fc) * bv * dv
         return Vuc*10**-3
-
-    def display_Table():
-        width = 80
-        print("+","-"*(width-2),"+",sep="")
-        print('|',f"{'Surface of members in contact with the ground': <{width-2}}",'|',sep= '')
-        print("+","-"*9,"+","-"*(width-12),"+",sep="")
-        print('|','{0: ^9}'.format("0"),'|',f'{"Members protected by a damp-proof membrane": ^{width-12}}','|', sep= '')
-        print("+","-"*9,"+","-"*(width-12),"+",sep="")
-        print('|','{0: ^9}'.format("1"),'|',f'{"Residential footings in non-aggressive soils": ^{width-12}}','|', sep= '')
-        print("+","-"*9,"+","-"*(width-12),"+",sep="")
-        print('|','{0: ^9}'.format("2"),'|',f'{"Other members in non-aggressive soils": ^{width-12}}','|', sep= '')
-        print("+","-"*9,"+","-"*(width-12),"+",sep="")
-
-
-    def durability():
-        member = {}
-        T4_3 = ["A1","A1", "A2", "Table 4.8.1", "U", "U", "Table 4.8.2","A1", "A2", "B1", "A1", "A2", "B1", "B1", "B1", "B2", "B1", "U", "B2", "C1", "C2", "U"]
-        while True:
-
-            classification = input("Input the index of the member classification from the table above:")
-            if classification.isdigit():
-                #add from the table
-                #member["fc"] = 
-                pass
-            else:
-                    pass
-
-    def intro_durability():
-        #User will input each type of member and it will generate a table of the cover requirements
-        display_Table()
-        members = []
-        while True:
-            cur_member = input("Input name of member type or type a number to overwrite an existing row:")
-            if cur_member.isdigit():
-                if int(cur_member) > len(members):
-                    print("Index does not exist")
-                else:
-                    #Overwrite
-                    members[int(cur_member)] 
-            elif cur_member != "":
-                #logic to determine cover and fc etc.
-                members += durability()
-            else:
-                #proceed to next step
-                break
-
 
 if __name__ == "__main__":
     beam = ConcreteBeam()
