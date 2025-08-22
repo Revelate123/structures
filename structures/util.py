@@ -38,7 +38,7 @@ def export_calc(output_dir, file_name):
         def handle_choice(choice):
             clear_output()
             if choice == "cancel":
-                print("❌ Export cancelled.")
+                print("Export cancelled.")
                 return
 
             if choice == "overwrite":
@@ -54,7 +54,6 @@ def export_calc(output_dir, file_name):
                 "--output-dir", output_dir,
                 ipynbname.name()
             ])
-            print(f"✅ Notebook exported as: {output_path}")
 
         def on_overwrite_clicked(b): handle_choice("overwrite")
         def on_new_clicked(b): handle_choice("new")
@@ -78,8 +77,6 @@ def export_calc(output_dir, file_name):
             "--output-dir", output_dir,
             ipynbname.name()
         ])
-        print(f"✅ Notebook exported as: {output_path}")
-
 
 def job_number(job_id):
 

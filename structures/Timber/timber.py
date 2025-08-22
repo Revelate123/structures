@@ -17,7 +17,21 @@ class TimberBeam:
         self.Zxx = self.breadth*self.depth**2/6
         self.Zyy = self.depth*self.breadth**2/6
 
-    def _bending(self, loads=[],seasoned=None, moisture_content=None,latitude = None, ncom=None, nmem = None, spacing = None, span = None, verbose=True):
+    def _bending(self,
+                  loads=[],
+                  seasoned=None,
+                    moisture_content=None,
+                    latitude = None,
+                      ncom=None,
+                        nmem = None,
+                          spacing = None,
+                            span = None,
+                              out_of_plane:bool|None = None,
+                              pb:float|None =None,
+                              restraint_location:int|None = None,
+                              Lay:float|None = None,
+                                Z:float|None = None,
+                                verbose=True):
         """
         Computes the bending capacity of a timber element using the methods
         described in AS 1720 Cl 3.2
@@ -36,19 +50,54 @@ class TimberBeam:
         k4 = self._calc_k4(seasoned=seasoned,moisture_content=moisture_content,verbose=verbose)
         k6 = self._calc_k6(latitude=latitude,verbose=verbose)
         k9 = self._calc_k9(ncom=ncom, nmem=nmem,spacing=spacing,span=span)
-        k12 = 1
-        Z = 1
+        k12 = self._calc_k12(pb=pb,restraint_location=restraint_location,Lay=Lay,out_of_plane=out_of_plane,verbose=verbose) 
+        Z = self._calc_Z(out_of_plane=out_of_plane)
 
         Md = self.φ_bending * k4 * k6 * k9 * k12 * self.fb * Z
         if verbose == True:
             print(f"Md: {Md} KNm")
         return Md
 
-    def in_plane_bending(self):
-        pass
+    def in_plane_bending(self,
+                  loads=[],
+                  seasoned=None,
+                    moisture_content=None,
+                    latitude = None,
+                      ncom=None,
+                        nmem = None,
+                          spacing = None,
+                            span = None,
+                              out_of_plane:bool|None = None,
+                              pb:float|None =None,
+                              restraint_location:int|None = None,
+                              Lay:float|None = None,
+                                Z:float|None = None,
+                                verbose=True):
+        return self._bending(loads=loads,seasoned=seasoned,moisture_content=moisture_content,latitude=latitude,ncom=ncom,nmem=nmem,spacing=spacing,span=span,
+                             pb=pb, restraint_location=restraint_location,Lay=Lay,Z=Z,
+                             out_of_plane=False if self.depth > self.breadth else True,
+                             verbose=verbose)
 
-    def out_of_plane_bending(self):
-        pass
+    def out_of_plane_bending(self,
+                  loads=[],
+                  seasoned=None,
+                    moisture_content=None,
+                    latitude = None,
+                      ncom=None,
+                        nmem = None,
+                          spacing = None,
+                            span = None,
+                              out_of_plane:bool|None = None,
+                              pb:float|None =None,
+                              restraint_location:int|None = None,
+                              Lay:float|None = None,
+                                Z:float|None = None,
+                                verbose=True):
+
+        return self._bending(loads=loads,seasoned=seasoned,moisture_content=moisture_content,latitude=latitude,ncom=ncom,nmem=nmem,spacing=spacing,span=span,
+                             pb=pb, restraint_location=restraint_location,Lay=Lay,Z=Z,
+                             out_of_plane=True if self.depth > self.breadth else False,
+                             verbose=verbose)
 
     def _calc_k4(self,seasoned, moisture_content, verbose):
         """Computes k4 using AS1720.1-2010 Cl 2.4.2.2 & Cl 2.4.2.3"""
@@ -134,11 +183,79 @@ class TimberBeam:
             print(f"k9: {k9}")
         return k9
     
-    def _calc_k12(self, pb:float|None = None, verbose:bool = True):
+    def _calc_k12(self, pb:float|None = None, restraint_location:int|None=None, Lay:float|None = None, fly_brace_spacing:int|None = None,out_of_plane:bool|None = None, verbose:bool = True):
         """Computes k12 using AS1720.1-2010 Cl """
         if not pb:
             raise ValueError("pb not defined")
         elif verbose:
             print(f"pb: {pb}")
+        
+        if out_of_plane is None:
+            raise ValueError("out_of_plane not set. Set to True if out of plane")
+        elif out_of_plane == True:
+            return 1
 
-        S1
+        if restraint_location is None or restraint_location not in [1,2,3]:
+            raise ValueError("restraint_location not set or set incorrectly.\n" \
+            "set to 1 if restraints are to the compression edge\n" \
+            "set to 2 if restraints are to the tension edge\n" \
+            "set to 3 if restraints are to the tension edge and there is fly-bracing to the compression edge\n"
+            "If unsure, setting to 2 is conservative") #TODO confirm
+        elif verbose:
+            print(f"restraint_location: {restraint_location}")
+        
+        if Lay is None:
+            raise ValueError("Lay not set. This is the distance between restraints.\n" \
+            "For continuous systems e.g. flooring, set to the nail spacing e.g 300mm\n" \
+            "For fly-bracing systems it is NOT the distance between fly-braces.")
+        elif verbose:
+            print(f"Lay: {Lay} mm")
+        
+        if restraint_location == 3 and fly_brace_spacing is None:
+            raise ValueError("restraint_location set to 3 but fly-brace spacing has not been set. This should be the number of members in the group"
+            "[L,R), for example, if there are fly braces to every purlin," \
+            " then fly_brace_spacing should be set to 1, if they alternate every 2nd purlin, it should be set to 2, etc.")
+        elif verbose:
+            if fly_brace_spacing == 1:
+                print("fly braces connected to every restraint")
+            elif fly_brace_spacing > 1:
+                print(f"fly bracing to every {fly_brace_spacing} restraints")
+            
+        cont_restrained = self._cont_restraint(pb=pb,Lay=Lay,verbose=verbose)
+        return self._calc_S1(pb=pb,restraint_location=restraint_location,Lay=Lay,fly_brace_spacing=fly_brace_spacing,cont_restrained=cont_restrained,verbose=verbose)
+        
+
+    def _calc_S1(self,pb:float|None = None, restraint_location:int|None=None, Lay:float|None = None, fly_brace_spacing:int|None = None,cont_restrained:bool = False, verbose:bool = True):
+        """ Calculates the beam slenderness S1 """
+        if cont_restrained == True:
+            if restraint_location == 1:
+                return 0
+            if restraint_location == 2:
+                return 2.25*self.depth/self.breadth
+            if restraint_location == 3:
+                return (1.5 * self.depth/self.breadth) / ((math.pi*self.depth/fly_brace_spacing*Lay)**2+0.4)**0.5
+        else:
+            if restraint_location == 1:
+                return 1.25*self.depth/self.breadth*(Lay/self.d)**0.5
+            if restraint_location == 2 or restraint_location == 3:
+                return (self.depth/self.breadth)**1.35 * (Lay/self.depth)**0.25
+        raise ValueError("_calc_S1 did not find a matching restraint case")
+        
+
+    def _cont_restraint(self,pb:float|None = None,  Lay:float|None = None, verbose:bool = True):
+        """ Determines if the beam is continuously restrained """
+        cont_restrained = Lay/self.depth <= 64*(self.breadth/(pb*self.depth))**2
+        if verbose:
+            print(f"Continuously restrained: {cont_restrained}")
+        return cont_restrained
+
+        
+    def _calc_Z(self, out_of_plane):
+        if out_of_plane is None:
+            raise ValueError("out_of_plane not set.")
+        if out_of_plane == True:
+            return self.depth*self.breadth**2/6
+        elif out_of_plane == False:
+            return self.breadth*self.depth**2/6
+        else:
+            raise ValueError("error in _calc_Z")
