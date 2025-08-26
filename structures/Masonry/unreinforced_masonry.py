@@ -33,11 +33,11 @@ class UnreinforcedMasonry(masonry.Masonry):
     hu: float | None = None
     tj: float | None = None
 
-    def basic_compressive_capacity(self,verbose):
+    def basic_compressive_capacity(self,verbose=True):
         """ Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)"""
         Fo = round(self.φ_compression * self.fmb,2)
         if verbose:
-            print("Simplified Compression capacity")
+            print(f"φ_compression: {self.φ_compression}")
             print("Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))")
         return Fo
 
@@ -61,7 +61,7 @@ class UnreinforcedMasonry(masonry.Masonry):
         return self.Vd
 
     def compression_capacity(
-        self, loads=[], simple_av=None, kt=None, Ab=None, compression_load_type=None, verbose=False
+        self, loads=[], simple_av=None, kt=None, Ab=None, compression_load_type=None, verbose=True
     ):
         """
         Computes the compression capacity of a masonry wall element using the simplified method,
@@ -147,9 +147,7 @@ class UnreinforcedMasonry(masonry.Masonry):
     def calc_e1_e2(self, e1, e2, W_left, W_direct, W_right):
         if e1 and e2:
             return
-        e1 = max(
-            (-W_left * self.thickness / 6 + W_right * self.thickness / 6)
-            / (W_left + W_direct + W_right),
+        e1 = max(abs(-W_left * self.thickness / 6 + W_right * self.thickness / 6)/ (W_left + W_direct + W_right),
             0.05 * self.thickness,
         )
         e2 = e1
@@ -201,7 +199,7 @@ class UnreinforcedMasonry(masonry.Masonry):
         
         if refined_av == None:
             raise ValueError(
-                "refined_av undefined, refer AS 3700 Cl 7.3.4.3, \n0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom"
+                "refined_av undefined, refer AS 3700 Cl 7.3.4.3, \n0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom\n"
                 "0.85 for a wall laterally supported at top and bottom and partially rotationally restrained at one end\n"
                 "1.0 for a wall laterally supported at both top and bottom\n"
                 "1.5 for a wall laterally supported and partially rotationally restrained at the bottom and partially laterally supported at the top\n"
@@ -389,13 +387,3 @@ class UnreinforcedMasonry(masonry.Masonry):
         return self.density * self.length * self.height * self.thickness
 
 
-
-class ReinforcedMasonry(UnreinforcedMasonry):
-    pass
-
-
-if __name__ == "__main__":
-    wall = UnreinforcedMasonry(
-        length=3000, height=3 * 86 - 20, thickness=110, fmt=0.2, fuc=20, mortar_class=3
-    )
-    wall.horizontal_bending()

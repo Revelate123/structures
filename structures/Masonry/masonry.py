@@ -14,11 +14,11 @@ class Masonry:
     def __post_init__(self):
             print(
                 """
-    All calculations are based on AS3700:2018
-    Units unless specified otherwise, are:
-    Pressure: MPa 
-    Length: mm
-    Forces: KN\n"""
+All calculations are based on AS3700:2018
+Units unless specified otherwise, are:
+Pressure: MPa 
+Length: mm
+Forces: KN\n"""
             )
             self.Zd = self.length * self.thickness**2 / 6
 
