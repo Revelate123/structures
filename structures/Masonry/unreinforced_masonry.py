@@ -57,9 +57,14 @@ class Clay(masonry.Masonry):
         self.Vd = self.V0 + self.V1
         print(f"V0 + V1, combined shear strength: {self.Vd}")
         return self.Vd
+    
+    def _calc_kb(self, a1:float|None = None, Ads:float|None = None, Ade:float|None = None):
+        """ Calculates kb in accordance with AS3700:2018 Cl 7.3.5.4"""
+        print("_calc_kb not implemented, defaulting to 1")
+        return 1
 
     def compression_capacity(
-        self, loads=[], simple_av=None, kt=None, Ab=None, compression_load_type=None, verbose=True
+        self, loads=[], simple_av=None, kt=None, compression_load_type=None, verbose=True
     ):
         """
         Computes the compression capacity of a masonry wall element using the simplified method,
@@ -69,7 +74,6 @@ class Clay(masonry.Masonry):
             loads: List of applied loads in kN.
             simple_av: Coefficient (1 or 2.5) based on lateral support.
             kt: Coefficient for engaged piers (1 if none).
-            Ab: Bearing area in mm². If 0, full wall bearing is assumed.
             compression_load_type: Type of compression loading (1, 2, or 3).
             verbose: If True, print internal calculation details.
 
@@ -90,30 +94,9 @@ class Clay(masonry.Masonry):
             raise ValueError(
                 "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
             )
-        if Ab == None:
-            raise ValueError(
-                "Bearing area Ab is not defined, refer AS 3700, set to 0 to use entire wall"
-            )
-        
-        if Ab == 0:
-            Ab = self.length * self.thickness
-            kb = 1
-            effective_length = self.length
-            if verbose: print("Note: Assumed bearing area is entire length of wall\n")
-        else:
-            raise NotImplementedError("Ab not implemented")
 
         Fo = self.basic_compressive_capacity(verbose)
-        
-        # Crushing capacity
-        kbFo = kb * Fo * Ab * 1e-3
-        if verbose:
-            print("\nCrushing capacity:")
-            print(f"kb: {kb}")
-            print(f"Ab: {Ab} mm2")
-            print(f"kbFo = {kbFo} KN (Load capacity under a concentrated load Cl 7.3.5.3)")
 
-        # Wall slenderness
         Srs = (simple_av * self.height) / (kt * self.thickness)
         if verbose:
             print("\nBuckling capacity:")
@@ -129,17 +112,15 @@ class Clay(masonry.Masonry):
             k = min(0.067 - 0.002 * (Srs - 14), 0.067)
             if verbose: print("Load type: Load applied to face of wall (Table 7.1)")
 
-        # Buckling capacity
-        kFo = k * Fo * effective_length * self.thickness * 1e-3
+        kFo = k * Fo * self.length * self.thickness * 1e-3
         if verbose:
             print(f"k: {k}")
-            print(f"Effective length of wall: {effective_length} mm")
             print(f"Simple compression capacity kFo: {kFo:.2f}")
 
         for N in loads:
-            if N > kbFo or N > kFo:
-                print(f"FAIL: {N} KN > {kbFo} KN or {kFo} KN")
-        return {"Crushing": kbFo, "Buckling": kFo}
+            if N > kFo:
+                print(f"FAIL: {N} KN > {kFo} KN")
+        return kFo
     
 
     def calc_e1_e2(self, e1, e2, W_left, W_direct, W_right):
@@ -151,13 +132,11 @@ class Clay(masonry.Masonry):
         e2 = e1
         return e1, e2
 
-    def refined_compression(
-        self,
+    def concentrated_load(self,
         loads=[],
         refined_av=None,
         refined_ah=None,
         kt=None,
-        Ab=None,
         W_left=None,
         W_direct=None,
         W_right=None,
@@ -166,6 +145,45 @@ class Clay(masonry.Masonry):
         dist_to_return=None,
         dist_to_bearing=None,
         bearing_length=None,
+        verbose=True):
+        #Step 1: Handle bearing geometry
+        if bearing_length is None:
+            raise ValueError("bearing_length not set")
+        
+        if dist_to_bearing == None:
+            raise ValueError(
+                "dist_to_bearing not set. This is defined as the shortest distance from the edge of the bearing area to "
+                "the edge of the wall, refer AS3700 Cl 7.3.5.4."
+            )
+        if bearing_length == None:
+            raise ValueError(
+                "bearing_length not set. This is required to deterine the effective wall length."
+            )
+        else:
+            effective_length = min(
+                self.length,
+                min(dist_to_bearing, self.height / 2)
+                + bearing_length
+                + min(self.height / 2, self.length - dist_to_bearing - bearing_length),
+            )
+
+        raise NotImplementedError("Concentrated loads have not been implemented yet.")
+
+        
+
+    def refined_compression(
+        self,
+        loads=[],
+        refined_av=None,
+        refined_ah=None,
+        kt=None,
+        W_left=None,
+        W_direct=None,
+        W_right=None,
+        e1=None,
+        e2=None,
+        dist_to_return=None,
+        effective_length=None,
         verbose=True
     ):
         """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
@@ -207,10 +225,6 @@ class Clay(masonry.Masonry):
             raise ValueError(
                 "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
             )
-        if Ab == None:
-            raise ValueError(
-                "Bearing area Ab is not defined, refer AS 3700, set to 0 to use entire wall"
-            )
         if (
             W_direct == None
             or W_left == None
@@ -241,35 +255,9 @@ class Clay(masonry.Masonry):
                 " distance between return walls"
             )
 
-
-        #Step 1: Handle bearing geometry
-        if bearing_length == 0 and Ab == None:
-            raise ValueError("bearing_length set to 0 but Ab not defined")
-        elif bearing_length == 0:
-            bearing_length = Ab / self.thickness
-
-        if Ab == 0:
-            Ab = self.length * self.thickness
+        if effective_length is None:
             effective_length = self.length
-        elif dist_to_bearing == None:
-            raise ValueError(
-                "Ab non-zero but dist_to_bearing has not been set. This is defined as the shortest distance from the edge of the bearing area to "
-                "the edge of the wall, refer AS3700 Cl 7.3.5.4."
-            )
-        elif bearing_length == None:
-            raise ValueError(
-                "Ab non-zero but bearing_length has not been set. This is required to deterine the effective wall length. To calculate "
-                "based on provided Ab and given wall thickness, enter 0"
-            )
-        else:
-            effective_length = min(
-                self.length,
-                min(dist_to_bearing, self.height / 2)
-                + bearing_length
-                + min(self.height / 2, self.length - dist_to_bearing - bearing_length),
-            )
 
-        # Step 2: Basic compressive capacity
         Fo = self.basic_compressive_capacity(verbose)
 
         #Step 3: Slenderness ratio
@@ -289,9 +277,9 @@ class Clay(masonry.Masonry):
         if verbose:
             print(f"End eccentricity, e1: {e1} mm, e2: {e2} mm, refer AS3700 Cl 7.3.4.4")
 
-        # Step 5: Crushing capacity
+        # Step 5: Local Crushing capacity
         k_local_crushing = 1 - 2 * e1 / self.thickness
-        kbFo = round(Fo * k_local_crushing * Ab * 1e-3, 2)
+        kbFo = round(Fo * k_local_crushing * effective_length * self.thickness * 1e-3, 2)
         if verbose:
             print("\nCrushing capacity:")
             print(f"  k (crushing): {k_local_crushing:.3f}")
