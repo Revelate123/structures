@@ -13,7 +13,7 @@ class TestBasicCompressiveCapacity:
         Fo = 0.75 * 6.261 = 4.70 MPa
         """
 
-        wall = unreinforced_masonry.UnreinforcedMasonry(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3)
+        wall = unreinforced_masonry.Clay(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3,bedding_type=True)
         Fo = wall.basic_compressive_capacity(verbose=False)
         assert(Fo == 4.70)
 

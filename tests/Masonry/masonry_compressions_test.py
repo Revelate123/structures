@@ -5,11 +5,120 @@ class TestCompression:
     def test_compression(self):
         pass
 
+class TestBasicCompressiveCapacity:
+    def test_standard_M3_brick(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
+        kh = 1.0 (for 76mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 6.261 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 6.261 = 4.70 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 4.70)
+
+    def test_standard_M4_brick(self):
+        """
+        km = 2 (For clay Full Bedding M4 mortar class)
+        fmb = km * sqrt(fuc) = 2 * sqrt(20) = 8.944 MPa
+        kh = 1.0 (for 76mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 8.944 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 8.944 = 6.71 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 4,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 6.71)
+    
+    def test_low_compressive_strength_brick(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(5) = 3.130 MPa
+        kh = 1.0 (for 76mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 3.130 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 3.130 = 2.35 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 5, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 2.35)
+
+    def test_high_compressive_strength_brick(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(60) = 10.844 MPa
+        kh = 1.0 (for 76mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 10.844 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 10.844 = 8.13 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc =60, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 8.13)
+
+    def test_face_shell_bedding_type(self):
+        """
+        km = 1.6 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.6 * sqrt(20) = 7.155 MPa
+        kh = 1.0 (for 76mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 7.155 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 7.155 = 5.37 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 3,bedding_type=False)
+        assert(wall.basic_compressive_capacity() == 5.37)
+
+    def test_fails_for_M4_face_shell_bedding_type(self):
+        with pytest.raises(ValueError):
+            wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100,fuc=20,mortar_class=4,bedding_type=False)
+            wall.basic_compressive_capacity()
+
+    def test_fails_for_M1_mortar(self):
+        with pytest.raises(ValueError):
+            wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100,fuc=20,mortar_class=1,bedding_type=True)
+            wall.basic_compressive_capacity()
+
+    def test_90_brick_10_joint(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
+        kh = 1.05 (for 90mm brick height with 10mm thick mortar)
+        fm = kh * fmb = 1.05 * 6.261 MPa = 6.574 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 6.261 = 4.93 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 90, tj=10, hu=90, fuc = 20, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 4.93)
+
+    def test_150_brick_12_joint(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
+        kh = 1.3 * (150/(19*12))**0.29 = 1.151
+        fm = kh * fmb = 1.151 * 6.261 MPa = 7.206 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 7.206 = 5.40 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, tj=12,hu=150,  fuc = 20, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 5.40)
+
+    def test_200_brick_5_joint(self):
+        """
+        km = 1.4 (For clay Full Bedding M3 mortar class)
+        fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
+        kh = 1.3 (maximum value)
+        fm = kh * fmb = 1.3 * 6.261 MPa = 8.14 MPa
+        Phi = 0.75
+        Fo = phi * f'm = 0.75 * 8.14 = 6.11 MPa
+        """
+        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, tj=5,hu=200,  fuc = 20, mortar_class= 3,bedding_type=True)
+        assert(wall.basic_compressive_capacity() == 6.11)
+    
+
 class TestRefinedCompression:
+    
     def test_refined_compression(self):
         """
         Scenario:
-        A masonry wall 600W x 2700H x 110Thick is supporting an eccentric load due to an RC slab.
+        A masonry wall 600W x 2700H x 110 Thick is supporting an eccentric load applied by an RC slab.
 
         Fd <= kFo
 
@@ -28,7 +137,7 @@ class TestRefinedCompression:
         kFo = 440.55 KN * 0.34255 = 150.91KN
 
         """
-        wall = unreinforced_masonry.UnreinforcedMasonry(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4)
+        wall = unreinforced_masonry.Clay(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4, bedding_type=True)
         capacity = wall.refined_compression(refined_av=0.75, Ab=0, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
         #assert(capacity['Buckling'] == 150.91)
         #assert(capacity['Crushing'] == 295.16)

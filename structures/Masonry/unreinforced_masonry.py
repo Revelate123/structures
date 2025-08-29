@@ -3,19 +3,13 @@ from dataclasses import dataclass
 import structures.Masonry.masonry as masonry
 
 @dataclass
-class UnreinforcedMasonry(masonry.Masonry):
-    length: float
-    height: float
-    thickness: float
-    fmt: float = -1
+class Clay(masonry.Masonry):
     fd: float = 0
-    fuc: float = -1
-    fm: float = -1
-    fmb: float = -1
+    fm: float|None = None
+    fmb: float|None = None
     # Cl 3.2 - In absence of test data, fut not to exceed 0.8MPa
     fut: float = 0.8
     kv: float = -1  # T3.3 default for interface with DPC/flashing
-    km: float = 1.4  # T3.1 default for
     hu: float = 76
     tj: float = 10
     tu: float = 110
@@ -27,15 +21,19 @@ class UnreinforcedMasonry(masonry.Masonry):
     density: float = 19  # KN/m3
     ah: float = -1
     dist_to_return: float | None = None
+    bedding_type:bool|None = None
 
     mortar_class: int = -1
     kh: float = 1
-    hu: float | None = None
-    tj: float | None = None
 
+    epsilon: float = 2
+        
     def basic_compressive_capacity(self,verbose=True):
-        """ Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)"""
-        Fo = round(self.φ_compression * self.fmb,2)
+        """ Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2) and returns a value in MPa"""
+        km = self._calc_km(verbose=verbose)
+        self._calc_fm(km=km,verbose=verbose)
+
+        Fo = round(self.φ_compression * self.fm,self.epsilon)
         if verbose:
             print(f"φ_compression: {self.φ_compression}")
             print("Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))")
@@ -385,5 +383,57 @@ class UnreinforcedMasonry(masonry.Masonry):
 
     def self_weight_masonry(self):
         return self.density * self.length * self.height * self.thickness
+
+    def _calc_km(self, verbose:bool = True):
+        if self.fuc == None:
+            raise ValueError(
+                "fuc undefined, for new structures the value is typically 20 MPa, and for existing 10 to 12MPa"
+            )
+        if self.bedding_type is None:
+            raise ValueError("bedding_type not set. set to True for Full bedding or False for Face shell bedding")
+        elif self.bedding_type is False and self.mortar_class != 3:
+            raise ValueError("Face shell bedding_type is only available for mortar class M3. Change bedding_type or mortar_class")
+        elif verbose:
+            print(f"bedding_type: {"Full" if self.bedding_type is True else "Face shell"}")
+        
+        if self.mortar_class is None:
+            raise ValueError("mortar_class undefined, typically 3")
+
+        if self.bedding_type == False:
+            km = 1.6     
+        elif self.mortar_class == 4:
+            km = 2
+        elif self.mortar_class == 3:
+            km = 1.4
+        elif self.mortar_class == 2:
+            km = 1.1
+        else:
+            raise ValueError("Invalid mortar class provided")
+        return km
+        
+    def _calc_fm(self, km:float|None = None, verbose:bool = True):
+        """ Computes fm in accordance with AS3700 Cl 3."""
+        
+        if km is None:
+            raise ValueError("km not set.")
+        elif verbose:
+            print(f"km: {km}")
+        if self.hu is not None and self.tj is None:
+            raise ValueError("Masonry unit height provided but mortar thickness tj not provided")
+        elif self.hu is None and self.tj is not None:
+            raise ValueError("joint thickness tj provided but masonry unit height not provided")
+     
+        kh = round(min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3),self.epsilon)
+        if verbose:
+            print(f"kh: {kh}, based on a masonry unit height of {self.hu} mm and a joint thickness of {self.tj} mm")
+   
+        self.fmb = round(math.sqrt(self.fuc) * km, self.epsilon)
+        if verbose:
+            print(f"fmb: {self.fmb} MPa")
+
+        self.fm = round(kh * self.fmb, self.epsilon)
+        if verbose:
+            print(f"fm: {self.fm} MPa")
+        
 
 
