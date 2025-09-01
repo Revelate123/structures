@@ -113,7 +113,38 @@ class TestBasicCompressiveCapacity:
         assert(wall.basic_compressive_capacity() == 6.11)
     
 
+class TestSimplifiedCompression:
+    def test(self):
+        pass
+
 class TestRefinedCompression:
+    
+    def test_face_shell_bedding(self):
+        pass
+
+    def test_large_eccentricity(self):
+        pass
+
+    def test_small_eccentricity(self):
+        pass
+    
+    def test_horz_capacity_limited_by_Fo(self):
+        pass
+
+    def test_stocky_wall(self):
+        pass
+
+    def test_slender_wall(self):
+        pass
+
+    def test_one_return(self):
+        pass
+
+    def test_two_returns(self):
+        pass
+
+    def test_cantilever_wall(self):
+        pass
     
     def test_refined_compression(self):
         """
@@ -123,24 +154,26 @@ class TestRefinedCompression:
         Fd <= kFo
 
         Fo = phi * fm * Ab
-        fm = 8.9MPa
+        fm = 8.94MPa
         phi = 0.75
-        Fo = 6.675MPa * Ab
-        Ab = 600*110 = 66,000 mm2
-        Fo = 440.55 KN
+        Fo = 0.75 * 8.94 * Ab = 6.71MPa
+        Sr = av * H / (kt * t) = 0.75 * 2700 / (1 * 110) = 18.41
         k = 0.5(1+ e1/e2) * [(1 - 2.082* e1/tw) - (0.025 - 0.037 * e1/tw) * (1.33 * Sr - 8)] + 0.5 * (1 - 0.6 * e1/tw) * (1 - e2/e1) * (1.18 - 0.03Sr)
-        k =  1 * [(0.65300) - (0.01883333) * (16.4841)] + 0 = 0.34255
+        k =  1 * [(0.65300) - (0.01883333) * (16.4841)] + 0 = 0.34
         e1 = tw/6 = 18.3333mm
         e2 = tw/6 = 18.3333mm
         tw = 110mm
-        Sr = av * H / (kt * t) = 0.75 * 2700 / (1 * 110) = 18.40909
-        kFo = 440.55 KN * 0.34255 = 150.91KN
+        Ab = 600*110 = 66,000 mm2
+        kFo = 6.71MPa * 66,000mm2 * 0.34 = 150.57KN
+
+        k = 1 - 2*(18.33/110) = 0.67
+        Fo = 6.71MPa * 66,000mm2 * 0.67 = 296.72
 
         """
         wall = unreinforced_masonry.Clay(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4, bedding_type=True)
-        capacity = wall.refined_compression(refined_av=0.75, Ab=0, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
-        #assert(capacity['Buckling'] == 150.91)
-        #assert(capacity['Crushing'] == 295.16)
+        capacity = wall.refined_compression(refined_av=0.75, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
+        assert(capacity['Buckling'] == 150.57)
+        assert(capacity['Crushing'] == 296.72)
     
     def test_refined_compression_2(self):
         """
@@ -161,8 +194,8 @@ class TestRefinedCompression:
         kFo = 217.8 KN * 0.34255 = 74.6KN
 
         """
-        #wall = masonry.UnreinforcedMasonry(length=600, height=2700, thickness=110, av=0.75, kt = 1, Ab = 0 , fuc = 10, mortar_class=3)
-        #assert(round(wall.refined_compression()) == 74.6)
+        wall = unreinforced_masonry.Clay(length=600, height=2700, thickness=110, fuc = 10, mortar_class=3)
+        #capacity = wall.refined_compression(refined_av=0.75, refined_ah=0,kt=1)
     
     def test_refined_compression_3(self):
         """
@@ -188,3 +221,12 @@ class TestRefinedCompression:
     
     def test_define_bearing_area(self):
         pass
+
+class TestConcentratedLoad:
+    def test_concetrated_load_1(self):
+        """
+        
+        """
+        wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100, fuc=20, mortar_class=3,bedding_type=True)
+        bearing_cap = wall.concentrated_load(bearing_length=1000,dist_to_end=0,bearing_width=100,W_left=0,W_direct=0,W_right=0,refined_av=0.75,refined_ah=0,kt=1)
+        #assert(bearing_cap == 600)
