@@ -11,7 +11,7 @@ from dataclasses import dataclass
 @dataclass
 class Clay:
     """
-    asdasfdasd
+    For the design of unreinforced clay brick masonry in accordance with AS3700:2018
     """
 
     length: float | None = None
@@ -20,6 +20,7 @@ class Clay:
     fuc: float | None = None
     mortar_class: float | None = None
     bedding_type: bool | None = None
+    fm: float | None = None
     fmt: float | None = None
     fut: float = 0.8
     hu: float = 76
@@ -558,12 +559,14 @@ class Clay:
         return Mcv
 
     def self_weight(self) -> float:
+        """ Returns the seld weight of the masonry, exlcuding any applied actions such as Fd. """
         return self.density * self.length * self.height * self.thickness
 
     def _calc_km(self, verbose: bool = True) -> float:
         if self.fuc is None:
             raise ValueError(
-                "fuc undefined, for new structures the value is typically 20 MPa, and for existing 10 to 12MPa"
+                "fuc undefined, for new structures the value is typically 20 MPa,"
+                " and for existing 10 to 12MPa"
             )
         if self.bedding_type is None:
             raise ValueError(
@@ -571,7 +574,8 @@ class Clay:
             )
         elif self.bedding_type is False and self.mortar_class != 3:
             raise ValueError(
-                "Face shell bedding_type is only available for mortar class M3. Change bedding_type or mortar_class"
+                "Face shell bedding_type is only available for mortar class M3." \
+                " Change bedding_type or mortar_class"
             )
         elif verbose:
             print(
@@ -612,7 +616,8 @@ class Clay:
         kh = round(min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3), self.epsilon)
         if verbose:
             print(
-                f"kh: {kh}, based on a masonry unit height of {self.hu} mm and a joint thickness of {self.tj} mm"
+                f"kh: {kh}, based on a masonry unit height of {self.hu} mm"
+                  " and a joint thickness of {self.tj} mm"
             )
 
         fmb = round(math.sqrt(self.fuc) * km, self.epsilon)
