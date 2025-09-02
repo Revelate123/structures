@@ -1,14 +1,8 @@
 import math
 from dataclasses import dataclass
-import structures.Masonry.masonry as masonry
-
 
 @dataclass
-class Clay(masonry.Masonry):
-    """
-    asdas
-    """
-
+class Clay:
     length: float | None = None
     height: float | None = None
     thickness: float | None = None
@@ -25,15 +19,14 @@ class Clay(masonry.Masonry):
     tu: float = 110
     lu: float = 230
     Ld: float | None = None
-    φ_shear: float = 0.6
-    φ_bending: float = 0.6
-    φ_compression: float = 0.75
+    phi_shear: float = 0.6
+    phi_bending: float = 0.6
+    phi_compression: float = 0.75
     density: float = 19
     ah: float | None = None
     dist_to_return: float | None = None
     bedding_type: bool | None = None
     kh: float | None = None
-
     epsilon: float = 2
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
@@ -42,13 +35,14 @@ class Clay(masonry.Masonry):
         km = self._calc_km(verbose=verbose)
         self._calc_fm(km=km, verbose=verbose)
 
-        Fo = round(self.φ_compression * self.fm, self.epsilon)
+        basic_comp_cap = round(self.phi_compression * self.fm, self.epsilon)
         if verbose:
-            print(f"φ_compression: {self.φ_compression}")
+            print(f"phi_compression: {self.phi_compression}")
             print(
-                "Fo = ", round(Fo, 2), "MPa", "(Basic Compressive Capacity Cl 7.3.2(2))"
+                f"basic_compressive_capacity = {round(basic_comp_cap, 2)} MPa \
+                (Basic Compressive Capacity Cl 7.3.2(2))"
             )
-        return Fo
+        return basic_comp_cap
 
     def compression_capacity(
         self,
@@ -74,46 +68,49 @@ class Clay(masonry.Masonry):
         if compression_load_type not in [1, 2, 3]:
             raise ValueError(
                 """compression_load_type undefined, refer AS 3700 Cl 7.3.3.3.
-                              Options are  1: concrete slab, 2: other systems as defined in Table 7.1,
-                              3: wall with load applied to the face as defined in Table 7.1"""
+                    Options are:
+                        1: concrete slab
+                        2: other systems as defined in Table 7.1,
+                        3: wall with load applied to the face as defined in Table 7.1"""
             )
         if simple_av is None:
             raise ValueError(
-                "simple_av undefined, refer AS 3700 Cl 7.3.3.4, set to 1 if member is laterally supported along top edge, else 2.5"
+                "simple_av undefined, refer AS 3700 Cl 7.3.3.4."
+                "Set to 1 if member is laterally supported along top edge, else 2.5"
             )
         if kt is None:
             raise ValueError(
                 "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
             )
 
-        Fo = self.basic_compressive_capacity(verbose)
+        basic_comp_cap = self.basic_compressive_capacity(verbose)
 
-        Srs = (simple_av * self.height) / (kt * self.thickness)
+        srs = (simple_av * self.height) / (kt * self.thickness)
         if verbose:
             print("\nBuckling capacity:")
-            print(f"Srs = {Srs:.2f} (Simplified slenderness ratio Cl 7.3.3.3)")
+            print(f"Srs = {srs:.2f} (Simplified slenderness ratio Cl 7.3.3.3)")
 
         if compression_load_type == 1:
-            k = min(0.67 - 0.02 * (Srs - 14), 0.67)
+            k = min(0.67 - 0.02 * (srs - 14), 0.67)
             if verbose:
                 print("Load type: Concrete slab over")
         elif compression_load_type == 2:
-            k = min(0.67 - 0.025 * (Srs - 10), 0.67)
+            k = min(0.67 - 0.025 * (srs - 10), 0.67)
             if verbose:
                 print("Load type: Other systems (Table 7.1)")
         elif compression_load_type == 3:
-            k = min(0.067 - 0.002 * (Srs - 14), 0.067)
+            k = min(0.067 - 0.002 * (srs - 14), 0.067)
             if verbose:
                 print("Load type: Load applied to face of wall (Table 7.1)")
         else:
             raise ValueError("")
 
-        kFo = k * Fo * self.length * self.thickness * 1e-3
+        simple_comp_cap = k * basic_comp_cap * self.length * self.thickness * 1e-3
         if verbose:
             print(f"k: {k}")
-            print(f"Simple compression capacity kFo: {kFo:.2f}")
+            print(f"Simple compression capacity kFo: {simple_comp_cap:.2f}")
 
-        return kFo
+        return simple_comp_cap
 
     def refined_compression(
         self,
@@ -146,7 +143,7 @@ class Clay(masonry.Masonry):
 
         Returns:
             dict: {
-                'Crushing': kbFo,
+                'Crushing': crushing_compressive_capacity,
                 'Buckling': kFo,
             }
         """
@@ -158,21 +155,25 @@ class Clay(masonry.Masonry):
                 f"effective length of wall used in calculation: {effective_length} mm"
             )
 
-        Fo = self.basic_compressive_capacity(verbose)
+        basic_comp_cap = self.basic_compressive_capacity(verbose)
 
         e1, e2 = self._calc_e1_e2(e1, e2, w_left, w_direct, w_right, verbose)
 
         k_local_crushing = round(1 - 2 * e1 / self.thickness, self.epsilon)
-        kbFo = round(
-            Fo * k_local_crushing * effective_length * self.thickness * 1e-3,
+        crushing_comp_cap = round(
+            basic_comp_cap
+            * k_local_crushing
+            * effective_length
+            * self.thickness
+            * 1e-3,
             self.epsilon,
         )
         if verbose:
             print("\nCrushing capacity:")
             print(f"  k (crushing): {k_local_crushing:.3f}")
-            print(f"  kbFo = {kbFo} kN")
+            print(f"  crushing_compressive_capacity = {crushing_comp_cap} kN")
 
-        Sr_vertical, Sr_horizontal = self._calc_refined_slenderness(
+        sr_vertical, sr_horizontal = self._calc_refined_slenderness(
             refined_ah=refined_ah,
             refined_av=refined_av,
             kt=kt,
@@ -181,10 +182,10 @@ class Clay(masonry.Masonry):
         )
 
         k_lateral_horz = self._calc_refined_k_lateral(
-            e1=e1, e2=e2, Sr=Sr_horizontal, verbose=verbose
+            e1=e1, e2=e2, sr=sr_horizontal, verbose=verbose
         )
         k_lateral_vert = self._calc_refined_k_lateral(
-            e1=e1, e2=e2, Sr=Sr_vertical, verbose=verbose
+            e1=e1, e2=e2, sr=sr_vertical, verbose=verbose
         )
 
         if k_lateral_horz < k_lateral_vert and k_lateral_horz <= 0.2:
@@ -192,16 +193,17 @@ class Clay(masonry.Masonry):
         else:
             k_lateral = k_lateral_vert
 
-        kFo = round(
-            Fo * k_lateral * effective_length * self.thickness * 1e-3, self.epsilon
+        buckling_comp_cap = round(
+            basic_comp_cap * k_lateral * effective_length * self.thickness * 1e-3,
+            self.epsilon,
         )
         if verbose:
             print("\nBuckling capacity:")
             print(f"  k (buckling): {k_lateral}")
             print(f"  Effective length: {effective_length:.1f} mm")
-            print(f"  kFo = {kFo} kN")
+            print(f"  kFo = {buckling_comp_cap} kN")
 
-        return {"Crushing": kbFo, "Buckling": kFo}
+        return {"Crushing": crushing_comp_cap, "Buckling": buckling_comp_cap}
 
     def concentrated_load(
         self,
@@ -225,7 +227,9 @@ class Clay(masonry.Masonry):
             refined_av (float): Coefficient for vertical restraint.
             refined_ah (float): Coefficient for horizontal restraint.
             kt (float): Coefficient for engaged piers.
-            w_left, w_direct, w_right (float): Applied loads (kN) from left, right and center based on applied slab loading. May be overriden by setting e1, e2.
+            w_left, w_direct, w_right (float): Applied loads (kN) from left,
+                        right and center based on applied slab loading.
+                        May be overriden by setting e1, e2.
             e1, e2 (float): End eccentricities (mm).
             dist_to_return (float): Distance to return wall (mm).
             effective_length (float): Length of wall used in calculations (mm).
@@ -239,7 +243,7 @@ class Clay(masonry.Masonry):
             }
         """
 
-        Fo = self.basic_compressive_capacity(verbose=False)
+        basic_comp_cap = self.basic_compressive_capacity(verbose=False)
 
         effective_length = self._calc_effective_compression_length(
             bearing_length=bearing_length, dist_to_end=dist_to_end, verbose=verbose
@@ -264,11 +268,11 @@ class Clay(masonry.Masonry):
             effective_length=effective_length,
             verbose=verbose,
         )
-        kbFo = kb * Fo * bearing_length * bearing_width * 1e-3
+        bearing_comp_cap = kb * basic_comp_cap * bearing_length * bearing_width * 1e-3
         if verbose:
-            print(f"kbFo: {kbFo} KN")
+            print(f"kbFo: {bearing_comp_cap} KN")
 
-        capacity["Bearing"] = kbFo
+        capacity["Bearing"] = bearing_comp_cap
 
         return capacity
 
@@ -283,7 +287,8 @@ class Clay(masonry.Masonry):
 
         if dist_to_end is None:
             raise ValueError(
-                "dist_to_end not set. This is defined as the shortest distance from the edge of the bearing area to "
+                "dist_to_end not set. This is defined as the shortest distance "
+                "from the edge of the bearing area to "
                 "the edge of the wall, refer AS3700 Cl 7.3.5.4."
             )
 
@@ -312,7 +317,8 @@ class Clay(masonry.Masonry):
             )
         elif self.bedding_type is False and self.mortar_class != 3:
             raise ValueError(
-                "Face shell bedding_type is only available for mortar class M3. Change bedding_type or mortar_class"
+                "Face shell bedding_type is only available for mortar class M3. "
+                "Change bedding_type or mortar_class"
             )
         elif verbose:
             print(
@@ -345,7 +351,7 @@ class Clay(masonry.Masonry):
             )
 
         self.Ab = self.length * self.thickness
-        self.V0 = self.φ_shear * self.fms_horizontal * self.Ab * 1e-3
+        self.V0 = self.phi_shear * self.fms_horizontal * self.Ab * 1e-3
         print(
             f"V0, the shear bond strength of section: {self.V0} KN. To be taken as 0 at interfaces with DPC/flashings etc."
         )
@@ -407,65 +413,68 @@ class Clay(masonry.Masonry):
     ) -> tuple[float, float]:
         if refined_av is None:
             raise ValueError(
-                "refined_av undefined, refer AS 3700 Cl 7.3.4.3, \n0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom\n"
+                "refined_av undefined, refer AS 3700 Cl 7.3.4.3. \n"
+                "0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom\n"
                 "0.85 for a wall laterally supported at top and bottom and partially rotationally restrained at one end\n"
                 "1.0 for a wall laterally supported at both top and bottom\n"
                 "1.5 for a wall laterally supported and partially rotationally restrained at the bottom and partially laterally supported at the top\n"
                 "2.5 for freestanding walls"
             )
-        elif verbose:
+        if verbose:
             print(f"av: {refined_av}")
 
         if refined_ah is None:
             raise ValueError(
-                "refined_ah undefined, refer AS3700 Cl 7.3.4.3, 1.0 for a wall laterally supported along both vertical edges,"
+                "refined_ah undefined, refer AS3700 Cl 7.3.4.3." \
+                " 1.0 for a wall laterally supported along both vertical edges,"
                 " 2.5 for one edge. If no vertical edges supported set as 0"
             )
-        elif verbose:
+        if verbose:
             print(f"ah: {refined_ah}")
 
         if kt is None:
             raise ValueError(
                 "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
             )
-        elif verbose:
+        if verbose:
             print(f"kt: {kt}")
 
         if refined_ah != 0 and dist_to_return is None:
             raise ValueError(
-                "dist_to_return undefined, for one edge restrained, this is the distance to the return wall. If both edges restrained, it is the"
-                " distance between return walls"
+                "dist_to_return undefined. " \
+                "For one edge restrained, this is the distance to the return wall. " \
+                "If both edges restrained, it is thedistance between return walls"
             )
-        elif dist_to_return is not None and verbose:
+        if dist_to_return is not None and verbose:
             print(
                 f"distance to return wall or between lateral supports {dist_to_return} mm"
             )
 
-        Sr_vertical = round(
+        sr_vertical = round(
             (refined_av * self.height) / (kt * self.thickness), self.epsilon
         )
         if verbose:
-            print(f"Sr (vertical): {Sr_vertical}")
+            print(f"Sr (vertical): {sr_vertical}")
 
-        Sr_horizontal = float("inf")
+        sr_horizontal = float("inf")
 
         if refined_ah != 0:
-            Sr_horizontal = round(
+            sr_horizontal = round(
                 0.7
                 / self.thickness
                 * math.sqrt(refined_av * self.height * refined_ah * dist_to_return),
                 self.epsilon,
             )
         if verbose:
-            print(f"Sr (horizontal) = {Sr_horizontal}")
+            print(f"Sr (horizontal) = {sr_horizontal}")
 
-        return Sr_vertical, Sr_horizontal
+        return sr_vertical, sr_horizontal
 
     def _calc_refined_k_lateral(
         self,
         e1: float | None = None,
         e2: float | None = None,
-        Sr: float | None = None,
+        sr: float | None = None,
         verbose=True,
     ) -> float:
         """Calculates k for lateral instability in accordance with AS3700 Cl 7.3.4.5(1)"""
@@ -475,12 +484,12 @@ class Clay(masonry.Masonry):
             * (1 + e2 / e1)
             * (
                 (1 - 2.083 * e1 / self.thickness)
-                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * Sr - 8)
+                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
             )
             + 0.5
             * (1 - 0.6 * e1 / self.thickness)
             * (1 - e2 / e1)
-            * (1.18 - 0.03 * Sr),
+            * (1.18 - 0.03 * sr),
             self.epsilon,
         )
         if verbose:
@@ -541,9 +550,9 @@ class Clay(masonry.Masonry):
 
         if self.fmt > 0:
             Mcv = min(
-                self.φ_bending * self.fmt * self.Zd * 1e-6
+                self.phi_bending * self.fmt * self.Zd * 1e-6
                 + min(self.fd, 0.36) * self.Zd * 1e-6,
-                3 * self.φ_bending * self.fmt * self.Zd * 1e-6,
+                3 * self.phi_bending * self.fmt * self.Zd * 1e-6,
             )
         else:
             Mcv = self.fd * self.Zd * 1e-6

@@ -187,8 +187,8 @@ class TestRefinedCompression:
             length=600, height=2700, thickness=110, fuc=20, mortar_class=4, bedding_type=True)
         capacity = wall.refined_compression(
             refined_av=0.75, kt=1, w_left=0, w_direct=0, w_right=10, refined_ah=0)
-        assert (capacity['Buckling'] == 150.57)
-        assert (capacity['Crushing'] == 296.72)
+        assert capacity['Buckling'] == 150.57
+        assert capacity['Crushing'] == 296.72
 
     def test_refined_compression_2(self):
         """
