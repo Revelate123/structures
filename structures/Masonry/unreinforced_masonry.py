@@ -159,7 +159,7 @@ class Clay:
 
         basic_comp_cap = self.basic_compressive_capacity(verbose)
 
-        if e1 is not None and e2 is not None:
+        if e1 is None and e2 is None:
             e1, e2 = self._calc_e1_e2(w_left, w_direct, w_right, verbose)
 
         k_local_crushing = round(1 - 2 * e1 / self.thickness, self.epsilon)

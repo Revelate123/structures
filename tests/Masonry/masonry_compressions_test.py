@@ -141,6 +141,15 @@ class TestRefinedCompression:
     def test_small_eccentricity(self):
         pass
 
+    def test_explicit_small_eccentricity(self):
+        pass
+
+    def test_explicit_large_eccentricity(self):
+        pass
+
+    def test_explicit_double_curvature_eccentricity(self):
+        pass
+
     def test_horz_capacity_limited_by_Fo(self):
         pass
 
