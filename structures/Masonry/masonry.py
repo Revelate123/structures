@@ -21,7 +21,6 @@ Length: mm
 Forces: KN\n"""
             )
             self.Zd = self.length * self.thickness**2 / 6
-
             self.Zu = self.Zp = self.Zd
             self.Zd_horz = self.height * self.thickness**2 / 6
             self.Zu_horz = self.Zp_horz = self.Zd_horz

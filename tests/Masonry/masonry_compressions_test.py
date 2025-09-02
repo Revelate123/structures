@@ -1,9 +1,11 @@
 import pytest
 import structures.Masonry.unreinforced_masonry as unreinforced_masonry
 
+
 class TestCompression:
     def test_compression(self):
         pass
+
 
 class TestBasicCompressiveCapacity:
     def test_standard_M3_brick(self):
@@ -15,8 +17,9 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 6.261 = 4.70 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 4.70)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=20, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 4.70)
 
     def test_standard_M4_brick(self):
         """
@@ -27,9 +30,10 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 8.944 = 6.71 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 4,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 6.71)
-    
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=20, mortar_class=4, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 6.71)
+
     def test_low_compressive_strength_brick(self):
         """
         km = 1.4 (For clay Full Bedding M3 mortar class)
@@ -39,8 +43,9 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 3.130 = 2.35 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 5, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 2.35)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=5, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 2.35)
 
     def test_high_compressive_strength_brick(self):
         """
@@ -51,8 +56,9 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 10.844 = 8.13 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc =60, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 8.13)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=60, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 8.13)
 
     def test_face_shell_bedding_type(self):
         """
@@ -63,17 +69,20 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 7.155 = 5.37 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, fuc = 20, mortar_class= 3,bedding_type=False)
-        assert(wall.basic_compressive_capacity() == 5.37)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=20, mortar_class=3, bedding_type=False)
+        assert (wall.basic_compressive_capacity() == 5.37)
 
     def test_fails_for_M4_face_shell_bedding_type(self):
         with pytest.raises(ValueError):
-            wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100,fuc=20,mortar_class=4,bedding_type=False)
+            wall = unreinforced_masonry.Clay(
+                length=1000, height=1000, thickness=100, fuc=20, mortar_class=4, bedding_type=False)
             wall.basic_compressive_capacity()
 
     def test_fails_for_M1_mortar(self):
         with pytest.raises(ValueError):
-            wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100,fuc=20,mortar_class=1,bedding_type=True)
+            wall = unreinforced_masonry.Clay(
+                length=1000, height=1000, thickness=100, fuc=20, mortar_class=1, bedding_type=True)
             wall.basic_compressive_capacity()
 
     def test_90_brick_10_joint(self):
@@ -85,8 +94,9 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 6.261 = 4.93 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 90, tj=10, hu=90, fuc = 20, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 4.93)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=90, tj=10, hu=90, fuc=20, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 4.93)
 
     def test_150_brick_12_joint(self):
         """
@@ -97,8 +107,9 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 7.206 = 5.40 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, tj=12,hu=150,  fuc = 20, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 5.40)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, tj=12, hu=150,  fuc=20, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 5.40)
 
     def test_200_brick_5_joint(self):
         """
@@ -109,16 +120,18 @@ class TestBasicCompressiveCapacity:
         Phi = 0.75
         Fo = phi * f'm = 0.75 * 8.14 = 6.11 MPa
         """
-        wall = unreinforced_masonry.Clay(length=1000, height=1000, thickness = 100, tj=5,hu=200,  fuc = 20, mortar_class= 3,bedding_type=True)
-        assert(wall.basic_compressive_capacity() == 6.11)
-    
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, tj=5, hu=200,  fuc=20, mortar_class=3, bedding_type=True)
+        assert (wall.basic_compressive_capacity() == 6.11)
+
 
 class TestSimplifiedCompression:
     def test(self):
         pass
 
+
 class TestRefinedCompression:
-    
+
     def test_face_shell_bedding(self):
         pass
 
@@ -127,7 +140,7 @@ class TestRefinedCompression:
 
     def test_small_eccentricity(self):
         pass
-    
+
     def test_horz_capacity_limited_by_Fo(self):
         pass
 
@@ -145,7 +158,7 @@ class TestRefinedCompression:
 
     def test_cantilever_wall(self):
         pass
-    
+
     def test_refined_compression(self):
         """
         Scenario:
@@ -170,11 +183,13 @@ class TestRefinedCompression:
         Fo = 6.71MPa * 66,000mm2 * 0.67 = 296.72
 
         """
-        wall = unreinforced_masonry.Clay(length=600, height=2700, thickness=110, fuc = 20, mortar_class=4, bedding_type=True)
-        capacity = wall.refined_compression(refined_av=0.75, kt=1, W_left=0,W_direct=0,W_right=10,refined_ah=0)
-        assert(capacity['Buckling'] == 150.57)
-        assert(capacity['Crushing'] == 296.72)
-    
+        wall = unreinforced_masonry.Clay(
+            length=600, height=2700, thickness=110, fuc=20, mortar_class=4, bedding_type=True)
+        capacity = wall.refined_compression(
+            refined_av=0.75, kt=1, w_left=0, w_direct=0, w_right=10, refined_ah=0)
+        assert (capacity['Buckling'] == 150.57)
+        assert (capacity['Crushing'] == 296.72)
+
     def test_refined_compression_2(self):
         """
         Fd <= kFo
@@ -194,9 +209,10 @@ class TestRefinedCompression:
         kFo = 217.8 KN * 0.34255 = 74.6KN
 
         """
-        wall = unreinforced_masonry.Clay(length=600, height=2700, thickness=110, fuc = 10, mortar_class=3)
-        #capacity = wall.refined_compression(refined_av=0.75, refined_ah=0,kt=1)
-    
+        wall = unreinforced_masonry.Clay(
+            length=600, height=2700, thickness=110, fuc=10, mortar_class=3)
+        # capacity = wall.refined_compression(refined_av=0.75, refined_ah=0,kt=1)
+
     def test_refined_compression_3(self):
         """
         Fd <= kFo
@@ -216,17 +232,41 @@ class TestRefinedCompression:
         kFo = 544.5 KN * 0.34255 = 186.5KN
 
         """
-        #wall = masonry.UnreinforcedMasonry(length=1500, height=2700, thickness=110, av=0.75, kt = 1, Ab =0 , fuc=10, mortar_class=3)
-        #assert(round(wall.refined_compression(),1) == 186.5)
-    
+        # wall = masonry.UnreinforcedMasonry(length=1500, height=2700, thickness=110, av=0.75, kt = 1, Ab =0 , fuc=10, mortar_class=3)
+        # assert(round(wall.refined_compression(),1) == 186.5)
+
     def test_define_bearing_area(self):
         pass
+
 
 class TestConcentratedLoad:
     def test_concetrated_load_1(self):
         """
-        
+
         """
-        wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100, fuc=20, mortar_class=3,bedding_type=True)
-        bearing_cap = wall.concentrated_load(bearing_length=1000,dist_to_end=0,bearing_width=100,W_left=0,W_direct=0,W_right=0,refined_av=0.75,refined_ah=0,kt=1)
-        #assert(bearing_cap == 600)
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=20, mortar_class=3, bedding_type=True)
+        capacity = wall.concentrated_load(bearing_length=1000, dist_to_end=0, bearing_width=100,
+                                          w_left=0, w_direct=0, w_right=0, refined_av=0.75, refined_ah=0, kt=1)
+        # assert(bearing_cap == 600)
+
+    def test_short_wall(self):
+        pass
+
+    def test_long_wall(self):
+        pass
+
+    def test_large_bearing_area(self):
+        pass
+
+    def test_small_bearing_area(self):
+        pass
+
+    def test_crushing_governs(self):
+        pass
+
+    def test_buckling_governs(self):
+        pass
+
+    def test_bearing_governs(self):
+        pass
