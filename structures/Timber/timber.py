@@ -8,15 +8,17 @@ class TimberBeam:
     length: float | None = None
     depth: float | None = None
     breadth: float | None = None
-    φ_shear: float = 0.1
-    φ_bending: float | None = None
-    φ_compression: float = 0.1
+    phi_shear: float = 0.1
+    phi_bending: float | None = None
+    phi_compression: float = 0.1
     fb: float | None = None
+    fs: float | None = None
 
     def __post_init__(self):
         if self.length is None:
             raise ValueError(
-                "length is not set. This is the length of beam being considered between supports in mm."
+                "length is not set. "
+                "This is the length of beam being considered between supports in mm."
             )
         if self.depth is None:
             raise ValueError("depth is not set. This is the depth of the beam in mm.")
@@ -26,8 +28,8 @@ class TimberBeam:
             )
         if self.fb is None:
             raise ValueError("fb is not set. This is in MPa")
-        if self.φ_bending is None:
-            raise ValueError("φ_bending not set.")
+        if self.phi_bending is None:
+            raise ValueError("phi_bending not set.")
 
     def in_plane_bending(
         self,
@@ -39,13 +41,13 @@ class TimberBeam:
         nmem=None,
         spacing=None,
         span=None,
-        out_of_plane: bool | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
         Lay: float | None = None,
         Z: float | None = None,
         verbose=True,
     ):
+
         return self._bending(
             loads=loads,
             seasoned=seasoned,
@@ -73,7 +75,6 @@ class TimberBeam:
         nmem=None,
         spacing=None,
         span=None,
-        out_of_plane: bool | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
         Lay: float | None = None,
@@ -100,7 +101,6 @@ class TimberBeam:
 
     def shear(
         self,
-        loads=[],
         seasoned=None,
         moisture_content=None,
         latitude=None,
@@ -113,8 +113,10 @@ class TimberBeam:
         Args:
             loads: List of applied loads in kN.
             seasoned: True if seasoned timber is used and false otherwise.
-            moisture_content: precentage moisture content, given as whole numbers, e.g. for 15% set as 15.
-            latitude: True if located in coastal Queensland north of latitude 25 degrees south or 16 degrees south elsewhere, and False otherwise.
+            moisture_content: precentage moisture content, given as whole numbers,
+                                 e.g. for 15% set as 15.
+            latitude: True if located in coastal Queensland north of latitude 25 degrees south
+                                 or 16 degrees south elsewhere, and False otherwise.
             verbose: If True, print internal calculation details.
 
         Returns:
@@ -129,7 +131,7 @@ class TimberBeam:
         if verbose:
             print(f"As: {As} mm2")
 
-        Vd = self.φ_shear * k4 * k6 * self.fs * As
+        Vd = self.phi_shear * k4 * k6 * self.fs * As
         if verbose == True:
             print(f"Vd = {Vd} KN (Not including k1)")
         return Vd
@@ -182,7 +184,7 @@ class TimberBeam:
         )
         Z = self._calc_Z(out_of_plane=out_of_plane, verbose=verbose)
 
-        Md = self.φ_bending * k4 * k6 * k9 * k12 * self.fb * Z * 1e-6
+        Md = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * Z * 1e-6
         if verbose == True:
             print(f"Md: {Md} KNm (Not inlcuding k1)")
         return Md
@@ -472,7 +474,7 @@ class TimberColumn(TimberBeam):
             verbose=verbose,
         )
         Ac = self.breadth * self.depth
-        Ndc = self.φ_compression * k4 * k6 * k12 * fc * Ac
+        Ndc = self.phi_compression * k4 * k6 * k12 * fc * Ac
         if verbose:
             print(f"Ndc: {Ndc} KNm")
         return Ndc

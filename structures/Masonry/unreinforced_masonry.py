@@ -1,32 +1,33 @@
+"""
+This module performs engineering calculations in accordance with
+AS3700:2018 for unreinforced masonry
+"""
+
 import math
 from dataclasses import dataclass
 
+
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class Clay:
+    """
+    asdasfdasd
+    """
+
     length: float | None = None
     height: float | None = None
     thickness: float | None = None
     fuc: float | None = None
     mortar_class: float | None = None
+    bedding_type: bool | None = None
     fmt: float | None = None
-    fd: float = 0
-    fm: float | None = None
-    fmb: float | None = None
     fut: float = 0.8
-    kv: float | None = None
     hu: float = 76
     tj: float = 10
-    tu: float = 110
-    lu: float = 230
-    Ld: float | None = None
     phi_shear: float = 0.6
     phi_bending: float = 0.6
     phi_compression: float = 0.75
     density: float = 19
-    ah: float | None = None
-    dist_to_return: float | None = None
-    bedding_type: bool | None = None
-    kh: float | None = None
     epsilon: float = 2
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
@@ -157,7 +158,8 @@ class Clay:
 
         basic_comp_cap = self.basic_compressive_capacity(verbose)
 
-        e1, e2 = self._calc_e1_e2(e1, e2, w_left, w_direct, w_right, verbose)
+        if e1 is not None and e2 is not None:
+            e1, e2 = self._calc_e1_e2(w_left, w_direct, w_right, verbose)
 
         k_local_crushing = round(1 - 2 * e1 / self.thickness, self.epsilon)
         crushing_comp_cap = round(
@@ -264,7 +266,7 @@ class Clay:
 
         kb = self._calc_kb(
             a1=dist_to_end,
-            Ads=bearing_length * bearing_width,
+            bearing_area=bearing_length * bearing_width,
             effective_length=effective_length,
             verbose=verbose,
         )
@@ -306,7 +308,7 @@ class Clay:
     def _calc_kb(
         self,
         a1: float | None = None,
-        Ads: float | None = None,
+        bearing_area: float | None = None,
         effective_length: float | None = None,
         verbose: bool = True,
     ) -> float:
@@ -325,14 +327,18 @@ class Clay:
                 f"bedding_type: {"Full" if self.bedding_type is True else "Face shell"}"
             )
 
-        if Ads is None:
+        if bearing_area is None:
             raise ValueError(
-                "Ads not set. This is the bearing area of the concentrated load."
+                "bearing_area not set. This is the bearing area of the concentrated load."
             )
-        Ade = effective_length * self.thickness
+        dispersed_area = effective_length * self.thickness
 
         if self.bedding_type:
-            kb = 0.55 * (1 + 0.5 * a1 / self.length) / ((Ads / Ade) ** 0.33)
+            kb = (
+                0.55
+                * (1 + 0.5 * a1 / self.length)
+                / ((bearing_area / dispersed_area) ** 0.33)
+            )
             kb = min(kb, 1.5 + a1 / self.length)
             kb = round(max(kb, 1), self.epsilon)
         else:
@@ -363,31 +369,19 @@ class Clay:
 
     def _calc_e1_e2(
         self,
-        e1: float | None = None,
-        e2: float | None = None,
         w_left: float | None = None,
         w_direct: float | None = None,
         w_right: float | None = None,
         verbose: bool = True,
     ) -> tuple[float, float]:
-        if (w_direct is None or w_left is None or w_right is None) and (
-            e1 is None and e2 is None
-        ):
+        if w_direct is None or w_left is None or w_right is None:
             raise ValueError(
-                "w_direct, w_left, w_right undefined, refer AS 3700 Cl 7.3.4.4. Where w_direct is load applied with eccentricity of 0"
-                " w_left and w_right is load applied with eccentricity of 1/3 bearing area of the depth of the bearing area, assuming bearing is across the full "
+                "w_direct, w_left, w_right undefined, refer AS 3700 Cl 7.3.4.4. "
+                "Where w_direct is load applied with eccentricity of 0"
+                "w_left and w_right is load applied with eccentricity of 1/3 bearing area of"
+                " the depth of the bearing area, assuming bearing is across the full "
                 "thickness of the wall. Alternatively, provide values of e1 and e2"
             )
-        elif not (e1 is None and e2 is None):
-            raise ValueError("e1 or e2 defined but not the other")
-        elif not (w_direct is None and w_left is None and w_right is None) and not (
-            e1 is None and e2 is None
-        ):
-            raise ValueError(
-                "w_direct/w_left/w_right and e1/e2 defined, use only one system"
-            )
-        if e1 and e2:
-            return
         if sum([w_left, w_direct, w_right]) == 0:
             w_direct = 1
 
@@ -414,10 +408,13 @@ class Clay:
         if refined_av is None:
             raise ValueError(
                 "refined_av undefined, refer AS 3700 Cl 7.3.4.3. \n"
-                "0.75 for a wall laterally supported and partially rotationally restrained at both top and bottom\n"
-                "0.85 for a wall laterally supported at top and bottom and partially rotationally restrained at one end\n"
+                "0.75 for a wall laterally supported and partially rotationally"
+                " restrained at both top and bottom\n"
+                "0.85 for a wall laterally supported at top and bottom and "
+                "partially rotationally restrained at one end\n"
                 "1.0 for a wall laterally supported at both top and bottom\n"
-                "1.5 for a wall laterally supported and partially rotationally restrained at the bottom and partially laterally supported at the top\n"
+                "1.5 for a wall laterally supported and partially rotationally"
+                "restrained at the bottom and partially laterally supported at the top\n"
                 "2.5 for freestanding walls"
             )
         if verbose:
@@ -425,7 +422,7 @@ class Clay:
 
         if refined_ah is None:
             raise ValueError(
-                "refined_ah undefined, refer AS3700 Cl 7.3.4.3." \
+                "refined_ah undefined, refer AS3700 Cl 7.3.4.3."
                 " 1.0 for a wall laterally supported along both vertical edges,"
                 " 2.5 for one edge. If no vertical edges supported set as 0"
             )
@@ -441,8 +438,8 @@ class Clay:
 
         if refined_ah != 0 and dist_to_return is None:
             raise ValueError(
-                "dist_to_return undefined. " \
-                "For one edge restrained, this is the distance to the return wall. " \
+                "dist_to_return undefined. "
+                "For one edge restrained, this is the distance to the return wall. "
                 "If both edges restrained, it is thedistance between return walls"
             )
         if dist_to_return is not None and verbose:
@@ -618,10 +615,10 @@ class Clay:
                 f"kh: {kh}, based on a masonry unit height of {self.hu} mm and a joint thickness of {self.tj} mm"
             )
 
-        self.fmb = round(math.sqrt(self.fuc) * km, self.epsilon)
+        fmb = round(math.sqrt(self.fuc) * km, self.epsilon)
         if verbose:
-            print(f"fmb: {self.fmb} MPa")
+            print(f"fmb: {fmb} MPa")
 
-        self.fm = round(kh * self.fmb, self.epsilon)
+        self.fm = round(kh * fmb, self.epsilon)
         if verbose:
             print(f"fm: {self.fm} MPa")
