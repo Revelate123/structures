@@ -7,8 +7,20 @@ class TestInPlaneBending:
         """
         Md =
         """
-        beam = timber.Beam()
-        assert 1 == 2
+        beam = timber.Beam(length=1000, depth=240, breadth=90, fb=12, phi_bending=0.7)
+        assert (
+            beam.in_plane_bending(
+                seasoned=True,
+                moisture_content=15,
+                latitude=False,
+                ncom=1,
+                nmem=1,
+                pb=1,
+                restraint_location=1,
+                Lay=1000,
+            )
+            is not None
+        )
 
     def test_stocky_beam(self):
         pass

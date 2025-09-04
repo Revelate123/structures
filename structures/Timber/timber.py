@@ -1,4 +1,5 @@
 import math
+from typing import Callable
 
 from dataclasses import dataclass
 
@@ -7,14 +8,15 @@ from dataclasses import dataclass
 class Beam:
     """Class for designing timber beams in accordance with AS1720.1"""
 
-    length: float
-    depth: float
-    breadth: float
-    phi_bending: float
-    fb: float
-    fs: float
-    phi_shear: float = 0.1
-    phi_compression: float = 0.1
+    length: float | None = None
+    depth: float | None = None
+    breadth: float | None = None
+    phi_bending: float | None = None
+    fb: float | None = None
+    fs: float | None = None
+    phi_shear: float | None = 0.1
+    phi_compression: float | None = 0.1
+    epsilon: int = 2
 
     def __post_init__(self):
         if self.length is None:
@@ -48,6 +50,8 @@ class Beam:
         Z: float | None = None,
         verbose=True,
     ):
+        assert self.depth is not None
+        assert self.breadth is not None
 
         return self._bending(
             seasoned=seasoned,
@@ -80,6 +84,9 @@ class Beam:
         Z: float | None = None,
         verbose=True,
     ):
+
+        assert self.depth is not None
+        assert self.breadth is not None
 
         return self._bending(
             seasoned=seasoned,
@@ -129,10 +136,10 @@ class Beam:
         if verbose:
             print(f"As: {As} mm2")
 
-        Vd = self.phi_shear * k4 * k6 * self.fs * As
+        vd = self.phi_shear * k4 * k6 * self.fs * As
         if verbose == True:
-            print(f"Vd = {Vd} KN (Not including k1)")
-        return Vd
+            print(f"Vd = {vd} KN (Not including k1)")
+        return vd
 
     def _bending(
         self,
@@ -436,7 +443,7 @@ class Column(Beam):
         moisture_content=None,
         latitude=None,
         fc=None,
-        slenderness: function | None = None,
+        slenderness: Callable | None = None,
         g13=None,
         pc=None,
         La=None,
@@ -479,7 +486,7 @@ class Column(Beam):
         pc: float | None = None,
         g13: float | None = None,
         La: float | None = None,
-        slenderness: function | None = None,
+        slenderness: Callable | None = None,
         out_of_plane: bool | None = None,
         verbose: bool = True,
     ):
