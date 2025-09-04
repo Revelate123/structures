@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TimberBeam:
+class Beam:
     """Class for designing timber beams in accordance with AS1720.1"""
 
     length: float
@@ -419,7 +419,7 @@ class TimberBeam:
         return Z
 
 
-class TimberColumn(TimberBeam):
+class Column(Beam):
 
     def out_of_plane_compression(self):
         pass
