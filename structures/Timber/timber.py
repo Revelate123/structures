@@ -5,14 +5,16 @@ from dataclasses import dataclass
 
 @dataclass
 class TimberBeam:
-    length: float | None = None
-    depth: float | None = None
-    breadth: float | None = None
+    """Class for designing timber beams in accordance with AS1720.1"""
+
+    length: float
+    depth: float
+    breadth: float
+    phi_bending: float
+    fb: float
+    fs: float
     phi_shear: float = 0.1
-    phi_bending: float | None = None
     phi_compression: float = 0.1
-    fb: float | None = None
-    fs: float | None = None
 
     def __post_init__(self):
         if self.length is None:
@@ -33,14 +35,13 @@ class TimberBeam:
 
     def in_plane_bending(
         self,
-        loads=[],
-        seasoned=None,
-        moisture_content=None,
-        latitude=None,
-        ncom=None,
-        nmem=None,
-        spacing=None,
-        span=None,
+        seasoned: bool | None = None,
+        moisture_content: float | None = None,
+        latitude: bool | None = None,
+        ncom: int | None = None,
+        nmem: int | None = None,
+        spacing: float | None = None,
+        span: float | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
         Lay: float | None = None,
@@ -49,7 +50,6 @@ class TimberBeam:
     ):
 
         return self._bending(
-            loads=loads,
             seasoned=seasoned,
             moisture_content=moisture_content,
             latitude=latitude,
@@ -61,14 +61,13 @@ class TimberBeam:
             restraint_location=restraint_location,
             Lay=Lay,
             Z=Z,
-            out_of_plane=False if self.depth > self.breadth else True,
+            out_of_plane=self.depth < self.breadth,
             verbose=verbose,
         )
 
     def out_of_plane_bending(
         self,
-        loads=[],
-        seasoned=None,
+        seasoned: bool | None = None,
         moisture_content=None,
         latitude=None,
         ncom=None,
@@ -83,7 +82,6 @@ class TimberBeam:
     ):
 
         return self._bending(
-            loads=loads,
             seasoned=seasoned,
             moisture_content=moisture_content,
             latitude=latitude,
@@ -95,13 +93,13 @@ class TimberBeam:
             restraint_location=restraint_location,
             Lay=Lay,
             Z=Z,
-            out_of_plane=True if self.depth > self.breadth else False,
+            out_of_plane=self.depth > self.breadth,
             verbose=verbose,
         )
 
     def shear(
         self,
-        seasoned=None,
+        seasoned: bool | None = None,
         moisture_content=None,
         latitude=None,
         verbose=None,
@@ -138,14 +136,13 @@ class TimberBeam:
 
     def _bending(
         self,
-        loads=[],
-        seasoned=None,
-        moisture_content=None,
-        latitude=None,
-        ncom=None,
-        nmem=None,
-        spacing=None,
-        span=None,
+        seasoned: bool | None = None,
+        moisture_content: float | None = None,
+        latitude: bool | None = None,
+        ncom: int | None = None,
+        nmem: int | None = None,
+        spacing: float | None = None,
+        span: float | None = None,
         out_of_plane: bool | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
@@ -388,8 +385,6 @@ class TimberBeam:
                 S1 = 1.25 * self.depth / self.breadth * (Lay / self.depth) ** 0.5
             if restraint_location == 2 or restraint_location == 3:
                 S1 = (self.depth / self.breadth) ** 1.35 * (Lay / self.depth) ** 0.25
-        else:
-            raise ValueError("_calc_S1 did not find a matching restraint case")
 
         if verbose:
             print(f"S1: {S1}")
