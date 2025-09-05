@@ -6,6 +6,19 @@ AS3700:2018 for unreinforced masonry
 import math
 from dataclasses import dataclass
 
+# ...
+
+def round_half_up(n, decimals=0):
+    """
+    Rounds positive numbers up, as a human would expect. Requires a 'fudge'
+    factor denoted by + 10**-(decimals*2) to account for rounding point errors
+    for example, 5.42 * 0.75 = 4.06499999999999, which would round to 
+    4.06 incorrectly.
+    """
+    if n < 0:
+        raise ValueError("This function should not be used to round negative numbers")
+    multiplier = 10**decimals
+    return math.floor(n * multiplier + 0.5 + 10**-(decimals*2)) / multiplier
 
 # pylint: disable=too-many-instance-attributes
 @dataclass
@@ -37,11 +50,11 @@ class Clay:
         km = self._calc_km(verbose=verbose)
         self._calc_fm(km=km, verbose=verbose)
 
-        basic_comp_cap = round(self.phi_compression * self.fm, self.epsilon)
+        basic_comp_cap = round_half_up(self.phi_compression * self.fm, self.epsilon)
         if verbose:
             print(f"phi_compression: {self.phi_compression}")
             print(
-                f"basic_compressive_capacity = {round(basic_comp_cap, 2)} MPa \
+                f"basic_compressive_capacity = {basic_comp_cap} MPa \
                 (Basic Compressive Capacity Cl 7.3.2(2))"
             )
         return basic_comp_cap
@@ -119,9 +132,6 @@ class Clay:
         refined_av: float | None = None,
         refined_ah: float | None = None,
         kt: float | None = None,
-        w_left: float | None = None,
-        w_direct: float | None = None,
-        w_right: float | None = None,
         e1: float | None = None,
         e2: float | None = None,
         dist_to_return: float | None = None,
@@ -159,11 +169,16 @@ class Clay:
 
         basic_comp_cap = self.basic_compressive_capacity(verbose)
 
-        if e1 is None and e2 is None:
-            e1, e2 = self._calc_e1_e2(w_left, w_direct, w_right, verbose)
+        if e1 is None or e2 is None:
+            raise ValueError(
+                "e1 and/or e2 is not set. "
+                "This is the eccentricity of the applied loads, where" \
+                "e1 is the larger eccentricity of the vertical force"
+            )
+        e1, e2 = self._calc_e1_e2(e1, e2, verbose)
 
-        k_local_crushing = round(1 - 2 * e1 / self.thickness, self.epsilon)
-        crushing_comp_cap = round(
+        k_local_crushing = round_half_up(1 - 2 * e1 / self.thickness, self.epsilon)
+        crushing_comp_cap = round_half_up(
             basic_comp_cap
             * k_local_crushing
             * effective_length
@@ -183,20 +198,25 @@ class Clay:
             dist_to_return=dist_to_return,
             verbose=verbose,
         )
-
+        if verbose:
+            print("Horizontal:")
         k_lateral_horz = self._calc_refined_k_lateral(
             e1=e1, e2=e2, sr=sr_horizontal, verbose=verbose
         )
+        if k_lateral_horz > 0.2:
+            k_lateral_horz = 0.2
+            if verbose:
+                print("k_lateral_horz limited to 0.2 by 7.3.4.3(a) requirement of Fd < 0.2Fd")
+
+        if verbose:
+            print("Vertical:")
         k_lateral_vert = self._calc_refined_k_lateral(
             e1=e1, e2=e2, sr=sr_vertical, verbose=verbose
         )
 
-        if k_lateral_horz < k_lateral_vert and k_lateral_horz <= 0.2:
-            k_lateral = k_lateral_horz
-        else:
-            k_lateral = k_lateral_vert
+        k_lateral = max(k_lateral_horz,k_lateral_vert)
 
-        buckling_comp_cap = round(
+        buckling_comp_cap = round_half_up(
             basic_comp_cap * k_lateral * effective_length * self.thickness * 1e-3,
             self.epsilon,
         )
@@ -213,9 +233,6 @@ class Clay:
         refined_av: float | None = None,
         refined_ah: float | None = None,
         kt: float | None = None,
-        w_left: float | None = None,
-        w_direct: float | None = None,
-        w_right: float | None = None,
         e1: float | None = None,
         e2: float | None = None,
         dist_to_return: float | None = None,
@@ -255,9 +272,6 @@ class Clay:
             refined_av=refined_av,
             refined_ah=refined_ah,
             kt=kt,
-            w_left=w_left,
-            w_direct=w_direct,
-            w_right=w_right,
             e1=e1,
             e2=e2,
             dist_to_return=dist_to_return,
@@ -341,7 +355,7 @@ class Clay:
                 / ((bearing_area / dispersed_area) ** 0.33)
             )
             kb = min(kb, 1.5 + a1 / self.length)
-            kb = round(max(kb, 1), self.epsilon)
+            kb = round_half_up(max(kb, 1), self.epsilon)
         else:
             kb = 1
         if verbose:
@@ -349,10 +363,10 @@ class Clay:
 
         return kb
 
-    def horizontal_shear(self):
-        if self.kv < 0:
+    def horizontal_shear(self, kv:float|None = None):
+        if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
-        if self.fmt < 0:
+        if self.fmt is None:
             raise ValueError(
                 "fmt undefined, fms is calculated using fmt, set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
@@ -370,28 +384,21 @@ class Clay:
 
     def _calc_e1_e2(
         self,
-        w_left: float | None = None,
-        w_direct: float | None = None,
-        w_right: float | None = None,
+        e1: float | None = None,
+        e2: float | None = None,
         verbose: bool = True,
     ) -> tuple[float, float]:
-        if w_direct is None or w_left is None or w_right is None:
-            raise ValueError(
-                "w_direct, w_left, w_right undefined, refer AS 3700 Cl 7.3.4.4. "
-                "Where w_direct is load applied with eccentricity of 0"
-                "w_left and w_right is load applied with eccentricity of 1/3 bearing area of"
-                " the depth of the bearing area, assuming bearing is across the full "
-                "thickness of the wall. Alternatively, provide values of e1 and e2"
-            )
-        if sum([w_left, w_direct, w_right]) == 0:
-            w_direct = 1
+        if e1 < e2:
+            raise ValueError("e1 set to a value less than e2")
+        if e1 < 0:
+            raise ValueError("e1 < 0. e1 should always be positive by defintion"
+            "refer AS3700:2018 Cl 7.3.4.5. If e1 and e2 are opposite, e1 should be"
+            "positive and e2 negative")
 
-        e1 = max(
-            abs(-w_left * self.thickness / 6 + w_right * self.thickness / 6)
-            / (w_left + w_direct + w_right),
-            0.05 * self.thickness,
-        )
-        e2 = e1
+        if abs(e1) < 0.05 * self.thickness:
+            e1 = 0.05 * self.thickness if e1 >= 0 else -0.05 * self.thickness
+        if abs(e2) < 0.05 * self.thickness:
+            e2 = 0.05 * self.thickness if e2 >= 0 else -0.05 * self.thickness
         if verbose:
             print(
                 f"End eccentricity, e1: {e1} mm, e2: {e2} mm, refer AS3700 Cl 7.3.4.4"
@@ -448,7 +455,7 @@ class Clay:
                 f"distance to return wall or between lateral supports {dist_to_return} mm"
             )
 
-        sr_vertical = round(
+        sr_vertical = round_half_up(
             (refined_av * self.height) / (kt * self.thickness), self.epsilon
         )
         if verbose:
@@ -457,7 +464,7 @@ class Clay:
         sr_horizontal = float("inf")
 
         if refined_ah != 0:
-            sr_horizontal = round(
+            sr_horizontal = round_half_up(
                 0.7
                 / self.thickness
                 * math.sqrt(refined_av * self.height * refined_ah * dist_to_return),
@@ -477,19 +484,22 @@ class Clay:
     ) -> float:
         """Calculates k for lateral instability in accordance with AS3700 Cl 7.3.4.5(1)"""
 
-        k_lateral = round(
-            0.5
-            * (1 + e2 / e1)
-            * (
-                (1 - 2.083 * e1 / self.thickness)
-                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
-            )
-            + 0.5
-            * (1 - 0.6 * e1 / self.thickness)
-            * (1 - e2 / e1)
-            * (1.18 - 0.03 * sr),
-            self.epsilon,
-        )
+        if sr == float("inf"):
+            k_lateral = 0
+        else:
+            k_lateral = (
+                0.5
+                * (1 + e2 / e1)
+                * (
+                    (1 - 2.083 * e1 / self.thickness)
+                    - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
+                )
+                + 0.5
+                * (1 - 0.6 * e1 / self.thickness)
+                * (1 - e2 / e1)
+                * (1.18 - 0.03 * sr))
+        
+        k_lateral = round_half_up(max(k_lateral, 0),self.epsilon)
         if verbose:
             print(f"k for lateral instability: {k_lateral}")
         return k_lateral
@@ -559,7 +569,7 @@ class Clay:
         return Mcv
 
     def self_weight(self) -> float:
-        """ Returns the seld weight of the masonry, exlcuding any applied actions such as Fd. """
+        """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""
         return self.density * self.length * self.height * self.thickness
 
     def _calc_km(self, verbose: bool = True) -> float:
@@ -574,7 +584,7 @@ class Clay:
             )
         elif self.bedding_type is False and self.mortar_class != 3:
             raise ValueError(
-                "Face shell bedding_type is only available for mortar class M3." \
+                "Face shell bedding_type is only available for mortar class M3."
                 " Change bedding_type or mortar_class"
             )
         elif verbose:
@@ -613,17 +623,17 @@ class Clay:
                 "joint thickness tj provided but masonry unit height not provided"
             )
 
-        kh = round(min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3), self.epsilon)
+        kh = round_half_up(min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3), self.epsilon)
         if verbose:
             print(
                 f"kh: {kh}, based on a masonry unit height of {self.hu} mm"
-                  " and a joint thickness of {self.tj} mm"
+                " and a joint thickness of {self.tj} mm"
             )
 
-        fmb = round(math.sqrt(self.fuc) * km, self.epsilon)
+        fmb = round_half_up(math.sqrt(self.fuc) * km, self.epsilon)
         if verbose:
             print(f"fmb: {fmb} MPa")
 
-        self.fm = round(kh * fmb, self.epsilon)
+        self.fm = round_half_up(kh * fmb, self.epsilon)
         if verbose:
             print(f"fm: {self.fm} MPa")
