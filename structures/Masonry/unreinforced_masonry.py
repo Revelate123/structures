@@ -363,20 +363,23 @@ class Clay:
 
         return kb
 
-    def horizontal_shear(self, kv:float|None = None):
+    def horizontal_shear(self, kv:float|None = None, fd:float|None = None):
+        """ Computes the horizontal shear capacity in accordance with AS3700:2018 """
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if self.fmt is None:
             raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
+                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 " \
+                "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
 
-        self.Ab = self.length * self.thickness
-        self.V0 = self.phi_shear * self.fms_horizontal * self.Ab * 1e-3
+        bedding_area = self.length * self.thickness
+        self.V0 = self.phi_shear * self.fms_horizontal * bedding_area * 1e-3
         print(
-            f"V0, the shear bond strength of section: {self.V0} KN. To be taken as 0 at interfaces with DPC/flashings etc."
+            f"V0, the shear bond strength of section: {self.V0} KN."
+             "To be taken as 0 at interfaces with DPC/flashings etc."
         )
-        self.V1 = self.kv * self.fd * self.Ab * 1e-3
+        self.V1 = kv * fd * bedding_area * 1e-3
         print(f"V1, the shear friction of the section: {self.V1} KN.")
         self.Vd = self.V0 + self.V1
         print(f"V0 + V1, combined shear strength: {self.Vd}")
@@ -582,12 +585,12 @@ class Clay:
             raise ValueError(
                 "bedding_type not set. set to True for Full bedding or False for Face shell bedding"
             )
-        elif self.bedding_type is False and self.mortar_class != 3:
+        if self.bedding_type is False and self.mortar_class != 3:
             raise ValueError(
                 "Face shell bedding_type is only available for mortar class M3."
                 " Change bedding_type or mortar_class"
             )
-        elif verbose:
+        if verbose:
             print(
                 f"bedding_type: {"Full" if self.bedding_type is True else "Face shell"}"
             )
