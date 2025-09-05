@@ -1,7 +1,23 @@
+"""
+Module for calculating timber member capacities in accordance with AS1720.1
+"""
+
 import math
 from typing import Callable
 
 from dataclasses import dataclass
+
+
+@dataclass
+class Properties:
+    fb: float | None = None
+    fs: float | None = None
+
+    def __post_init_(self):
+        pass
+
+    def _retrieve_section_properties(self) -> dict:
+        return {"fb": 10, "fs": 10}
 
 
 @dataclass
@@ -11,12 +27,14 @@ class Beam:
     length: float | None = None
     depth: float | None = None
     breadth: float | None = None
-    phi_bending: float | None = None
-    fb: float | None = None
-    fs: float | None = None
+    phi_bending: float | None = 0.1
     phi_shear: float | None = 0.1
+    grade: str | None = None
     phi_compression: float | None = 0.1
+    latitude: bool | None = None
+    seasoned: bool | None = None
     epsilon: int = 2
+    fb: float | None = 10
 
     def __post_init__(self):
         if self.length is None:
@@ -37,9 +55,7 @@ class Beam:
 
     def in_plane_bending(
         self,
-        seasoned: bool | None = None,
         moisture_content: float | None = None,
-        latitude: bool | None = None,
         ncom: int | None = None,
         nmem: int | None = None,
         spacing: float | None = None,
@@ -54,9 +70,7 @@ class Beam:
         assert self.breadth is not None
 
         return self._bending(
-            seasoned=seasoned,
             moisture_content=moisture_content,
-            latitude=latitude,
             ncom=ncom,
             nmem=nmem,
             spacing=spacing,
@@ -71,9 +85,7 @@ class Beam:
 
     def out_of_plane_bending(
         self,
-        seasoned: bool | None = None,
         moisture_content=None,
-        latitude=None,
         ncom=None,
         nmem=None,
         spacing=None,
@@ -89,9 +101,7 @@ class Beam:
         assert self.breadth is not None
 
         return self._bending(
-            seasoned=seasoned,
             moisture_content=moisture_content,
-            latitude=latitude,
             ncom=ncom,
             nmem=nmem,
             spacing=spacing,
@@ -106,9 +116,7 @@ class Beam:
 
     def shear(
         self,
-        seasoned: bool | None = None,
         moisture_content=None,
-        latitude=None,
         verbose=None,
     ):
         """
@@ -127,10 +135,8 @@ class Beam:
         Returns:
             A dictionary with bending capacities for different durations related to the factor k1
         """
-        k4 = self._calc_k4(
-            seasoned=seasoned, moisture_content=moisture_content, verbose=verbose
-        )
-        k6 = self._calc_k6(latitude=latitude, verbose=verbose)
+        k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
+        k6 = self._calc_k6(verbose=verbose)
 
         As = 2 / 3 * (self.breadth * self.depth)
         if verbose:
@@ -143,9 +149,7 @@ class Beam:
 
     def _bending(
         self,
-        seasoned: bool | None = None,
         moisture_content: float | None = None,
-        latitude: bool | None = None,
         ncom: int | None = None,
         nmem: int | None = None,
         spacing: float | None = None,
@@ -172,10 +176,8 @@ class Beam:
             A dictionary with bending capacities for different durations related to the factor k1
         """
 
-        k4 = self._calc_k4(
-            seasoned=seasoned, moisture_content=moisture_content, verbose=verbose
-        )
-        k6 = self._calc_k6(latitude=latitude, verbose=verbose)
+        k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
+        k6 = self._calc_k6(verbose=verbose)
         k9 = self._calc_k9(
             ncom=ncom, nmem=nmem, spacing=spacing, span=span, verbose=verbose
         )
@@ -193,14 +195,14 @@ class Beam:
             print(f"Md: {Md} KNm (Not inlcuding k1)")
         return Md
 
-    def _calc_k4(self, seasoned, moisture_content, verbose):
+    def _calc_k4(self, moisture_content, verbose):
         """Computes k4 using AS1720.1-2010 Cl 2.4.2.2 & Cl 2.4.2.3"""
-        if seasoned is None:
+        if self.seasoned is None:
             raise ValueError(
                 "seasoned not set, set to True if using seasoned timber, and False otherwise"
             )
         elif verbose:
-            print(f"seasoned: {seasoned}")
+            print(f"seasoned: {self.seasoned}")
 
         if moisture_content is None:
             raise ValueError(
@@ -211,7 +213,7 @@ class Beam:
             print(f"moisture_content: {moisture_content} %")
 
         least_dim = min(self.length, self.breadth, self.depth)
-        if seasoned:
+        if self.seasoned:
             if moisture_content > 15:
                 k4 = max(1 - 0.3 * (moisture_content - 15) / 10, 0.7)
             else:
@@ -229,18 +231,18 @@ class Beam:
             print(f"k4: {k4}, refer Table 2.5")
         return k4
 
-    def _calc_k6(self, latitude, verbose):
+    def _calc_k6(self, verbose):
         """Computes k6 using AS1720.1-2010 Cl 2.4.3"""
-        if latitude is None:
+        if self.latitude is None:
             raise ValueError(
                 "latitude not set, set to True if located in coastal Queensland "
                 "north of latitude 25 degrees south or 16 degrees south elsewhere, and False otherwise."
             )
         elif verbose:
-            print(f"latitude: {latitude}")
-        if latitude == True:
+            print(f"latitude: {self.latitude}")
+        if self.latitude == True:
             k6 = 0.9
-        elif latitude == False:
+        elif self.latitude == False:
             k6 = 1
         if verbose:
             print(f"k6: {k6}, refer Cl 2.4.3")
@@ -439,9 +441,7 @@ class Column(Beam):
 
     def _compression(
         self,
-        seasoned=None,
         moisture_content=None,
-        latitude=None,
         fc=None,
         slenderness: Callable | None = None,
         g13=None,
@@ -463,10 +463,8 @@ class Column(Beam):
         Returns:
             A dictionary with bending capacities for different durations related to the factor k1
         """
-        k4 = self._calc_k4(
-            seasoned=seasoned, moisture_content=moisture_content, verbose=verbose
-        )
-        k6 = self._calc_k6(latitude=latitude, verbose=verbose)
+        k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
+        k6 = self._calc_k6(verbose=verbose)
         k12 = self._calc_k12_compression(
             pc=pc,
             g13=g13,
