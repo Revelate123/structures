@@ -347,7 +347,8 @@ class Clay:
                 "bearing_area not set. This is the bearing area of the concentrated load."
             )
         dispersed_area = effective_length * self.thickness
-
+        if verbose:
+            print(f"dispersed area = {dispersed_area} mm2")
         if self.bedding_type:
             kb = (
                 0.55
@@ -363,15 +364,19 @@ class Clay:
 
         return kb
 
-    def horizontal_shear(self, kv:float|None = None, fd:float|None = None):
+    def horizontal_shear(self, kv:float|None = None, fd:float|None = None, verbose:bool = True):
         """ Computes the horizontal shear capacity in accordance with AS3700:2018 """
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
+        if verbose:
+            print(f"kv: {kv}")
         if self.fmt is None:
             raise ValueError(
                 "fmt undefined, fms is calculated using fmt, set fmt = 0.2 " \
                 "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
+        if verbose:
+            print(f"fmt: {self.fmt} MPa")
 
         bedding_area = self.length * self.thickness
         self.V0 = self.phi_shear * self.fms_horizontal * bedding_area * 1e-3
@@ -630,7 +635,7 @@ class Clay:
         if verbose:
             print(
                 f"kh: {kh}, based on a masonry unit height of {self.hu} mm"
-                " and a joint thickness of {self.tj} mm"
+                f" and a joint thickness of {self.tj} mm"
             )
 
         fmb = round_half_up(math.sqrt(self.fuc) * km, self.epsilon)
