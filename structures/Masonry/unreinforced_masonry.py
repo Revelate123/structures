@@ -8,17 +8,19 @@ from dataclasses import dataclass
 
 # ...
 
+
 def round_half_up(n, decimals=0):
     """
     Rounds positive numbers up, as a human would expect. Requires a 'fudge'
     factor denoted by + 10**-(decimals*2) to account for rounding point errors
-    for example, 5.42 * 0.75 = 4.06499999999999, which would round to 
+    for example, 5.42 * 0.75 = 4.06499999999999, which would round to
     4.06 incorrectly.
     """
     if n < 0:
         raise ValueError("This function should not be used to round negative numbers")
     multiplier = 10**decimals
-    return math.floor(n * multiplier + 0.5 + 10**-(decimals*2)) / multiplier
+    return math.floor(n * multiplier + 0.5 + 10 ** -(decimals * 2)) / multiplier
+
 
 # pylint: disable=too-many-instance-attributes
 @dataclass
@@ -101,29 +103,35 @@ class Clay:
         basic_comp_cap = self.basic_compressive_capacity(verbose)
 
         srs = (simple_av * self.height) / (kt * self.thickness)
+        if srs < 0:
+            raise ValueError(
+                "srs is negative, either decrease wall height or increase thickness"
+            )
         if verbose:
             print("\nBuckling capacity:")
             print(f"Srs = {srs:.2f} (Simplified slenderness ratio Cl 7.3.3.3)")
 
         if compression_load_type == 1:
-            k = min(0.67 - 0.02 * (srs - 14), 0.67)
+            k = round_half_up(min(0.67 - 0.02 * (srs - 14), 0.67), self.epsilon)
             if verbose:
                 print("Load type: Concrete slab over")
         elif compression_load_type == 2:
-            k = min(0.67 - 0.025 * (srs - 10), 0.67)
+            k = round_half_up(min(0.67 - 0.025 * (srs - 10), 0.67), self.epsilon)
             if verbose:
                 print("Load type: Other systems (Table 7.1)")
         elif compression_load_type == 3:
-            k = min(0.067 - 0.002 * (srs - 14), 0.067)
+            k = round_half_up(min(0.067 - 0.002 * (srs - 14), 0.067), self.epsilon + 1)
             if verbose:
                 print("Load type: Load applied to face of wall (Table 7.1)")
         else:
             raise ValueError("")
 
-        simple_comp_cap = k * basic_comp_cap * self.length * self.thickness * 1e-3
+        simple_comp_cap = round_half_up(
+            k * basic_comp_cap * self.length * self.thickness * 1e-3, self.epsilon
+        )
         if verbose:
             print(f"k: {k}")
-            print(f"Simple compression capacity kFo: {simple_comp_cap:.2f}")
+            print(f"Simple compression capacity kFo: {simple_comp_cap}")
 
         return simple_comp_cap
 
@@ -172,7 +180,7 @@ class Clay:
         if e1 is None or e2 is None:
             raise ValueError(
                 "e1 and/or e2 is not set. "
-                "This is the eccentricity of the applied loads, where" \
+                "This is the eccentricity of the applied loads, where"
                 "e1 is the larger eccentricity of the vertical force"
             )
         e1, e2 = self._calc_e1_e2(e1, e2, verbose)
@@ -206,7 +214,9 @@ class Clay:
         if k_lateral_horz > 0.2:
             k_lateral_horz = 0.2
             if verbose:
-                print("k_lateral_horz limited to 0.2 by 7.3.4.3(a) requirement of Fd < 0.2Fd")
+                print(
+                    "k_lateral_horz limited to 0.2 by 7.3.4.3(a) requirement of Fd < 0.2Fd"
+                )
 
         if verbose:
             print("Vertical:")
@@ -214,7 +224,7 @@ class Clay:
             e1=e1, e2=e2, sr=sr_vertical, verbose=verbose
         )
 
-        k_lateral = max(k_lateral_horz,k_lateral_vert)
+        k_lateral = max(k_lateral_horz, k_lateral_vert)
 
         buckling_comp_cap = round_half_up(
             basic_comp_cap * k_lateral * effective_length * self.thickness * 1e-3,
@@ -364,15 +374,17 @@ class Clay:
 
         return kb
 
-    def horizontal_shear(self, kv:float|None = None, fd:float|None = None, verbose:bool = True):
-        """ Computes the horizontal shear capacity in accordance with AS3700:2018 """
+    def horizontal_shear(
+        self, kv: float | None = None, fd: float | None = None, verbose: bool = True
+    ):
+        """Computes the horizontal shear capacity in accordance with AS3700:2018"""
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if verbose:
             print(f"kv: {kv}")
         if self.fmt is None:
             raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 " \
+                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 "
                 "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
         if verbose:
@@ -382,7 +394,7 @@ class Clay:
         self.V0 = self.phi_shear * self.fms_horizontal * bedding_area * 1e-3
         print(
             f"V0, the shear bond strength of section: {self.V0} KN."
-             "To be taken as 0 at interfaces with DPC/flashings etc."
+            "To be taken as 0 at interfaces with DPC/flashings etc."
         )
         self.V1 = kv * fd * bedding_area * 1e-3
         print(f"V1, the shear friction of the section: {self.V1} KN.")
@@ -399,9 +411,11 @@ class Clay:
         if e1 < e2:
             raise ValueError("e1 set to a value less than e2")
         if e1 < 0:
-            raise ValueError("e1 < 0. e1 should always be positive by defintion"
-            "refer AS3700:2018 Cl 7.3.4.5. If e1 and e2 are opposite, e1 should be"
-            "positive and e2 negative")
+            raise ValueError(
+                "e1 < 0. e1 should always be positive by defintion"
+                "refer AS3700:2018 Cl 7.3.4.5. If e1 and e2 are opposite, e1 should be"
+                "positive and e2 negative"
+            )
 
         if abs(e1) < 0.05 * self.thickness:
             e1 = 0.05 * self.thickness if e1 >= 0 else -0.05 * self.thickness
@@ -438,8 +452,8 @@ class Clay:
 
         if refined_ah is None:
             raise ValueError(
-                "refined_ah undefined, refer AS3700 Cl 7.3.4.3."
-                " 1.0 for a wall laterally supported along both vertical edges,"
+                "refined_ah undefined, refer AS3700 Cl 7.3.4.3.\n"
+                " 1.0 for a wall laterally supported along both vertical edges,\n"
                 " 2.5 for one edge. If no vertical edges supported set as 0"
             )
         if verbose:
@@ -495,19 +509,14 @@ class Clay:
         if sr == float("inf"):
             k_lateral = 0
         else:
-            k_lateral = (
-                0.5
-                * (1 + e2 / e1)
-                * (
-                    (1 - 2.083 * e1 / self.thickness)
-                    - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
-                )
-                + 0.5
-                * (1 - 0.6 * e1 / self.thickness)
-                * (1 - e2 / e1)
-                * (1.18 - 0.03 * sr))
-        
-        k_lateral = round_half_up(max(k_lateral, 0),self.epsilon)
+            k_lateral = 0.5 * (1 + e2 / e1) * (
+                (1 - 2.083 * e1 / self.thickness)
+                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
+            ) + 0.5 * (1 - 0.6 * e1 / self.thickness) * (1 - e2 / e1) * (
+                1.18 - 0.03 * sr
+            )
+
+        k_lateral = round_half_up(max(k_lateral, 0), self.epsilon)
         if verbose:
             print(f"k for lateral instability: {k_lateral}")
         return k_lateral
@@ -631,7 +640,9 @@ class Clay:
                 "joint thickness tj provided but masonry unit height not provided"
             )
 
-        kh = round_half_up(min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3), self.epsilon)
+        kh = round_half_up(
+            min(1.3 * (self.hu / (19 * self.tj)) ** 0.29, 1.3), self.epsilon
+        )
         if verbose:
             print(
                 f"kh: {kh}, based on a masonry unit height of {self.hu} mm"
