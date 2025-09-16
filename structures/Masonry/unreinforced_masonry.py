@@ -391,16 +391,23 @@ class Clay:
             print(f"fmt: {self.fmt} MPa")
 
         bedding_area = self.length * self.thickness
-        self.V0 = self.phi_shear * self.fms_horizontal * bedding_area * 1e-3
-        print(
-            f"V0, the shear bond strength of section: {self.V0} KN."
+        fms_horizontal = min(0.15,max(1.25 * self.fm,0.35))
+        if verbose:
+            print(f"f'ms: {fms_horizontal} MPa")
+
+        v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
+        if verbose:
+            print(
+            f"V0, the shear bond strength of section: {v0} KN."
             "To be taken as 0 at interfaces with DPC/flashings etc."
         )
-        self.V1 = kv * fd * bedding_area * 1e-3
-        print(f"V1, the shear friction of the section: {self.V1} KN.")
-        self.Vd = self.V0 + self.V1
-        print(f"V0 + V1, combined shear strength: {self.Vd}")
-        return self.Vd
+        v1 = kv * fd * bedding_area * 1e-3
+        if verbose:
+            print(f"V1, the shear friction of the section: {v1} KN.")
+        vd = v0 + v1
+        if verbose:
+            print(f"V0 + V1, combined shear strength: {vd}")
+        return {"bond":v0, "friction":v1}
 
     def _calc_e1_e2(
         self,

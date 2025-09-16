@@ -62,8 +62,8 @@ class Beam:
         span: float | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
-        Lay: float | None = None,
-        Z: float | None = None,
+        lay: float | None = None,
+        z: float | None = None,
         verbose=True,
     ):
         assert self.depth is not None
@@ -77,8 +77,8 @@ class Beam:
             span=span,
             pb=pb,
             restraint_location=restraint_location,
-            Lay=Lay,
-            Z=Z,
+            lay=lay,
+            z=z,
             out_of_plane=self.depth < self.breadth,
             verbose=verbose,
         )
@@ -92,8 +92,8 @@ class Beam:
         span=None,
         pb: float | None = None,
         restraint_location: int | None = None,
-        Lay: float | None = None,
-        Z: float | None = None,
+        lay: float | None = None,
+        z: float | None = None,
         verbose=True,
     ):
 
@@ -108,8 +108,8 @@ class Beam:
             span=span,
             pb=pb,
             restraint_location=restraint_location,
-            Lay=Lay,
-            Z=Z,
+            lay=lay,
+            z=z,
             out_of_plane=self.depth > self.breadth,
             verbose=verbose,
         )
@@ -143,7 +143,7 @@ class Beam:
             print(f"As: {As} mm2")
 
         vd = self.phi_shear * k4 * k6 * self.fs * As
-        if verbose == True:
+        if verbose is True:
             print(f"Vd = {vd} KN (Not including k1)")
         return vd
 
@@ -157,8 +157,8 @@ class Beam:
         out_of_plane: bool | None = None,
         pb: float | None = None,
         restraint_location: int | None = None,
-        Lay: float | None = None,
-        Z: float | None = None,
+        lay: float | None = None,
+        z: float | None = None,
         verbose=True,
     ):
         """
@@ -184,14 +184,14 @@ class Beam:
         k12 = self._calc_k12(
             pb=pb,
             restraint_location=restraint_location,
-            Lay=Lay,
+            lay=lay,
             out_of_plane=out_of_plane,
             verbose=verbose,
         )
-        Z = self._calc_Z(out_of_plane=out_of_plane, verbose=verbose)
+        z = self._calc_Z(out_of_plane=out_of_plane, verbose=verbose)
 
-        Md = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * Z * 1e-6
-        if verbose == True:
+        Md = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
+        if verbose is True:
             print(f"Md: {Md} KNm (Not inlcuding k1)")
         return Md
 
@@ -302,7 +302,7 @@ class Beam:
         self,
         pb: float | None = None,
         restraint_location: int | None = None,
-        Lay: float | None = None,
+        lay: float | None = None,
         fly_brace_spacing: int | None = None,
         out_of_plane: bool | None = None,
         verbose: bool = True,
@@ -329,14 +329,14 @@ class Beam:
         elif verbose:
             print(f"restraint_location: {restraint_location}")
 
-        if Lay is None:
+        if lay is None:
             raise ValueError(
-                "Lay not set. This is the distance between restraints.\n"
+                "lay not set. This is the distance between restraints.\n"
                 "For continuous systems e.g. flooring, set to the nail spacing e.g 300mm\n"
                 "For fly-bracing systems it is NOT the distance between fly-braces."
             )
         elif verbose:
-            print(f"Lay: {Lay} mm")
+            print(f"lay: {lay} mm")
 
         if restraint_location == 3 and fly_brace_spacing is None:
             raise ValueError(
@@ -350,11 +350,11 @@ class Beam:
             elif fly_brace_spacing > 1:
                 print(f"fly bracing to every {fly_brace_spacing} restraints")
 
-        cont_restrained = self._cont_restraint(pb=pb, Lay=Lay, verbose=verbose)
+        cont_restrained = self._cont_restraint(pb=pb, lay=lay, verbose=verbose)
         S1 = self._calc_S1(
             pb=pb,
             restraint_location=restraint_location,
-            Lay=Lay,
+            lay=lay,
             fly_brace_spacing=fly_brace_spacing,
             cont_restrained=cont_restrained,
             verbose=verbose,
@@ -374,7 +374,7 @@ class Beam:
         self,
         pb: float | None = None,
         restraint_location: int | None = None,
-        Lay: float | None = None,
+        lay: float | None = None,
         fly_brace_spacing: int | None = None,
         cont_restrained: bool = False,
         verbose: bool = True,
@@ -387,13 +387,13 @@ class Beam:
                 S1 = 2.25 * self.depth / self.breadth
             if restraint_location == 3:
                 S1 = (1.5 * self.depth / self.breadth) / (
-                    (math.pi * self.depth / fly_brace_spacing * Lay) ** 2 + 0.4
+                    (math.pi * self.depth / fly_brace_spacing * lay) ** 2 + 0.4
                 ) ** 0.5
         elif cont_restrained == False:
             if restraint_location == 1:
-                S1 = 1.25 * self.depth / self.breadth * (Lay / self.depth) ** 0.5
+                S1 = 1.25 * self.depth / self.breadth * (lay / self.depth) ** 0.5
             if restraint_location == 2 or restraint_location == 3:
-                S1 = (self.depth / self.breadth) ** 1.35 * (Lay / self.depth) ** 0.25
+                S1 = (self.depth / self.breadth) ** 1.35 * (lay / self.depth) ** 0.25
 
         if verbose:
             print(f"S1: {S1}")
@@ -403,11 +403,11 @@ class Beam:
         pass  # TODO
 
     def _cont_restraint(
-        self, pb: float | None = None, Lay: float | None = None, verbose: bool = True
+        self, pb: float | None = None, lay: float | None = None, verbose: bool = True
     ):
         """Determines if the beam is continuously restrained"""
         cont_restrained = (
-            Lay / self.depth <= 64 * (self.breadth / (pb * self.depth)) ** 2
+            lay / self.depth <= 64 * (self.breadth / (pb * self.depth)) ** 2
         )
         if verbose:
             print(f"Continuously restrained: {cont_restrained}")
@@ -417,15 +417,15 @@ class Beam:
         if out_of_plane is None:
             raise ValueError("out_of_plane not set.")
         if out_of_plane == True:
-            Z = self.depth * self.breadth**2 / 6
+            z = self.depth * self.breadth**2 / 6
         elif out_of_plane == False:
-            Z = self.breadth * self.depth**2 / 6
+            z = self.breadth * self.depth**2 / 6
         else:
             raise ValueError("error in _calc_Z")
 
         if verbose:
-            print(f"Z: {Z} mm3")
-        return Z
+            print(f"z: {z} mm3")
+        return z
 
 
 class Column(Beam):
@@ -535,15 +535,15 @@ class Column(Beam):
         return S3
 
     def _calc_S4(
-        self, g13: float | None = None, Lay: float | None = None, verbose: bool = True
+        self, g13: float | None = None, lay: float | None = None, verbose: bool = True
     ):
         """Computes Column slenderness for compression buckling using AS1720.1 Cl 3.3.2.2"""
-        if Lay is None:
-            raise ValueError("Lay not set. This is the distance between restraints...")
+        if lay is None:
+            raise ValueError("lay not set. This is the distance between restraints...")
         elif verbose:
-            print(f"Lay: {Lay} mm")
+            print(f"lay: {lay} mm")
 
-        S4 = min(Lay / self.breadth, g13 * self.length / self.breadth)
+        S4 = min(lay / self.breadth, g13 * self.length / self.breadth)
         if verbose:
             print(f"S4: {S4}")
         return S4
