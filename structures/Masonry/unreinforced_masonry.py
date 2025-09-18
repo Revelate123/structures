@@ -534,7 +534,9 @@ class Clay:
             print(f"kp: {kp} Cl 7.4.3.4")
         return kp
 
-    def horizontal_bending(self, fd: float | None = None, verbose: bool = True):
+    def horizontal_bending(
+        self, fd: float | None = None, verbose: bool = True
+    ) -> float:
         """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2"""
         if self.fmt is None:
             raise ValueError(
@@ -554,17 +556,21 @@ class Clay:
 
         kp = self._calc_kp(verbose=verbose)
 
-        zd_horz = round_half_up(self.height * self.thickness **2 / 6,self.epsilon)
+        zd_horz = round_half_up(self.height * self.thickness**2 / 6, self.epsilon)
         if verbose:
             print(f"Zd (horizontal): {zd_horz} mm3")
 
         zu_horz = zd_horz
         if verbose:
-            print(f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking")
+            print(
+                f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking"
+            )
 
         zp_horz = zd_horz
         if verbose:
-            print(f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking")
+            print(
+                f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking"
+            )
 
         mch_1 = (
             2
@@ -581,9 +587,7 @@ class Clay:
         if verbose:
             print(f"Mch_2: {mch_2} KNm Cl 7.4.3.2(3)")
 
-        mch_3 = self.phi_shear * (
-            0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz
-        )
+        mch_3 = self.phi_shear * (0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz)
         if verbose:
             print(f"Mch_3: {mch_3} KNm  # Cl 7.4.3.2(4)")
         mch = min(mch_1, mch_2, mch_3) * 10**-6
@@ -591,7 +595,8 @@ class Clay:
             print(f"Mch: {mch} KNm")
         return mch
 
-    def diagonal_bending(self, hu, tj, lu, tu, Ld, Mch):
+    def _diagonal_bending(self, hu, tj, lu, tu, Ld, Mch) -> float:
+        """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4"""
         G = 2 * (hu + tj) / (lu + tj)
         Hd = 2900 / 2
         alpha = G * Ld / Hd
@@ -616,23 +621,39 @@ class Clay:
         w = (2 * af) / (Ld**2) * (k1 * Mch + k2 * Mcd)
         print(w)
 
-    def vertical_bending(self):
-        if self.fmt < 0:
+    def vertical_bending(self, fd:float|None = None, verbose: bool = True) -> float:
+        """ Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2 """
+        if self.fmt is None:
             raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
+                "self.fmt undefined.\n"
+                " set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
+        if verbose:
+            print(f"fmt: {self.fmt} MPa")
+
+        if fd is None:
+            raise ValueError(
+                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
+                "at the cross section under consideration, in MPa"
+            )
+        if verbose:
+            print(f"fd: {fd} MPa")
+
+        zd_vert = round_half_up(self.length * self.thickness**2 / 6, self.epsilon)
+        if verbose:
+            print(f"Zd (vertical): {zd_vert} mm3")
 
         if self.fmt > 0:
-            Mcv = min(
-                self.phi_bending * self.fmt * self.Zd * 1e-6
-                + min(self.fd, 0.36) * self.Zd * 1e-6,
-                3 * self.phi_bending * self.fmt * self.Zd * 1e-6,
+            m_cv = min(
+                self.phi_bending * self.fmt * zd_vert * 1e-6
+                + min(fd, 0.36) * zd_vert * 1e-6,
+                3 * self.phi_bending * self.fmt * zd_vert * 1e-6,
             )
         else:
-            Mcv = self.fd * self.Zd * 1e-6
-        print(f"Mcv = {Mcv} for length of {self.length}")
-        print(f"Mcv per m = {Mcv/self.length*1e3}")
-        return Mcv
+            m_cv = fd * zd_vert * 1e-6
+        print(f"Mcv = {m_cv} for length of {self.length}")
+        print(f"Mcv per m = {m_cv/self.length*1e3}")
+        return m_cv
 
     def self_weight(self) -> float:
         """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""
