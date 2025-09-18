@@ -391,23 +391,23 @@ class Clay:
             print(f"fmt: {self.fmt} MPa")
 
         bedding_area = self.length * self.thickness
-        fms_horizontal = min(0.15,max(1.25 * self.fm,0.35))
+        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
         if verbose:
             print(f"f'ms: {fms_horizontal} MPa")
 
         v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
         if verbose:
             print(
-            f"V0, the shear bond strength of section: {v0} KN."
-            "To be taken as 0 at interfaces with DPC/flashings etc."
-        )
+                f"V0, the shear bond strength of section: {v0} KN."
+                "To be taken as 0 at interfaces with DPC/flashings etc."
+            )
         v1 = kv * fd * bedding_area * 1e-3
         if verbose:
             print(f"V1, the shear friction of the section: {v1} KN.")
         vd = v0 + v1
         if verbose:
             print(f"V0 + V1, combined shear strength: {vd}")
-        return {"bond":v0, "friction":v1}
+        return {"bond": v0, "friction": v1}
 
     def _calc_e1_e2(
         self,
@@ -528,26 +528,68 @@ class Clay:
             print(f"k for lateral instability: {k_lateral}")
         return k_lateral
 
-    def horizontal_bending(self):
-        if self.fmt < 0:
-            raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
-            )
-        # Cl 4.4
-        φ = 0.6
-        # Cl 7.4.3.4
+    def _calc_kp(self, verbose: bool):
         kp = 1
-        # Cl 7.4.3.2(2)
-        Mch_1 = (
-            2 * φ * kp * math.sqrt(self.fmt) * (1 + self.fd / self.fmt) * self.Zd_horz
+        if verbose:
+            print(f"kp: {kp} Cl 7.4.3.4")
+        return kp
+
+    def horizontal_bending(self, fd: float | None = None, verbose: bool = True):
+        """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2"""
+        if self.fmt is None:
+            raise ValueError(
+                "self.fmt undefined.\n"
+                " set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
+            )
+        if verbose:
+            print(f"fmt: {self.fmt} MPa")
+
+        if fd is None:
+            raise ValueError(
+                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
+                "at the cross section under consideration, in MPa"
+            )
+        if verbose:
+            print(f"fd: {fd} MPa")
+
+        kp = self._calc_kp(verbose=verbose)
+
+        zd_horz = round_half_up(self.height * self.thickness **2 / 6,self.epsilon)
+        if verbose:
+            print(f"Zd (horizontal): {zd_horz} mm3")
+
+        zu_horz = zd_horz
+        if verbose:
+            print(f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking")
+
+        zp_horz = zd_horz
+        if verbose:
+            print(f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking")
+
+        mch_1 = (
+            2
+            * self.phi_shear
+            * kp
+            * math.sqrt(self.fmt)
+            * (1 + fd / self.fmt)
+            * zd_horz
         )
-        # Cl 7.4.3.2(3)
-        Mch_2 = 4 * φ * kp * math.sqrt(self.fmt) * self.Zd_horz
-        # Cl 7.4.3.2(4)
-        Mch_3 = φ * (0.44 * self.fut * self.Zu_horz + 0.56 * self.fmt * self.Zp_horz)
-        Mch = min(Mch_1, Mch_2, Mch_3) * 10**-6
-        print("Mch:", Mch, " KNm")
-        return Mch
+        if verbose:
+            print(f"Mch_1: {mch_1} KNm Cl 7.4.3.2(2)")
+
+        mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz
+        if verbose:
+            print(f"Mch_2: {mch_2} KNm Cl 7.4.3.2(3)")
+
+        mch_3 = self.phi_shear * (
+            0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz
+        )
+        if verbose:
+            print(f"Mch_3: {mch_3} KNm  # Cl 7.4.3.2(4)")
+        mch = min(mch_1, mch_2, mch_3) * 10**-6
+        if verbose:
+            print(f"Mch: {mch} KNm")
+        return mch
 
     def diagonal_bending(self, hu, tj, lu, tu, Ld, Mch):
         G = 2 * (hu + tj) / (lu + tj)
