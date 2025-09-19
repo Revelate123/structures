@@ -133,7 +133,7 @@ class Clay:
             print(f"k: {k}")
             print(f"Simple compression capacity kFo: {simple_comp_cap}")
 
-        return simple_comp_cap
+        return {"Simple":simple_comp_cap}
 
     def refined_compression(
         self,
@@ -239,6 +239,49 @@ class Clay:
         return {"Crushing": crushing_comp_cap, "Buckling": buckling_comp_cap}
 
     def concentrated_load(
+        self,
+        simple_av: float | None = None,
+        kt: float | None = None,
+        compression_load_type: int | None = None,
+        dist_to_end: float | None = None,
+        bearing_width: float | None = None,
+        bearing_length: float | None = None,
+        verbose: bool = True,
+    ) -> dict:
+        """Computes the simplified compression capacity
+        of a masonry wall under concentrated loads"""
+        if bearing_width is None:
+            raise ValueError("bearing_width not defined. Often this is the width of the wall.")
+        if verbose:
+            print(f"bearing width: {bearing_width} mm")
+
+        basic_comp_cap = self.basic_compressive_capacity(verbose=False)
+
+        effective_length = self._calc_effective_compression_length(
+            bearing_length=bearing_length, dist_to_end=dist_to_end, verbose=verbose
+        )
+        capacity = self.compression_capacity(
+            simple_av=simple_av,
+            kt=kt,
+            compression_load_type=compression_load_type,
+            verbose=verbose,
+        )
+
+        kb = self._calc_kb(
+            a1=dist_to_end,
+            bearing_area=bearing_length * bearing_width,
+            effective_length=effective_length,
+            verbose=verbose,
+        )
+        bearing_comp_cap = kb * basic_comp_cap * bearing_length * bearing_width * 1e-3
+        if verbose:
+            print(f"kbFo: {bearing_comp_cap} KN")
+
+        capacity["Bearing"] = bearing_comp_cap
+
+        return capacity
+
+    def refined_concentrated_load(
         self,
         refined_av: float | None = None,
         refined_ah: float | None = None,
@@ -621,8 +664,8 @@ class Clay:
         w = (2 * af) / (Ld**2) * (k1 * Mch + k2 * Mcd)
         print(w)
 
-    def vertical_bending(self, fd:float|None = None, verbose: bool = True) -> float:
-        """ Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2 """
+    def vertical_bending(self, fd: float | None = None, verbose: bool = True) -> float:
+        """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2"""
         if self.fmt is None:
             raise ValueError(
                 "self.fmt undefined.\n"

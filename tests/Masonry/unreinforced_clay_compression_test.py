@@ -217,7 +217,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=1, simple_av=1, kt=1)
-            == 179.08
+            == {"Simple":179.08}
         )
 
     def test_stocky_concrete_slab_over(self):
@@ -242,7 +242,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=1, simple_av=1, kt=1)
-            == 544.71
+            == {"Simple":544.71}
         )
 
     def test_slender_other_system_over(self):
@@ -267,7 +267,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=2, simple_av=2.5, kt=1)
-            == 31.34
+            == {"Simple":31.34}
         )
 
     def test_stocky_other_system_over(self):
@@ -292,7 +292,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=2, simple_av=1, kt=1)
-            == 259.67
+            == {"Simple":259.67}
         )
 
     def test_slender_face_loading(self):
@@ -317,7 +317,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=3, simple_av=1, kt=1)
-            == 28.46
+            == {"Simple":28.46}
         )
 
     def test_stocky_face_loading(self):
@@ -342,7 +342,7 @@ class TestSimplifiedCompression:
         )
         assert (
             wall.compression_capacity(compression_load_type=3, simple_av=1, kt=1)
-            == 52.85
+            == {"Simple":52.85}
         )
 
 
