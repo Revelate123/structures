@@ -10,23 +10,26 @@ from dataclasses import dataclass
 
 @dataclass
 class Properties:
+    """ Stores properties of timber members. Retrieves values from database """
+    length: float
+    depth: float
+    breadth: float
+    grade: str
     fb: float | None = None
     fs: float | None = None
 
-    def __post_init_(self):
-        pass
+    def __post_init__(self):
+        self._set_section_properties()
 
-    def _retrieve_section_properties(self) -> dict:
-        return {"fb": 10, "fs": 10}
+    def _set_section_properties(self) -> dict:
+        self.fb = 10
+        self.fs = 10
 
 
 @dataclass
-class Beam:
+class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
 
-    length: float | None = None
-    depth: float | None = None
-    breadth: float | None = None
     phi_bending: float | None = 0.1
     phi_shear: float | None = 0.1
     grade: str | None = None
@@ -34,9 +37,9 @@ class Beam:
     latitude: bool | None = None
     seasoned: bool | None = None
     epsilon: int = 2
-    fb: float | None = 10
 
     def __post_init__(self):
+        super().__post_init__()
         if self.length is None:
             raise ValueError(
                 "length is not set. "
