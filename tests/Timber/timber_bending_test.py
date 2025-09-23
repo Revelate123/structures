@@ -13,6 +13,7 @@ class TestInPlaneBending:
             phi_bending=0.7,
             latitude=False,
             seasoned=True,
+            grade="F17"
         )
 
     def test_stocky_beam(self):
