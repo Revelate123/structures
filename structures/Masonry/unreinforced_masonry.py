@@ -6,9 +6,6 @@ AS3700:2018 for unreinforced masonry
 import math
 from dataclasses import dataclass
 
-# ...
-
-
 def round_half_up(n, decimals=0):
     """
     Rounds positive numbers up, as a human would expect. Requires a 'fudge'
@@ -133,7 +130,7 @@ class Clay:
             print(f"k: {k}")
             print(f"Simple compression capacity kFo: {simple_comp_cap}")
 
-        return {"Simple":simple_comp_cap}
+        return {"Simple": simple_comp_cap}
 
     def refined_compression(
         self,
@@ -251,7 +248,9 @@ class Clay:
         """Computes the simplified compression capacity
         of a masonry wall under concentrated loads"""
         if bearing_width is None:
-            raise ValueError("bearing_width not defined. Often this is the width of the wall.")
+            raise ValueError(
+                "bearing_width not defined. Often this is the width of the wall."
+            )
         if verbose:
             print(f"bearing width: {bearing_width} mm")
 
@@ -769,3 +768,15 @@ class Clay:
         self.fm = round_half_up(kh * fmb, self.epsilon)
         if verbose:
             print(f"fm: {self.fm} MPa")
+
+    def in_plane_horz_shear(self):
+        """Calculates the in-plane horizontal shear capacity in accordance with AS3700 Cl 7.5.4.1"""
+
+    def bracing_capacity(self, fd: float = 0) -> dict:
+        """Calculates the in plane bracing capacity of the masonry shear wall"""
+
+        # moment capacity
+
+        # shear capacity
+
+        # Overturning capacity

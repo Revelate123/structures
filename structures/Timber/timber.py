@@ -3,6 +3,8 @@ Module for calculating timber member capacities in accordance with AS1720.1
 """
 
 import math
+import sqlite3
+import os
 from typing import Callable
 
 from dataclasses import dataclass
@@ -17,13 +19,25 @@ class Properties:
     grade: str
     fb: float | None = None
     fs: float | None = None
+    fc: float | None = None
+    ft_hw: float | None = None
+    ft_sw: float | None = None
+    E: float | None = None
+    G: float | None = None
+    pb: float | None = None
+    pc: float | None = None
+
 
     def __post_init__(self):
         self._set_section_properties()
 
     def _set_section_properties(self) -> dict:
-        self.fb = 10
-        self.fs = 10
+        DB_PATH = os.path.join(os.path.dirname(__file__), "tables.db")
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM f_grade_properties WHERE grade = ?", (self.grade,))
+        row = cursor.fetchone()
+        _, self.fb, self.ft_hw, self.ft_sw, self.fs, self.fc, self.E, self.G = row
 
 
 @dataclass
@@ -32,7 +46,6 @@ class Beam(Properties):
 
     phi_bending: float | None = 0.1
     phi_shear: float | None = 0.1
-    grade: str | None = None
     phi_compression: float | None = 0.1
     latitude: bool | None = None
     seasoned: bool | None = None
@@ -243,9 +256,9 @@ class Beam(Properties):
             )
         elif verbose:
             print(f"latitude: {self.latitude}")
-        if self.latitude == True:
+        if self.latitude is True:
             k6 = 0.9
-        elif self.latitude == False:
+        else:
             k6 = 1
         if verbose:
             print(f"k6: {k6}, refer Cl 2.4.3")
