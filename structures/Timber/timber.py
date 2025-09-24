@@ -9,10 +9,13 @@ from typing import Callable
 
 from dataclasses import dataclass
 
+db_path = os.path.join(os.path.dirname(__file__), "tables.db")
+
 
 @dataclass
 class Properties:
     """ Stores properties of timber members. Retrieves values from database """
+
     length: float
     depth: float
     breadth: float
@@ -22,22 +25,53 @@ class Properties:
     fc: float | None = None
     ft_hw: float | None = None
     ft_sw: float | None = None
-    E: float | None = None
-    G: float | None = None
+    elastic_modulus: float | None = None
+    rigidity_modulus: float | None = None
     pb: float | None = None
     pc: float | None = None
-
+    seasoned: bool | None = None
 
     def __post_init__(self):
-        self._set_section_properties()
+        self._set_section_properties(verbose=True)
+        self._set_pb(verbose=True)
 
-    def _set_section_properties(self) -> dict:
-        DB_PATH = os.path.join(os.path.dirname(__file__), "tables.db")
-        conn = sqlite3.connect(DB_PATH)
+    def _set_section_properties(self, verbose: bool = True) -> None:
+
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM f_grade_properties WHERE grade = ?", (self.grade,))
+        cursor.execute(
+            "SELECT * FROM f_grade_properties WHERE grade = ?", (self.grade,)
+        )
         row = cursor.fetchone()
-        _, self.fb, self.ft_hw, self.ft_sw, self.fs, self.fc, self.E, self.G = row
+        (
+            _,
+            self.fb,
+            self.ft_hw,
+            self.ft_sw,
+            self.fs,
+            self.fc,
+            self.elastic_modulus,
+            self.rigidity_modulus,
+        ) = row
+        if verbose:
+            print(f"fb: {self.fb} MPa")
+            print(f"ft: {self.ft_hw} MPa (hardwood)")
+            print(f"ft: {self.ft_sw} MPa (softwood)")
+            print(f"fs: {self.fs} MPa")
+            print(f"fc: {self.fc} MPa")
+            print(f"E:  {self.elastic_modulus} MPa")
+            print(f"G:  {self.rigidity_modulus} MPa")
+
+    def _set_pb(self, verbose: bool = True) -> None:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT seasoned, unseasoned FROM table3_1 WHERE grade = ?", (self.grade,)
+        )
+        row = cursor.fetchone()
+        self.pb = row[0] if self.seasoned is True else row[1]
+        if verbose:
+            print(f"pb: {self.pb}")
 
 
 @dataclass
@@ -48,7 +82,7 @@ class Beam(Properties):
     phi_shear: float | None = 0.1
     phi_compression: float | None = 0.1
     latitude: bool | None = None
-    seasoned: bool | None = None
+
     epsilon: int = 2
 
     def __post_init__(self):
@@ -76,7 +110,6 @@ class Beam(Properties):
         nmem: int | None = None,
         spacing: float | None = None,
         span: float | None = None,
-        pb: float | None = None,
         restraint_location: int | None = None,
         lay: float | None = None,
         z: float | None = None,
@@ -91,7 +124,6 @@ class Beam(Properties):
             nmem=nmem,
             spacing=spacing,
             span=span,
-            pb=pb,
             restraint_location=restraint_location,
             lay=lay,
             z=z,
@@ -106,7 +138,6 @@ class Beam(Properties):
         nmem=None,
         spacing=None,
         span=None,
-        pb: float | None = None,
         restraint_location: int | None = None,
         lay: float | None = None,
         z: float | None = None,
@@ -122,7 +153,6 @@ class Beam(Properties):
             nmem=nmem,
             spacing=spacing,
             span=span,
-            pb=pb,
             restraint_location=restraint_location,
             lay=lay,
             z=z,
@@ -171,7 +201,6 @@ class Beam(Properties):
         spacing: float | None = None,
         span: float | None = None,
         out_of_plane: bool | None = None,
-        pb: float | None = None,
         restraint_location: int | None = None,
         lay: float | None = None,
         z: float | None = None,
@@ -198,7 +227,6 @@ class Beam(Properties):
             ncom=ncom, nmem=nmem, spacing=spacing, span=span, verbose=verbose
         )
         k12 = self._calc_k12(
-            pb=pb,
             restraint_location=restraint_location,
             lay=lay,
             out_of_plane=out_of_plane,
@@ -271,33 +299,33 @@ class Beam(Properties):
             raise ValueError(
                 "ncom not set, this is the number of elements that are effectively fastened together to form a single group"
             )
-        elif verbose:
+        if verbose:
             print(f"ncom: {ncom}, number of members per group")
 
         if nmem is None:
             raise ValueError(
                 "nmem not set, this is the number of members that are discretely spaced parallel to each other"
             )
-        elif verbose:
+        if verbose:
             print(f"nmem: {nmem}, number of groups of members")
 
         if nmem > 1 and spacing is None:
             raise ValueError(
                 "nmem greater than 1 but spacing between groups not set. This should be in mm."
             )
-        elif verbose and nmem > 1 and not spacing is None:
+        if verbose and nmem > 1 and not spacing is None:
             print(f"spacing: {spacing} mm")
 
         if nmem > 1 and span is None:
             raise ValueError(
                 "nmem greater than 1 but span of members not set. This should be in mm."
             )
-        elif verbose and nmem > 1 and not span is None:
+        if verbose and nmem > 1 and not span is None:
             print(f"span: {span} mm")
 
         if nmem == 1 and ncom == 1:
             if verbose:
-                print(f"k9: 1")
+                print("k9: 1")
             return 1
 
         table_2_7 = [0, 1, 1.14, 1.2, 1.24, 1.26, 1.28, 1.3, 1.31, 1.32, 1.33]
@@ -316,7 +344,6 @@ class Beam(Properties):
 
     def _calc_k12(
         self,
-        pb: float | None = None,
         restraint_location: int | None = None,
         lay: float | None = None,
         fly_brace_spacing: int | None = None,
@@ -324,10 +351,10 @@ class Beam(Properties):
         verbose: bool = True,
     ):
         """Computes k12 using AS1720.1-2010 Cl"""
-        if pb is None:
+        if self.pb is None:
             raise ValueError("pb not defined")
         elif verbose:
-            print(f"pb: {pb}")
+            print(f"pb: {self.pb}")
 
         if out_of_plane is None:
             raise ValueError("out_of_plane not set. Set to True if out of plane")
@@ -366,9 +393,8 @@ class Beam(Properties):
             elif fly_brace_spacing > 1:
                 print(f"fly bracing to every {fly_brace_spacing} restraints")
 
-        cont_restrained = self._cont_restraint(pb=pb, lay=lay, verbose=verbose)
+        cont_restrained = self._cont_restraint(lay=lay, verbose=verbose)
         S1 = self._calc_S1(
-            pb=pb,
             restraint_location=restraint_location,
             lay=lay,
             fly_brace_spacing=fly_brace_spacing,
@@ -376,19 +402,18 @@ class Beam(Properties):
             verbose=verbose,
         )
 
-        if pb * S1 <= 10:
+        if self.pb * S1 <= 10:
             k12 = 1
-        elif pb * S1 <= 20:
-            k12 = 1.5 - 0.05 * pb * S1
+        elif self.pb * S1 <= 20:
+            k12 = 1.5 - 0.05 * self.pb * S1
         else:
-            k12 = 200 / (pb * S1) ** 2
+            k12 = 200 / (self.pb * S1) ** 2
         if verbose:
             print(f"k12: {k12}")
         return k12
 
     def _calc_S1(
         self,
-        pb: float | None = None,
         restraint_location: int | None = None,
         lay: float | None = None,
         fly_brace_spacing: int | None = None,
@@ -418,12 +443,10 @@ class Beam(Properties):
     def _calc_S2(self):
         pass  # TODO
 
-    def _cont_restraint(
-        self, pb: float | None = None, lay: float | None = None, verbose: bool = True
-    ):
+    def _cont_restraint(self, lay: float | None = None, verbose: bool = True):
         """Determines if the beam is continuously restrained"""
         cont_restrained = (
-            lay / self.depth <= 64 * (self.breadth / (pb * self.depth)) ** 2
+            lay / self.depth <= 64 * (self.breadth / (self.pb * self.depth)) ** 2
         )
         if verbose:
             print(f"Continuously restrained: {cont_restrained}")
@@ -542,7 +565,7 @@ class Column(Beam):
     ):
         if Lax is None:
             raise ValueError("Lax not set. This is the distance between restraints...")
-        elif verbose:
+        if verbose:
             print(f"Lax: {Lax} mm")
 
         S3 = min(Lax / self.depth, g13 * self.length / self.depth)
