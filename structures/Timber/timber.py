@@ -14,7 +14,7 @@ db_path = os.path.join(os.path.dirname(__file__), "tables.db")
 
 @dataclass
 class Properties:
-    """ Stores properties of timber members. Retrieves values from database """
+    """Stores properties of timber members. Retrieves values from database"""
 
     length: float
     depth: float
@@ -114,7 +114,8 @@ class Beam(Properties):
         lay: float | None = None,
         z: float | None = None,
         verbose=True,
-    ):
+    ) -> float:
+        """Interface function which calls self._bending() configured for in-plane capacity"""
         assert self.depth is not None
         assert self.breadth is not None
 
@@ -142,7 +143,8 @@ class Beam(Properties):
         lay: float | None = None,
         z: float | None = None,
         verbose=True,
-    ):
+    ) -> float:
+        """Interface function which calls self._bending() configured for out-of-plane capacity"""
 
         assert self.depth is not None
         assert self.breadth is not None
@@ -184,11 +186,11 @@ class Beam(Properties):
         k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
         k6 = self._calc_k6(verbose=verbose)
 
-        As = 2 / 3 * (self.breadth * self.depth)
+        shear_plane_area = 2 / 3 * (self.breadth * self.depth)
         if verbose:
-            print(f"As: {As} mm2")
+            print(f"As (shear plane area): {shear_plane_area} mm2")
 
-        vd = self.phi_shear * k4 * k6 * self.fs * As
+        vd = self.phi_shear * k4 * k6 * self.fs * shear_plane_area
         if verbose is True:
             print(f"Vd = {vd} KN (Not including k1)")
         return vd
@@ -205,7 +207,7 @@ class Beam(Properties):
         lay: float | None = None,
         z: float | None = None,
         verbose=True,
-    ):
+    ) -> float:
         """
         Computes the bending capacity of a timber element using the methods
         described in AS 1720 Cl 3.2
@@ -213,8 +215,10 @@ class Beam(Properties):
         Args:
             loads: List of applied loads in kN.
             seasoned: True if seasoned timber is used and false otherwise.
-            moisture_content: precentage moisture content, given as whole numbers, e.g. for 15% set as 15.
-            latitude: True if located in coastal Queensland north of latitude 25 degrees south or 16 degrees south elsewhere, and False otherwise.
+            moisture_content: precentage moisture content, given as whole numbers,
+                                 e.g. for 15% set as 15.
+            latitude: True if located in coastal Queensland north of latitude 25
+                         degrees south or 16 degrees south elsewhere, and False otherwise.
             verbose: If True, print internal calculation details.
 
         Returns:
@@ -232,12 +236,12 @@ class Beam(Properties):
             out_of_plane=out_of_plane,
             verbose=verbose,
         )
-        z = self._calc_Z(out_of_plane=out_of_plane, verbose=verbose)
+        z = self._calc_z(out_of_plane=out_of_plane, verbose=verbose)
 
-        Md = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
+        moment_cap = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
         if verbose is True:
-            print(f"Md: {Md} KNm (Not inlcuding k1)")
-        return Md
+            print(f"Md: {moment_cap} KNm (Not inlcuding k1)")
+        return moment_cap
 
     def _calc_k4(self, moisture_content, verbose):
         """Computes k4 using AS1720.1-2010 Cl 2.4.2.2 & Cl 2.4.2.3"""
@@ -280,7 +284,8 @@ class Beam(Properties):
         if self.latitude is None:
             raise ValueError(
                 "latitude not set, set to True if located in coastal Queensland "
-                "north of latitude 25 degrees south or 16 degrees south elsewhere, and False otherwise."
+                "north of latitude 25 degrees south or 16 degrees south elsewhere,"
+                " and False otherwise."
             )
         elif verbose:
             print(f"latitude: {self.latitude}")
@@ -297,14 +302,16 @@ class Beam(Properties):
 
         if ncom is None:
             raise ValueError(
-                "ncom not set, this is the number of elements that are effectively fastened together to form a single group"
+                "ncom not set, this is the number of elements that"
+                " are effectively fastened together to form a single group"
             )
         if verbose:
             print(f"ncom: {ncom}, number of members per group")
 
         if nmem is None:
             raise ValueError(
-                "nmem not set, this is the number of members that are discretely spaced parallel to each other"
+                "nmem not set, this is the number of members that"
+                " are discretely spaced parallel to each other"
             )
         if verbose:
             print(f"nmem: {nmem}, number of groups of members")
@@ -349,7 +356,7 @@ class Beam(Properties):
         fly_brace_spacing: int | None = None,
         out_of_plane: bool | None = None,
         verbose: bool = True,
-    ):
+    ) -> float:
         """Computes k12 using AS1720.1-2010 Cl"""
         if self.pb is None:
             raise ValueError("pb not defined")
@@ -358,7 +365,7 @@ class Beam(Properties):
 
         if out_of_plane is None:
             raise ValueError("out_of_plane not set. Set to True if out of plane")
-        elif out_of_plane == True:
+        if out_of_plane is True:
             return 1
 
         if restraint_location is None or restraint_location not in [1, 2, 3]:
@@ -366,10 +373,11 @@ class Beam(Properties):
                 "restraint_location not set or set incorrectly.\n"
                 "set to 1 if restraints are to the compression edge\n"
                 "set to 2 if restraints are to the tension edge\n"
-                "set to 3 if restraints are to the tension edge and there is fly-bracing to the compression edge\n"
+                "set to 3 if restraints are to the tension edge and "
+                "there is fly-bracing to the compression edge\n"
                 "If unsure, setting to 2 is conservative"
-            )  # TODO confirm
-        elif verbose:
+            )
+        if verbose:
             print(f"restraint_location: {restraint_location}")
 
         if lay is None:
@@ -378,14 +386,16 @@ class Beam(Properties):
                 "For continuous systems e.g. flooring, set to the nail spacing e.g 300mm\n"
                 "For fly-bracing systems it is NOT the distance between fly-braces."
             )
-        elif verbose:
+        if verbose:
             print(f"lay: {lay} mm")
 
         if restraint_location == 3 and fly_brace_spacing is None:
             raise ValueError(
-                "restraint_location set to 3 but fly-brace spacing has not been set. This should be the number of members in the group"
+                "restraint_location set to 3 but fly-brace spacing has not been set."
+                " This should be the number of members in the group"
                 "[L,R), for example, if there are fly braces to every purlin,"
-                " then fly_brace_spacing should be set to 1, if they alternate every 2nd purlin, it should be set to 2, etc."
+                " then fly_brace_spacing should be set to 1, if they alternate every 2nd purlin,"
+                " it should be set to 2, etc."
             )
         elif verbose and restraint_location == 3 and not fly_brace_spacing is None:
             if fly_brace_spacing == 1:
@@ -394,7 +404,7 @@ class Beam(Properties):
                 print(f"fly bracing to every {fly_brace_spacing} restraints")
 
         cont_restrained = self._cont_restraint(lay=lay, verbose=verbose)
-        S1 = self._calc_S1(
+        s1 = self._calc_s1(
             restraint_location=restraint_location,
             lay=lay,
             fly_brace_spacing=fly_brace_spacing,
@@ -402,46 +412,47 @@ class Beam(Properties):
             verbose=verbose,
         )
 
-        if self.pb * S1 <= 10:
+        if self.pb * s1 <= 10:
             k12 = 1
-        elif self.pb * S1 <= 20:
-            k12 = 1.5 - 0.05 * self.pb * S1
+        elif self.pb * s1 <= 20:
+            k12 = 1.5 - 0.05 * self.pb * s1
         else:
-            k12 = 200 / (self.pb * S1) ** 2
+            k12 = 200 / (self.pb * s1) ** 2
         if verbose:
             print(f"k12: {k12}")
         return k12
 
-    def _calc_S1(
+    def _calc_s1(
         self,
         restraint_location: int | None = None,
         lay: float | None = None,
         fly_brace_spacing: int | None = None,
         cont_restrained: bool = False,
         verbose: bool = True,
-    ):
-        """Calculates the beam slenderness S1"""
-        if cont_restrained == True:
+    ) -> float:
+        """Calculates the beam slenderness s1"""
+        s1 = float("inf")
+        if cont_restrained is True:
             if restraint_location == 1:
-                S1 = 0
+                s1 = 0
             if restraint_location == 2:
-                S1 = 2.25 * self.depth / self.breadth
+                s1 = 2.25 * self.depth / self.breadth
             if restraint_location == 3:
-                S1 = (1.5 * self.depth / self.breadth) / (
+                s1 = (1.5 * self.depth / self.breadth) / (
                     (math.pi * self.depth / fly_brace_spacing * lay) ** 2 + 0.4
                 ) ** 0.5
-        elif cont_restrained == False:
+        elif cont_restrained is False:
             if restraint_location == 1:
-                S1 = 1.25 * self.depth / self.breadth * (lay / self.depth) ** 0.5
-            if restraint_location == 2 or restraint_location == 3:
-                S1 = (self.depth / self.breadth) ** 1.35 * (lay / self.depth) ** 0.25
+                s1 = 1.25 * self.depth / self.breadth * (lay / self.depth) ** 0.5
+            if restraint_location in (2, 3):
+                s1 = (self.depth / self.breadth) ** 1.35 * (lay / self.depth) ** 0.25
 
         if verbose:
-            print(f"S1: {S1}")
-        return S1
+            print(f"s1: {s1}")
+        return s1
 
-    def _calc_S2(self):
-        pass  # TODO
+    def _calc_s2(self):
+        pass
 
     def _cont_restraint(self, lay: float | None = None, verbose: bool = True):
         """Determines if the beam is continuously restrained"""
@@ -452,15 +463,15 @@ class Beam(Properties):
             print(f"Continuously restrained: {cont_restrained}")
         return cont_restrained
 
-    def _calc_Z(self, out_of_plane, verbose):
+    def _calc_z(self, out_of_plane: bool | None = None, verbose: bool = True) -> float:
         if out_of_plane is None:
             raise ValueError("out_of_plane not set.")
-        if out_of_plane == True:
+        if out_of_plane is True:
             z = self.depth * self.breadth**2 / 6
-        elif out_of_plane == False:
+        elif out_of_plane is False:
             z = self.breadth * self.depth**2 / 6
         else:
-            raise ValueError("error in _calc_Z")
+            raise ValueError("error in _calc_z")
 
         if verbose:
             print(f"z: {z} mm3")
@@ -490,13 +501,16 @@ class Column(Beam):
         verbose=None,
     ):
         """
-        Computes the compressive strength of a Timber column parallel to grain in accordance with AS1720.1 Cl 3.3.1
+        Computes the compressive strength of a Timber column parallel
+          to grain in accordance with AS1720.1 Cl 3.3.1
 
         Args:
             loads: List of applied loads in kN.
             seasoned: True if seasoned timber is used and false otherwise.
-            moisture_content: precentage moisture content, given as whole numbers, e.g. for 15% set as 15.
-            latitude: True if located in coastal Queensland north of latitude 25 degrees south or 16 degrees south elsewhere, and False otherwise.
+            moisture_content: precentage moisture content, given as whole numbers,
+                                 e.g. for 15% set as 15.
+            latitude: True if located in coastal Queensland north of latitude 25 degrees
+                         south or 16 degrees south elsewhere, and False otherwise.
             verbose: If True, print internal calculation details.
 
         Returns:
@@ -509,7 +523,6 @@ class Column(Beam):
             g13=g13,
             La=La,
             slenderness=slenderness,
-            out_of_plane=out_of_plane,
             verbose=verbose,
         )
         Ac = self.breadth * self.depth
@@ -524,7 +537,6 @@ class Column(Beam):
         g13: float | None = None,
         La: float | None = None,
         slenderness: Callable | None = None,
-        out_of_plane: bool | None = None,
         verbose: bool = True,
     ):
         """Computes k12 using AS1720.1-2010 Cl 3.3.2.2"""
