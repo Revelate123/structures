@@ -6,6 +6,7 @@ import math
 import sqlite3
 import os
 from typing import Callable
+from structures.util import round_half_up
 
 from dataclasses import dataclass
 
@@ -20,6 +21,7 @@ class Properties:
     depth: float
     breadth: float
     grade: str
+    category: int
     fb: float | None = None
     fs: float | None = None
     fc: float | None = None
@@ -78,7 +80,7 @@ class Properties:
 class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
 
-    phi_bending: float | None = 0.1
+    phi_bending: float | None = 0.95
     phi_shear: float | None = 0.1
     phi_compression: float | None = 0.1
     latitude: bool | None = None
@@ -237,8 +239,10 @@ class Beam(Properties):
             verbose=verbose,
         )
         z = self._calc_z(out_of_plane=out_of_plane, verbose=verbose)
-
-        moment_cap = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
+        print(f"phi_bending = {self.phi_bending}")
+        moment_cap = round_half_up(
+            self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6, self.epsilon
+        )
         if verbose is True:
             print(f"Md: {moment_cap} KNm (Not inlcuding k1)")
         return moment_cap
@@ -382,7 +386,7 @@ class Beam(Properties):
 
         if lay is None:
             raise ValueError(
-                "lay not set. This is the distance between restraints.\n"
+                "lay not set. This is the distance between restraints in mm.\n"
                 "For continuous systems e.g. flooring, set to the nail spacing e.g 300mm\n"
                 "For fly-bracing systems it is NOT the distance between fly-braces."
             )
@@ -418,6 +422,7 @@ class Beam(Properties):
             k12 = 1.5 - 0.05 * self.pb * s1
         else:
             k12 = 200 / (self.pb * s1) ** 2
+        k12 = round_half_up(k12, self.epsilon)
         if verbose:
             print(f"k12: {k12}")
         return k12

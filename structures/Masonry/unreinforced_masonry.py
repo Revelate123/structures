@@ -5,18 +5,7 @@ AS3700:2018 for unreinforced masonry
 
 import math
 from dataclasses import dataclass
-
-def round_half_up(n, decimals=0):
-    """
-    Rounds positive numbers up, as a human would expect. Requires a 'fudge'
-    factor denoted by + 10**-(decimals*2) to account for rounding point errors
-    for example, 5.42 * 0.75 = 4.06499999999999, which would round to
-    4.06 incorrectly.
-    """
-    if n < 0:
-        raise ValueError("This function should not be used to round negative numbers")
-    multiplier = 10**decimals
-    return math.floor(n * multiplier + 0.5 + 10 ** -(decimals * 2)) / multiplier
+from structures.util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes
@@ -637,7 +626,7 @@ class Clay:
             print(f"Mch: {mch} KNm")
         return mch
 
-    def _diagonal_bending(self, hu, tj, lu, tu, Ld, Mch) -> float:
+    def _diagonal_bending(self, hu, fd, tj, lu, tu, Ld, Mch) -> float:
         """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4"""
         G = 2 * (hu + tj) / (lu + tj)
         Hd = 2900 / 2
@@ -647,7 +636,7 @@ class Clay:
         k1 = 0
         k2 = 1 + 1 / G**2
         φ = 0.6
-        ft = 2.25 * math.sqrt(self.fmt) + 0.15 * self.fd
+        ft = 2.25 * math.sqrt(self.fmt) + 0.15 * fd
         B = (hu + tj) / math.sqrt(1 + G**2)
         if B >= tu:
             Zt = ((2 * B**2 * tu**2) / (3 * B + 1.8 * tu)) / (

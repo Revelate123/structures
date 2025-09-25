@@ -1,10 +1,24 @@
 import os
+import math
 import subprocess
 from datetime import datetime
 import ipynbname
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 from IPython.display import display, Markdown
+
+def round_half_up(n, decimals=0):
+    """
+    Rounds positive numbers up, as a human would expect. Requires a 'fudge'
+    factor denoted by + 10**-(decimals*2) to account for rounding point errors
+    for example, 5.42 * 0.75 = 4.06499999999999, which would round to
+    4.06 incorrectly.
+    """
+    if n < 0:
+        raise ValueError("This function should not be used to round negative numbers")
+    multiplier = 10**decimals
+    return math.floor(n * multiplier + 0.5 + 10 ** -(decimals * 2)) / multiplier
+
 
 def export_calc(output_dir, file_name):
     base_name = os.path.splitext(os.path.basename(file_name))[0]
