@@ -19,7 +19,7 @@ class TestInPlaneBending:
         k12 = 1.5 - 0.05 * pb*S1 = 0.56
         fb = 42 MPa
         Z = 45 * 240 ^2 /6 = 432,000 mm3
-        Md = k1 * 0.95 * 0.56 * 42 MPa * 432,000mm3 = 9.65 KNm
+        Md = k1 * 0.95 * 0.56 * 42 MPa * 432,000mm3 = k1 * 9.65 KNm
         """
         beam = timber.Beam(
             length=1000,
@@ -30,10 +30,11 @@ class TestInPlaneBending:
             grade="F17",
             category=1,
         )
-        assert (
-            beam.in_plane_bending(
+        cap = beam.in_plane_bending(
                 moisture_content=15, ncom=1, nmem=1, restraint_location=1, lay=2000
             )
+        assert (
+            cap["5 seconds"]
             == 9.65
         )
 

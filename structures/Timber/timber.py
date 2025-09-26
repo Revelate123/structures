@@ -6,9 +6,10 @@ import math
 import sqlite3
 import os
 from typing import Callable
+from dataclasses import dataclass
 from structures.util import round_half_up
 
-from dataclasses import dataclass
+
 
 db_path = os.path.join(os.path.dirname(__file__), "tables.db")
 
@@ -22,6 +23,9 @@ class Properties:
     breadth: float
     grade: str
     category: int
+    phi_bending: float | None = None
+    phi_shear: float | None = None
+    phi_compression: float | None = None
     fb: float | None = None
     fs: float | None = None
     fc: float | None = None
@@ -30,12 +34,13 @@ class Properties:
     elastic_modulus: float | None = None
     rigidity_modulus: float | None = None
     pb: float | None = None
-    pc: float | None = None
+    pc: float | None = 1
     seasoned: bool | None = None
 
     def __post_init__(self):
         self._set_section_properties(verbose=True)
         self._set_pb(verbose=True)
+        self._set_phi()
 
     def _set_section_properties(self, verbose: bool = True) -> None:
 
@@ -75,14 +80,19 @@ class Properties:
         if verbose:
             print(f"pb: {self.pb}")
 
+    def _set_phi(self) -> None:
+        if self.category == 1:
+            self.phi_bending = 0.95
+        else:
+            self.phi_bending = 0.6
+        self.phi_compression = 0.7
+
 
 @dataclass
 class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
 
-    phi_bending: float | None = 0.95
-    phi_shear: float | None = 0.1
-    phi_compression: float | None = 0.1
+    
     latitude: bool | None = None
 
     epsilon: int = 2
@@ -209,7 +219,7 @@ class Beam(Properties):
         lay: float | None = None,
         z: float | None = None,
         verbose=True,
-    ) -> float:
+    ) -> dict:
         """
         Computes the bending capacity of a timber element using the methods
         described in AS 1720 Cl 3.2
@@ -226,7 +236,6 @@ class Beam(Properties):
         Returns:
             A dictionary with bending capacities for different durations related to the factor k1
         """
-
         k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
         k6 = self._calc_k6(verbose=verbose)
         k9 = self._calc_k9(
@@ -240,12 +249,19 @@ class Beam(Properties):
         )
         z = self._calc_z(out_of_plane=out_of_plane, verbose=verbose)
         print(f"phi_bending = {self.phi_bending}")
-        moment_cap = round_half_up(
-            self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6, self.epsilon
-        )
+        moment_cap = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
+        k1_moment_cap = {
+            "5 seconds" : round_half_up(moment_cap,self.epsilon),
+            "5 minutes" : round_half_up(moment_cap,self.epsilon),
+            "5 hours"   : round_half_up(0.97 * moment_cap,self.epsilon),
+            "5 days"    : round_half_up(0.94 * moment_cap,self.epsilon),
+            "5 months"  : round_half_up(0.8 * moment_cap,self.epsilon),
+            "50+ years" : round_half_up(0.57 * moment_cap,self.epsilon)
+        }
         if verbose is True:
-            print(f"Md: {moment_cap} KNm (Not inlcuding k1)")
-        return moment_cap
+            for key,value in k1_moment_cap.items():
+                print(f"Md ({key}): {value} KNm")
+        return k1_moment_cap
 
     def _calc_k4(self, moisture_content, verbose):
         """Computes k4 using AS1720.1-2010 Cl 2.4.2.2 & Cl 2.4.2.3"""
@@ -482,6 +498,41 @@ class Beam(Properties):
             print(f"z: {z} mm3")
         return z
 
+    def _calc_k1(self, duration:int|None = None, verbose:bool = True):
+        """ Calculates k1 in accordance with AS1720.1-2010 Cl 2.4.1.1 """
+        if duration is None or duration not in (1,2,3,4,5,6):
+            raise ValueError("duration not set. This is the duration of loading for strength:\n" \
+            "1:     5 seconds\n" \
+            "2:     5 minutes\n" \
+            "3:     5 hours\n" \
+            "4:     5 days\n" \
+            "5:     5 months\n" \
+            "6:     50+ years")
+        if duration == 1:
+            k1 = 1
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 5 seconds")
+        elif duration == 2:
+            k1 = 1
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 5 minutes")
+        if duration == 3:
+            k1 = 0.97
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 5 hours")
+        if duration == 4:
+            k1 = 0.94
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 5 days")
+        if duration == 5:
+            k1 = 0.8
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 5 months")
+        if duration == 6:
+            k1 = 0.57
+            if verbose:
+                print(f"k1: {k1}, duration of loading for strength: 50+ years")
+        return k1
 
 class Column(Beam):
 
@@ -497,10 +548,8 @@ class Column(Beam):
     def _compression(
         self,
         moisture_content=None,
-        fc=None,
         slenderness: Callable | None = None,
         g13=None,
-        pc=None,
         La=None,
         out_of_plane=None,
         verbose=None,
@@ -524,31 +573,29 @@ class Column(Beam):
         k4 = self._calc_k4(moisture_content=moisture_content, verbose=verbose)
         k6 = self._calc_k6(verbose=verbose)
         k12 = self._calc_k12_compression(
-            pc=pc,
             g13=g13,
             La=La,
             slenderness=slenderness,
             verbose=verbose,
         )
         Ac = self.breadth * self.depth
-        Ndc = self.phi_compression * k4 * k6 * k12 * fc * Ac
+        Ndc = self.phi_compression * k4 * k6 * k12 * self.fc * Ac
         if verbose:
             print(f"Ndc: {Ndc} KNm")
         return Ndc
 
     def _calc_k12_compression(
         self,
-        pc: float | None = None,
         g13: float | None = None,
         La: float | None = None,
         slenderness: Callable | None = None,
         verbose: bool = True,
     ):
         """Computes k12 using AS1720.1-2010 Cl 3.3.2.2"""
-        if pc is None:
+        if self.pc is None:
             raise ValueError("pc not defined")
         elif verbose:
-            print(f"pc: {pc}")
+            print(f"pc: {self.pc}")
 
         if g13 is None:
             raise ValueError(
@@ -565,14 +612,14 @@ class Column(Beam):
                 "position or direction at other end 2.0\n"
             )
 
-        S = slenderness(g13, La)
+        S = max(self._calc_S3(g13, La),self._calc_S4(g13,La))
 
-        if pc * S <= 10:
+        if self.pc * S <= 10:
             k12 = 1
-        elif pc * S <= 20:
-            k12 = 1.5 - 0.05 * pc * S
+        elif self.pc * S <= 20:
+            k12 = 1.5 - 0.05 * self.pc * S
         else:
-            k12 = 200 / (pc * S) ** 2
+            k12 = 200 / (self.pc * S) ** 2
         if verbose:
             print(f"k12: {k12}")
         return k12
