@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from structures.util import round_half_up
 
 
-
 db_path = os.path.join(os.path.dirname(__file__), "tables.db")
 
 
@@ -91,10 +90,7 @@ class Properties:
 @dataclass
 class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
-
-    
     latitude: bool | None = None
-
     epsilon: int = 2
 
     def __post_init__(self):
@@ -251,15 +247,15 @@ class Beam(Properties):
         print(f"phi_bending = {self.phi_bending}")
         moment_cap = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
         k1_moment_cap = {
-            "5 seconds" : round_half_up(moment_cap,self.epsilon),
-            "5 minutes" : round_half_up(moment_cap,self.epsilon),
-            "5 hours"   : round_half_up(0.97 * moment_cap,self.epsilon),
-            "5 days"    : round_half_up(0.94 * moment_cap,self.epsilon),
-            "5 months"  : round_half_up(0.8 * moment_cap,self.epsilon),
-            "50+ years" : round_half_up(0.57 * moment_cap,self.epsilon)
+            "5 seconds": round_half_up(moment_cap, self.epsilon),
+            "5 minutes": round_half_up(moment_cap, self.epsilon),
+            "5 hours": round_half_up(0.97 * moment_cap, self.epsilon),
+            "5 days": round_half_up(0.94 * moment_cap, self.epsilon),
+            "5 months": round_half_up(0.8 * moment_cap, self.epsilon),
+            "50+ years": round_half_up(0.57 * moment_cap, self.epsilon),
         }
         if verbose is True:
-            for key,value in k1_moment_cap.items():
+            for key, value in k1_moment_cap.items():
                 print(f"Md ({key}): {value} KNm")
         return k1_moment_cap
 
@@ -498,16 +494,18 @@ class Beam(Properties):
             print(f"z: {z} mm3")
         return z
 
-    def _calc_k1(self, duration:int|None = None, verbose:bool = True):
-        """ Calculates k1 in accordance with AS1720.1-2010 Cl 2.4.1.1 """
-        if duration is None or duration not in (1,2,3,4,5,6):
-            raise ValueError("duration not set. This is the duration of loading for strength:\n" \
-            "1:     5 seconds\n" \
-            "2:     5 minutes\n" \
-            "3:     5 hours\n" \
-            "4:     5 days\n" \
-            "5:     5 months\n" \
-            "6:     50+ years")
+    def _calc_k1(self, duration: int | None = None, verbose: bool = True):
+        """Calculates k1 in accordance with AS1720.1-2010 Cl 2.4.1.1"""
+        if duration is None or duration not in (1, 2, 3, 4, 5, 6):
+            raise ValueError(
+                "duration not set. This is the duration of loading for strength:\n"
+                "1:     5 seconds\n"
+                "2:     5 minutes\n"
+                "3:     5 hours\n"
+                "4:     5 days\n"
+                "5:     5 months\n"
+                "6:     50+ years"
+            )
         if duration == 1:
             k1 = 1
             if verbose:
@@ -533,6 +531,7 @@ class Beam(Properties):
             if verbose:
                 print(f"k1: {k1}, duration of loading for strength: 50+ years")
         return k1
+
 
 class Column(Beam):
 
@@ -612,7 +611,7 @@ class Column(Beam):
                 "position or direction at other end 2.0\n"
             )
 
-        S = max(self._calc_S3(g13, La),self._calc_S4(g13,La))
+        S = max(self._calc_S3(g13, La), self._calc_S4(g13, La))
 
         if self.pc * S <= 10:
             k12 = 1
