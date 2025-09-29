@@ -534,11 +534,12 @@ class Beam(Properties):
 
 
 class Column(Beam):
+    """ Class for designing timber columns in accordance with AS 1720.1 """
 
-    def out_of_plane_compression(self):
+    def minor_axis_compression(self):
         pass
 
-    def in_plane_compression(self):
+    def major_axis_compression(self):
         pass
 
     def compression(self):
