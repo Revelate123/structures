@@ -67,6 +67,8 @@ class Properties:
             print(f"fc: {self.fc} MPa")
             print(f"E:  {self.elastic_modulus} MPa")
             print(f"G:  {self.rigidity_modulus} MPa")
+        conn.commit()
+        conn.close()
 
     def _set_pb(self, verbose: bool = True) -> None:
         conn = sqlite3.connect(db_path)
@@ -78,18 +80,31 @@ class Properties:
         self.pb = row[0] if self.seasoned is True else row[1]
         if verbose:
             print(f"pb: {self.pb}")
+        conn.commit()
+        conn.close()
 
-    def _set_phi(self) -> None:
-        if self.category == 1:
-            self.phi_bending = 0.95
-        else:
-            self.phi_bending = 0.6
-        self.phi_compression = 0.7
+    def _set_phi(self, verbose: bool = True) -> None:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT grade, category_1, category_2, category_3 FROM table2_1 WHERE grade = ?",
+            (self.grade,),
+        )
+        row = cursor.fetchone()
+        self.phi_bending = self.phi_shear = self.phi_compression = row[self.category]
+
+        if verbose:
+            print(f"phi_bending: {self.phi_bending}")
+            print(f"phi_shear: {self.phi_shear}")
+            print(f"phi_compression: {self.phi_compression}")
+        conn.commit()
+        conn.close()
 
 
 @dataclass
 class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
+
     latitude: bool | None = None
     epsilon: int = 2
 
@@ -534,7 +549,7 @@ class Beam(Properties):
 
 
 class Column(Beam):
-    """ Class for designing timber columns in accordance with AS 1720.1 """
+    """Class for designing timber columns in accordance with AS 1720.1"""
 
     def minor_axis_compression(self):
         pass
