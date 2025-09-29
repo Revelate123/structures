@@ -15,7 +15,8 @@ name = "toms_structures"
 dynamic = ["version"]
 dependencies = [
     "concreteproperties>=0.7.0",
-    "pytest"
+    "pytest",
+    "ipynbname"
 ]
 authors = [
   { name="Thomas Duffett", email="thomasduffett4@gmail.com" },
