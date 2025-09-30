@@ -6,7 +6,7 @@ import math
 import sqlite3
 import os
 from typing import Callable
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from structures.util import round_half_up
 
 
@@ -35,6 +35,7 @@ class Properties:
     pb: float | None = None
     pc: float | None = 1
     seasoned: bool | None = None
+    epsilon: int = 2
 
     def __post_init__(self):
         self._set_section_properties(verbose=True)
@@ -42,7 +43,6 @@ class Properties:
         self._set_phi()
 
     def _set_section_properties(self, verbose: bool = True) -> None:
-
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute(
@@ -59,6 +59,9 @@ class Properties:
             self.elastic_modulus,
             self.rigidity_modulus,
         ) = row
+        if "LVL" in self.grade:
+            self.fb *= (95/self.depth)**0.154
+            self.fb = round_half_up(self.fb,self.epsilon)
         if verbose:
             print(f"fb: {self.fb} MPa")
             print(f"ft: {self.ft_hw} MPa (hardwood)")
@@ -71,17 +74,23 @@ class Properties:
         conn.close()
 
     def _set_pb(self, verbose: bool = True) -> None:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT seasoned, unseasoned FROM table3_1 WHERE grade = ?", (self.grade,)
-        )
-        row = cursor.fetchone()
-        self.pb = row[0] if self.seasoned is True else row[1]
+        if "LVL" in self.grade:
+            self.pb = round_half_up(
+                14.71 * (self.elastic_modulus / self.fb) ** (-0.48) * 0.25 ** (-0.061)
+            ,self.epsilon)
+        else:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT seasoned, unseasoned FROM table3_1 WHERE grade = ?",
+                (self.grade,),
+            )
+            row = cursor.fetchone()
+            self.pb = row[0] if self.seasoned is True else row[1]
+            conn.commit()
+            conn.close()
         if verbose:
             print(f"pb: {self.pb}")
-        conn.commit()
-        conn.close()
 
     def _set_phi(self, verbose: bool = True) -> None:
         conn = sqlite3.connect(db_path)
@@ -106,7 +115,7 @@ class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
 
     latitude: bool | None = None
-    epsilon: int = 2
+    
 
     def __post_init__(self):
         super().__post_init__()
@@ -126,7 +135,7 @@ class Beam(Properties):
         if self.phi_bending is None:
             raise ValueError("phi_bending not set.")
 
-    def in_plane_bending(
+    def major_axis_bending(
         self,
         moisture_content: float | None = None,
         ncom: int | None = None,
@@ -155,7 +164,7 @@ class Beam(Properties):
             verbose=verbose,
         )
 
-    def out_of_plane_bending(
+    def minor_axis_bending(
         self,
         moisture_content=None,
         ncom=None,
@@ -262,6 +271,7 @@ class Beam(Properties):
         print(f"phi_bending = {self.phi_bending}")
         moment_cap = self.phi_bending * k4 * k6 * k9 * k12 * self.fb * z * 1e-6
         k1_moment_cap = {
+            "k1 = 1": round_half_up(moment_cap, self.epsilon),
             "5 seconds": round_half_up(moment_cap, self.epsilon),
             "5 minutes": round_half_up(moment_cap, self.epsilon),
             "5 hours": round_half_up(0.97 * moment_cap, self.epsilon),
@@ -478,7 +488,7 @@ class Beam(Properties):
                 s1 = 1.25 * self.depth / self.breadth * (lay / self.depth) ** 0.5
             if restraint_location in (2, 3):
                 s1 = (self.depth / self.breadth) ** 1.35 * (lay / self.depth) ** 0.25
-
+        s1 = round_half_up(s1,self.epsilon)
         if verbose:
             print(f"s1: {s1}")
         return s1
@@ -565,7 +575,7 @@ class Column(Beam):
         moisture_content=None,
         slenderness: Callable | None = None,
         g13=None,
-        La=None,
+        la=None,
         out_of_plane=None,
         verbose=None,
     ):
@@ -589,8 +599,7 @@ class Column(Beam):
         k6 = self._calc_k6(verbose=verbose)
         k12 = self._calc_k12_compression(
             g13=g13,
-            La=La,
-            slenderness=slenderness,
+            la=la,
             verbose=verbose,
         )
         Ac = self.breadth * self.depth
@@ -602,8 +611,7 @@ class Column(Beam):
     def _calc_k12_compression(
         self,
         g13: float | None = None,
-        La: float | None = None,
-        slenderness: Callable | None = None,
+        la: float | None = None,
         verbose: bool = True,
     ):
         """Computes k12 using AS1720.1-2010 Cl 3.3.2.2"""
@@ -627,32 +635,32 @@ class Column(Beam):
                 "position or direction at other end 2.0\n"
             )
 
-        S = max(self._calc_S3(g13, La), self._calc_S4(g13, La))
+        s = max(self._calc_s3(g13, la), self._calc_s4(g13, la))
 
-        if self.pc * S <= 10:
+        if self.pc * s <= 10:
             k12 = 1
-        elif self.pc * S <= 20:
-            k12 = 1.5 - 0.05 * self.pc * S
+        elif self.pc * s <= 20:
+            k12 = 1.5 - 0.05 * self.pc * s
         else:
-            k12 = 200 / (self.pc * S) ** 2
+            k12 = 200 / (self.pc * s) ** 2
         if verbose:
             print(f"k12: {k12}")
         return k12
 
-    def _calc_S3(
-        self, g13: float | None = None, Lax: float | None = None, verbose: bool = True
+    def _calc_s3(
+        self, g13: float | None = None, lax: float | None = None, verbose: bool = True
     ):
-        if Lax is None:
+        if lax is None:
             raise ValueError("Lax not set. This is the distance between restraints...")
         if verbose:
-            print(f"Lax: {Lax} mm")
+            print(f"Lax: {lax} mm")
 
-        S3 = min(Lax / self.depth, g13 * self.length / self.depth)
+        s3 = min(lax / self.depth, g13 * self.length / self.depth)
         if verbose:
-            print(f"S3: {S3}")
-        return S3
+            print(f"S3: {s3}")
+        return s3
 
-    def _calc_S4(
+    def _calc_s4(
         self, g13: float | None = None, lay: float | None = None, verbose: bool = True
     ):
         """Computes Column slenderness for compression buckling using AS1720.1 Cl 3.3.2.2"""
@@ -661,7 +669,7 @@ class Column(Beam):
         elif verbose:
             print(f"lay: {lay} mm")
 
-        S4 = min(lay / self.breadth, g13 * self.length / self.breadth)
+        s4 = min(lay / self.breadth, g13 * self.length / self.breadth)
         if verbose:
-            print(f"S4: {S4}")
-        return S4
+            print(f"S4: {s4}")
+        return s4

@@ -4,7 +4,7 @@ AS3700:2018 for unreinforced masonry
 """
 
 import math
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from structures.util import round_half_up
 
 
