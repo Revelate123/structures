@@ -16,7 +16,8 @@ dynamic = ["version"]
 dependencies = [
     "concreteproperties>=0.7.0",
     "pytest",
-    "ipynbname"
+    "ipynbname",
+    "pydantic"
 ]
 authors = [
   { name="Thomas Duffett", email="thomasduffett4@gmail.com" },
