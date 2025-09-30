@@ -1,4 +1,6 @@
-import structures.Timber.timber as timber
+"""Test cases for Timber bending capacities"""
+
+from structures.Timber import timber
 
 
 class TestInPlaneBending:
@@ -31,12 +33,9 @@ class TestInPlaneBending:
             category=1,
         )
         cap = beam.major_axis_bending(
-                moisture_content=15, ncom=1, nmem=1, restraint_location=1, lay=2000
-            )
-        assert (
-            cap["k1 = 1"]
-            == 9.65
+            moisture_content=15, ncom=1, nmem=1, restraint_location=1, lay=2000
         )
+        assert cap["k1 = 1"] == 9.65
 
     def test_stocky_beam(self):
         """
@@ -66,12 +65,9 @@ class TestInPlaneBending:
             category=2,
         )
         cap = beam.major_axis_bending(
-                moisture_content=15, ncom=1, nmem=1, restraint_location=2, lay=2000
-            )
-        assert (
-            cap["k1 = 1"]
-            == 2.72
+            moisture_content=15, ncom=1, nmem=1, restraint_location=2, lay=2000
         )
+        assert cap["k1 = 1"] == 2.72
 
     def test_slender_beam_minor_axis(self):
         """
@@ -100,14 +96,11 @@ class TestInPlaneBending:
             category=1,
         )
         cap = beam.minor_axis_bending(
-                moisture_content=15, ncom=1, nmem=1, restraint_location=1, lay=2000
-            )
-        assert (
-            cap["k1 = 1"]
-            == 3.23
+            moisture_content=15, ncom=1, nmem=1, restraint_location=1, lay=2000
         )
+        assert cap["k1 = 1"] == 3.23
 
-    def test_long_span_LVL(self):
+    def test_long_span_lvl(self):
         """
         360 x 90 LVL13 Beam spanning 6000mm:
 
@@ -116,7 +109,7 @@ class TestInPlaneBending:
         k4 = 1
         k6 = 1 (Located in NSW)
         k9 = 1 (single member)
-        S1 = (d/b)^1.35 * (Lay/d)^0.25 
+        S1 = (d/b)^1.35 * (Lay/d)^0.25
         S1 = (360/90)^1.35 * (6000/360)^0.25
         S1 = 13.13
 
@@ -140,12 +133,9 @@ class TestInPlaneBending:
             category=2,
         )
         cap = beam.major_axis_bending(
-                moisture_content=15, ncom=1, nmem=1, restraint_location=2, lay=6000
-            )
-        assert (
-            cap["k1 = 1"]
-            == 52.83
+            moisture_content=15, ncom=1, nmem=1, restraint_location=2, lay=6000
         )
+        assert cap["k1 = 1"] == 52.83
 
     def test_compression_flange_restraints(self):
         pass

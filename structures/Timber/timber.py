@@ -60,11 +60,11 @@ class Properties:
             self.rigidity_modulus,
         ) = row
         if "LVL" in self.grade and self.depth > 95:
-            self.fb *= (95/self.depth)**0.154
-            self.fb = round_half_up(self.fb,self.epsilon)
+            self.fb *= (95 / self.depth) ** 0.154
+            self.fb = round_half_up(self.fb, self.epsilon)
         if "LVL" in self.grade and self.depth > 300:
-            self.fb *= (300/self.depth)**0.167
-            self.fb = round_half_up(self.fb,self.epsilon)
+            self.fb *= (300 / self.depth) ** 0.167
+            self.fb = round_half_up(self.fb, self.epsilon)
         if verbose:
             print(f"fb: {self.fb} MPa")
             print(f"ft: {self.ft_hw} MPa (hardwood)")
@@ -79,8 +79,9 @@ class Properties:
     def _set_pb(self, verbose: bool = True) -> None:
         if "LVL" in self.grade:
             self.pb = round_half_up(
-                14.71 * (self.elastic_modulus / self.fb) ** (-0.48) * 0.25 ** (-0.061)
-            ,self.epsilon)
+                14.71 * (self.elastic_modulus / self.fb) ** (-0.48) * 0.25 ** (-0.061),
+                self.epsilon,
+            )
         else:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -118,7 +119,6 @@ class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
 
     latitude: bool | None = None
-    
 
     def __post_init__(self):
         super().__post_init__()
@@ -491,7 +491,7 @@ class Beam(Properties):
                 s1 = 1.25 * self.depth / self.breadth * (lay / self.depth) ** 0.5
             if restraint_location in (2, 3):
                 s1 = (self.depth / self.breadth) ** 1.35 * (lay / self.depth) ** 0.25
-        s1 = round_half_up(s1,self.epsilon)
+        s1 = round_half_up(s1, self.epsilon)
         if verbose:
             print(f"s1: {s1}")
         return s1
