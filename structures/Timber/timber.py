@@ -59,8 +59,11 @@ class Properties:
             self.elastic_modulus,
             self.rigidity_modulus,
         ) = row
-        if "LVL" in self.grade:
+        if "LVL" in self.grade and self.depth > 95:
             self.fb *= (95/self.depth)**0.154
+            self.fb = round_half_up(self.fb,self.epsilon)
+        if "LVL" in self.grade and self.depth > 300:
+            self.fb *= (300/self.depth)**0.167
             self.fb = round_half_up(self.fb,self.epsilon)
         if verbose:
             print(f"fb: {self.fb} MPa")
@@ -371,7 +374,7 @@ class Beam(Properties):
         if verbose and nmem > 1 and not span is None:
             print(f"span: {span} mm")
 
-        if nmem == 1 and ncom == 1:
+        if (nmem == 1 and ncom == 1) or "LVL" in self.grade:
             if verbose:
                 print("k9: 1")
             return 1

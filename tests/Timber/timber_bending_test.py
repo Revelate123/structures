@@ -107,7 +107,7 @@ class TestInPlaneBending:
             == 3.23
         )
 
-    def test_long_span(self):
+    def test_long_span_LVL(self):
         """
         360 x 90 LVL13 Beam spanning 6000mm:
 
@@ -121,14 +121,14 @@ class TestInPlaneBending:
         S1 = 13.13
 
         pb = 14.71 * (E/fb)^-0.48 * r^-0.061 (Worst case assume r=0.25)
-        pb = 14.71 * (13200/34.2)^-0.48 * (0.25)^-0.061
-        pb = 14.71 * 0.0573399 * 1.088242
-        pb = 0.92
-        pb*S1 = 0.92 * 13.13 = 12.08
-        k12 = 1.5 - 0.05*12.08 = 0.90
-        fb = 42 * (95/360)^0.154 = 34.21 MPa
+        pb = 14.71 * (13200/33.18)^-0.48 * (0.25)^-0.061
+        pb = 14.71 * 0.0565125 * 1.088242
+        pb = 0.90
+        pb*S1 = 0.90 * 13.13 = 11.82
+        k12 = 1.5 - 0.05*11.82 = 0.91
+        fb = 42 * (95/360)^0.154 * (300/360)^0.167 = 33.18 MPa
         Z = 90 * 360 ^2 /6 = 1,944,000 mm3
-        Md = k1 * 0.9 * 0.9 * 34.21 MPa * 1,944,000 mm3 = k1 * 53.87 KNm
+        Md = k1 * 0.9 * 0.91 * 33.18 MPa * 1,944,000 mm3 = k1 * 52.83 KNm
         """
         beam = timber.Beam(
             length=6000,
@@ -144,7 +144,7 @@ class TestInPlaneBending:
             )
         assert (
             cap["k1 = 1"]
-            == 53.87
+            == 52.83
         )
 
     def test_compression_flange_restraints(self):
