@@ -95,20 +95,24 @@ class Clay:
             )
         if verbose:
             print("\nBuckling capacity:")
+            print(f"Srs = {simple_av} * {self.height} / {kt} * {self.thickness} ")
             print(f"Srs = {srs:.2f} (Simplified slenderness ratio Cl 7.3.3.3)")
 
         if compression_load_type == 1:
             k = round_half_up(min(0.67 - 0.02 * (srs - 14), 0.67), self.epsilon)
             if verbose:
                 print("Load type: Concrete slab over")
+                print(f"k = min(0.67 - 0.02 * ({srs} - 14), 0.67)")
         elif compression_load_type == 2:
             k = round_half_up(min(0.67 - 0.025 * (srs - 10), 0.67), self.epsilon)
             if verbose:
                 print("Load type: Other systems (Table 7.1)")
+                print(f"k = min(0.67 - 0.025 * ({srs} - 10), 0.67)")
         elif compression_load_type == 3:
             k = round_half_up(min(0.067 - 0.002 * (srs - 14), 0.067), self.epsilon + 1)
             if verbose:
                 print("Load type: Load applied to face of wall (Table 7.1)")
+                print(f"k = min(0.067 - 0.002 * ({srs} - 14), 0.067)")
         else:
             raise ValueError("")
 
@@ -116,7 +120,7 @@ class Clay:
             k * basic_comp_cap * self.length * self.thickness * 1e-3, self.epsilon
         )
         if verbose:
-            print(f"k: {k}")
+            print(f"k = {k}")
             print(f"Simple compression capacity kFo: {simple_comp_cap}")
 
         return {"Simple": simple_comp_cap}
