@@ -761,7 +761,7 @@ class TestConcentratedLoad:
             bedding_type=True,
         )
 
-        # assert(bearing_cap == 600)
+        assert wall
 
     def test_short_wall(self):
         pass

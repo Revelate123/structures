@@ -364,10 +364,13 @@ class Clay:
             m_cv = min(m_cv_1, m_cv_2)
             if verbose:
                 print(
-                    f"Mcv = {self.phi_bending} * {self.fmt} * {zd_vert} + {min(fd,0.36)} = {round_half_up(m_cv_1* 1e-6,self.epsilon)} KNm (7.4.2(2))"
+                    f"Mcv = {self.phi_bending} * {self.fmt} *"
+                    f"{zd_vert} + {min(fd,0.36)} = "
+                    f"{round_half_up(m_cv_1* 1e-6,self.epsilon)} KNm (7.4.2(2))"
                 )
                 print(
-                    f"Mcv = 3 * {self.phi_bending} * {self.fmt} * {zd_vert} = {round_half_up(m_cv_2* 1e-6,self.epsilon)} KNm (7.4.2(3))"
+                    f"Mcv = 3 * {self.phi_bending} * {self.fmt} *"
+                    f" {zd_vert} = {round_half_up(m_cv_2* 1e-6,self.epsilon)} KNm (7.4.2(3))"
                 )
         else:
             m_cv = fd * zd_vert
@@ -811,11 +814,13 @@ class Clay:
         # 0.2 for clay masonry
         if interface is None:
             raise ValueError(
-                "interface not set, set to True if shear plane is masonry to masonry, and False if shear_plane is masonry to other material"
+                "interface not set, set to True if shear plane is masonry to masonry,"
+                " and False if shear_plane is masonry to other material"
             )
         if interface is False:
             self.fmt = 0
         if verbose:
             print(
-                f"fmt = {self.fmt} MPa (at interface with {"masonry" if interface else "other materials"})"
+                f"fmt = {self.fmt} MPa (at interface with "\
+                f"{"masonry" if interface else "other materials"})"
             )
