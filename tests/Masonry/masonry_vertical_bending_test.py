@@ -1,7 +1,26 @@
+"""Contains tests for unreinforced clay masonry in vertical bending"""
+
 import pytest
 from structures.Masonry import unreinforced_masonry
 
 class TestUnreinforcedMasonryBending:
+    """Tests for vertical bending in accordance with 7.4.2"""
+    def test_fd_0(self):
+        """
+        Length = 1000
+        Height = 1000
+        thickness = 100
+        Zd = 1000*100^2/6 = 1,666,666.6667 mm3
+        fmt = 0.2 MPa
+        fd = 0
+        Lowest of:
+        Mcv = phi * fmt * Zd + fd * Zd = 0.6 * 0.2MPa * 1,666,666.6667 = 0.2MPa
+        Mcv =  3 * phi * fmt * Zd = 3 * 0.6 * 0.2MPa * 1,666,666.6667 = 0.6MPa
+        Mcv = 0.2 KNm
+        """
+        wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100)
+        assert wall.vertical_bending(fd=0,interface=True) == 0.2
+        
     def test_vertical_bending_1(self):
         """
         Mdv <= Mcv

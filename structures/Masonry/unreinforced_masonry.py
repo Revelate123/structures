@@ -22,7 +22,7 @@ class Clay:
     mortar_class: float | None = None
     bedding_type: bool | None = None
     fm: float | None = None
-    fmt: float | None = None
+    fmt: float = 0.2
     fut: float = 0.8
     hu: float = 76
     tj: float = 10
@@ -338,6 +338,168 @@ class Clay:
 
         return capacity
 
+    def vertical_bending(
+        self,
+        fd: float | None = None,
+        interface: None | bool = None,
+        verbose: bool = True,
+    ) -> float:
+        """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2"""
+        if fd is None:
+            raise ValueError(
+                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
+                "at the cross section under consideration, in MPa"
+            )
+        if verbose:
+            print(f"fd: {fd} MPa")
+        self._calc_fmt(interface=interface, verbose=verbose)
+
+        zd_vert = round_half_up(self.length * self.thickness**2 / 6, self.epsilon)
+        if verbose:
+            print(f"Zd (horizontal plane): {zd_vert} mm3")
+
+        if self.fmt > 0:
+            m_cv_1 = self.phi_bending * self.fmt * zd_vert + min(fd, 0.36) * zd_vert
+            m_cv_2 = 3 * self.phi_bending * self.fmt * zd_vert
+            m_cv = min(m_cv_1, m_cv_2)
+            if verbose:
+                print(
+                    f"Mcv = {self.phi_bending} * {self.fmt} * {zd_vert} + {min(fd,0.36)} = {round_half_up(m_cv_1* 1e-6,self.epsilon)} KNm (7.4.2(2))"
+                )
+                print(
+                    f"Mcv = 3 * {self.phi_bending} * {self.fmt} * {zd_vert} = {round_half_up(m_cv_2* 1e-6,self.epsilon)} KNm (7.4.2(3))"
+                )
+        else:
+            m_cv = fd * zd_vert
+            if verbose:
+                print(
+                    f"Mcv = fd Zd = {min(fd,0.36)} * {zd_vert} = {m_cv*1e-6} KNm (7.4.2(4))"
+                )
+        m_cv = round_half_up(m_cv * 1e-6, self.epsilon)
+        if verbose:
+            print("\nVertical bending capacity:")
+            print(f"Mcv = {m_cv} KNm for length of {self.length} mm")
+            print(f"Mcv = {m_cv/self.length*1e3} KNm/m")
+        return m_cv
+
+    def horizontal_bending(
+        self, fd: float | None = None, verbose: bool = True
+    ) -> float:
+        """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2"""
+        if self.fmt is None:
+            raise ValueError(
+                "self.fmt undefined.\n"
+                " set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
+            )
+        if verbose:
+            print(f"fmt: {self.fmt} MPa")
+
+        if fd is None:
+            raise ValueError(
+                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
+                "at the cross section under consideration, in MPa"
+            )
+        if verbose:
+            print(f"fd: {fd} MPa")
+
+        kp = self._calc_kp(verbose=verbose)
+
+        zd_horz = round_half_up(self.height * self.thickness**2 / 6, self.epsilon)
+        if verbose:
+            print(f"Zd (horizontal): {zd_horz} mm3")
+
+        zu_horz = zd_horz
+        if verbose:
+            print(
+                f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking"
+            )
+
+        zp_horz = zd_horz
+        if verbose:
+            print(
+                f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking"
+            )
+
+        mch_1 = (
+            2
+            * self.phi_shear
+            * kp
+            * math.sqrt(self.fmt)
+            * (1 + fd / self.fmt)
+            * zd_horz
+        )
+        if verbose:
+            print(f"Mch_1: {mch_1} KNm Cl 7.4.3.2(2)")
+
+        mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz
+        if verbose:
+            print(f"Mch_2: {mch_2} KNm Cl 7.4.3.2(3)")
+
+        mch_3 = self.phi_shear * (0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz)
+        if verbose:
+            print(f"Mch_3: {mch_3} KNm  # Cl 7.4.3.2(4)")
+        mch = min(mch_1, mch_2, mch_3) * 10**-6
+        if verbose:
+            print(f"Mch: {mch} KNm")
+        return mch
+
+    def horizontal_plane_shear(
+        self, kv: float | None = None, fd: float | None = None, verbose: bool = True
+    ) -> dict:
+        """Computes the horizontal shear capacity in accordance with AS3700:2018"""
+        if kv is None:
+            raise ValueError("kv undefined, select kv from AS3700 T3.3")
+        if verbose:
+            print(f"kv: {kv}")
+        if self.fmt is None:
+            raise ValueError(
+                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 "
+                "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
+            )
+        if verbose:
+            print(f"fmt: {self.fmt} MPa")
+
+        bedding_area = self.length * self.thickness
+        fms_horizontal = self._calc_fms_horz(verbose=verbose)
+
+        v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
+        if verbose:
+            print(
+                f"V0, the shear bond strength of section: {v0} KN."
+                "To be taken as 0 at interfaces with DPC/flashings etc."
+            )
+        v1 = kv * fd * bedding_area * 1e-3
+        if verbose:
+            print(f"V1, the shear friction of the section: {v1} KN.")
+        vd = v0 + v1
+        if verbose:
+            print(f"V0 + V1, combined shear strength: {vd}")
+        return {"bond": v0, "friction": v1}
+
+    def vertical_plane_shear(self, verbose: bool = True) -> float:
+        """Computes the horizontal shear capacity in accordance with AS3700 Cl 7.5.4.2"""
+        fms_vertical = self._calc_fms_vert(verbose=verbose)
+        vertical_shear_cap = (
+            self.phi_shear * fms_vertical * self.thickness * self.length
+        )
+        if verbose:
+            print(f"Vertical shear capacity: {vertical_shear_cap} KN")
+        return vertical_shear_cap
+
+    def in_plane_horz_shear(self):
+        """Calculates the in-plane horizontal shear capacity in accordance with AS3700 Cl 7.5.4.1"""
+
+    def bracing_capacity(self, fd: float = 0) -> dict:
+        """Calculates the in plane bracing capacity of the masonry shear wall"""
+
+        # moment capacity
+
+        # shear capacity
+
+        # Overturning capacity
+
+    # --- Helper Methods --- #
+
     def _calc_effective_compression_length(
         self,
         bearing_length: float | None = None,
@@ -408,41 +570,6 @@ class Clay:
             print(f"kb: {kb}")
 
         return kb
-
-    def horizontal_shear(
-        self, kv: float | None = None, fd: float | None = None, verbose: bool = True
-    ):
-        """Computes the horizontal shear capacity in accordance with AS3700:2018"""
-        if kv is None:
-            raise ValueError("kv undefined, select kv from AS3700 T3.3")
-        if verbose:
-            print(f"kv: {kv}")
-        if self.fmt is None:
-            raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 "
-                "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
-            )
-        if verbose:
-            print(f"fmt: {self.fmt} MPa")
-
-        bedding_area = self.length * self.thickness
-        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
-        if verbose:
-            print(f"f'ms: {fms_horizontal} MPa")
-
-        v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
-        if verbose:
-            print(
-                f"V0, the shear bond strength of section: {v0} KN."
-                "To be taken as 0 at interfaces with DPC/flashings etc."
-            )
-        v1 = kv * fd * bedding_area * 1e-3
-        if verbose:
-            print(f"V1, the shear friction of the section: {v1} KN.")
-        vd = v0 + v1
-        if verbose:
-            print(f"V0 + V1, combined shear strength: {vd}")
-        return {"bond": v0, "friction": v1}
 
     def _calc_e1_e2(
         self,
@@ -569,67 +696,6 @@ class Clay:
             print(f"kp: {kp} Cl 7.4.3.4")
         return kp
 
-    def horizontal_bending(
-        self, fd: float | None = None, verbose: bool = True
-    ) -> float:
-        """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2"""
-        if self.fmt is None:
-            raise ValueError(
-                "self.fmt undefined.\n"
-                " set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
-            )
-        if verbose:
-            print(f"fmt: {self.fmt} MPa")
-
-        if fd is None:
-            raise ValueError(
-                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
-                "at the cross section under consideration, in MPa"
-            )
-        if verbose:
-            print(f"fd: {fd} MPa")
-
-        kp = self._calc_kp(verbose=verbose)
-
-        zd_horz = round_half_up(self.height * self.thickness**2 / 6, self.epsilon)
-        if verbose:
-            print(f"Zd (horizontal): {zd_horz} mm3")
-
-        zu_horz = zd_horz
-        if verbose:
-            print(
-                f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking"
-            )
-
-        zp_horz = zd_horz
-        if verbose:
-            print(
-                f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking"
-            )
-
-        mch_1 = (
-            2
-            * self.phi_shear
-            * kp
-            * math.sqrt(self.fmt)
-            * (1 + fd / self.fmt)
-            * zd_horz
-        )
-        if verbose:
-            print(f"Mch_1: {mch_1} KNm Cl 7.4.3.2(2)")
-
-        mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz
-        if verbose:
-            print(f"Mch_2: {mch_2} KNm Cl 7.4.3.2(3)")
-
-        mch_3 = self.phi_shear * (0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz)
-        if verbose:
-            print(f"Mch_3: {mch_3} KNm  # Cl 7.4.3.2(4)")
-        mch = min(mch_1, mch_2, mch_3) * 10**-6
-        if verbose:
-            print(f"Mch: {mch} KNm")
-        return mch
-
     def _diagonal_bending(self, hu, fd, tj, lu, tu, Ld, Mch) -> float:
         """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4"""
         G = 2 * (hu + tj) / (lu + tj)
@@ -656,41 +722,7 @@ class Clay:
         w = (2 * af) / (Ld**2) * (k1 * Mch + k2 * Mcd)
         print(w)
 
-    def vertical_bending(self, fd: float | None = None, verbose: bool = True) -> float:
-        """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2"""
-        if self.fmt is None:
-            raise ValueError(
-                "self.fmt undefined.\n"
-                " set fmt = 0.2 under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
-            )
-        if verbose:
-            print(f"fmt: {self.fmt} MPa")
-
-        if fd is None:
-            raise ValueError(
-                "fd undefined. This is the minimum design compressive stress on the bed joint\n"
-                "at the cross section under consideration, in MPa"
-            )
-        if verbose:
-            print(f"fd: {fd} MPa")
-
-        zd_vert = round_half_up(self.length * self.thickness**2 / 6, self.epsilon)
-        if verbose:
-            print(f"Zd (vertical): {zd_vert} mm3")
-
-        if self.fmt > 0:
-            m_cv = min(
-                self.phi_bending * self.fmt * zd_vert * 1e-6
-                + min(fd, 0.36) * zd_vert * 1e-6,
-                3 * self.phi_bending * self.fmt * zd_vert * 1e-6,
-            )
-        else:
-            m_cv = fd * zd_vert * 1e-6
-        print(f"Mcv = {m_cv} for length of {self.length}")
-        print(f"Mcv per m = {m_cv/self.length*1e3}")
-        return m_cv
-
-    def self_weight(self) -> float:
+    def _self_weight(self) -> float:
         """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""
         return self.density * self.length * self.height * self.thickness
 
@@ -762,14 +794,28 @@ class Clay:
         if verbose:
             print(f"fm: {self.fm} MPa")
 
-    def in_plane_horz_shear(self):
-        """Calculates the in-plane horizontal shear capacity in accordance with AS3700 Cl 7.5.4.1"""
+    def _calc_fms_horz(self, verbose: bool = True) -> float:
+        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
+        if verbose:
+            print(f"f'ms (horizontal): {fms_horizontal} MPa")
+        return fms_horizontal
 
-    def bracing_capacity(self, fd: float = 0) -> dict:
-        """Calculates the in plane bracing capacity of the masonry shear wall"""
+    def _calc_fms_vert(self, verbose: bool = True) -> float:
+        fms_vertical = min(0.15, max(1.25 * self.fm, 0.35))
+        if verbose:
+            print(f"f'ms (vertical): {fms_vertical} MPa")
+        return fms_vertical
 
-        # moment capacity
-
-        # shear capacity
-
-        # Overturning capacity
+    def _calc_fmt(self, interface: None | bool = None, verbose: bool = True) -> None:
+        """Computes fmt in accordance with AS3700 Cl 3.3.3"""
+        # 0.2 for clay masonry
+        if interface is None:
+            raise ValueError(
+                "interface not set, set to True if shear plane is masonry to masonry, and False if shear_plane is masonry to other material"
+            )
+        if interface is False:
+            self.fmt = 0
+        if verbose:
+            print(
+                f"fmt = {self.fmt} MPa (at interface with {"masonry" if interface else "other materials"})"
+            )
