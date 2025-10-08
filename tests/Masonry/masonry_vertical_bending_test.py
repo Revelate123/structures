@@ -2,8 +2,10 @@
 
 from structures.Masonry import unreinforced_masonry
 
+
 class TestUnreinforcedMasonryBending:
     """Tests for vertical bending in accordance with 7.4.2"""
+
     def test_fd_0(self):
         """
         Length = 1000
@@ -17,9 +19,11 @@ class TestUnreinforcedMasonryBending:
         Mcv =  3 * phi * fmt * Zd = 3 * 0.6 * 0.2MPa * 1,666,666.6667 = 0.6MPa
         Mcv = 0.2 KNm
         """
-        wall = unreinforced_masonry.Clay(length=1000,height=1000,thickness=100)
-        assert wall.vertical_bending(fd=0,interface=True) == 0.2
-    
+        wall = unreinforced_masonry.Clay(
+            length=1000, height=1000, thickness=100, fuc=20, bedding_type=True
+        )
+        assert wall.vertical_bending(fd=0, interface=True) == 0.2
+
     def test_vertical_bending_1(self):
         """
         Mdv <= Mcv
@@ -32,14 +36,14 @@ class TestUnreinforcedMasonryBending:
         fd = 0
 
         if fmt > 0:
-    
+
         Lowest of:
         Mcv = phi * fmt * Zd + fd * Zd = 0.6 * 0.2MPa * 20126666.667 = 0.242MPa
         Mcv =  3 * phi * fmt * Zd = 3 * 0.6 * 0.2MPa * 20126666.67 = 0.72MPa
         Mcv = 0.242 KNm
         """
-        #wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, fmt=0.2, fuc = 20, mortar_class=3)
-        #assert(wall.vertical_bending() == 0.242)
+        # wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, fmt=0.2, fuc = 20, mortar_class=3)
+        # assert(wall.vertical_bending() == 0.242)
 
     def test_vertical_bending_2(self):
         """
@@ -55,9 +59,9 @@ class TestUnreinforcedMasonryBending:
         Mcv = fd * Zd = 0.20 KNm
         """
 
-        #wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, fd=0.1, fmt=0, fuc = 20, mortar_class=3)
-        #assert(round(wall.vertical_bending(),2) == 0.2)
-    
+        # wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, fd=0.1, fmt=0, fuc = 20, mortar_class=3)
+        # assert(round(wall.vertical_bending(),2) == 0.2)
+
     def test_vertical_bending_3(self):
         """
         Mdv <= Mcv
@@ -76,12 +80,12 @@ class TestUnreinforcedMasonryBending:
         Mcv = 0.140 KNm
         """
 
-        #with pytest.raises(ValueError) as e_info:
-            #wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110)
-            #assert(round(wall.vertical_bending(),3) == 0.140)
+        # with pytest.raises(ValueError) as e_info:
+        # wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110)
+        # assert(round(wall.vertical_bending(),3) == 0.140)
 
-        #wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110, fmt=0.2, fd=0.019, fuc = 20, mortar_class=3)
-        #assert(round(wall.vertical_bending(),3) == 0.140)
+        # wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110, fmt=0.2, fd=0.019, fuc = 20, mortar_class=3)
+        # assert(round(wall.vertical_bending(),3) == 0.140)
 
     def test_vertical_bending_4(self):
         """
@@ -102,5 +106,5 @@ class TestUnreinforcedMasonryBending:
 
         """
 
-        #wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110, fmt=0.2, fuc = 20, mortar_class=3)
-        #assert(round(wall.vertical_bending(),3) == 0.121)
+        # wall = masonry.UnreinforcedMasonry(length=500, height=2000, thickness=110, fmt=0.2, fuc = 20, mortar_class=3)
+        # assert(round(wall.vertical_bending(),3) == 0.121)
