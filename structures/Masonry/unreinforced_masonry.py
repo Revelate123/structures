@@ -500,20 +500,26 @@ class Clay:
             * math.sqrt(self.fmt)
             * (1 + fd / self.fmt)
             * zd_horz
+        ) * 10**-6
+        if verbose:
+            print(f"Mch_1: {mch_1:.2f} KNm Cl 7.4.3.2(2)")
+
+        mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz * 10**-6
+        if verbose:
+            print(f"Mch_2: {mch_2:.2f} KNm Cl 7.4.3.2(3)")
+
+        mch_3 = (
+            self.phi_shear
+            * (0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz)
+            * 10**-6
         )
         if verbose:
-            print(f"Mch_1: {mch_1} KNm Cl 7.4.3.2(2)")
-
-        mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz
+            print(f"Mch_3: {mch_3:.2f} KNm  # Cl 7.4.3.2(4)")
+        mch = round_half_up(min(mch_1, mch_2, mch_3), self.epsilon)
         if verbose:
-            print(f"Mch_2: {mch_2} KNm Cl 7.4.3.2(3)")
-
-        mch_3 = self.phi_shear * (0.44 * self.fut * zu_horz + 0.56 * self.fmt * zp_horz)
-        if verbose:
-            print(f"Mch_3: {mch_3} KNm  # Cl 7.4.3.2(4)")
-        mch = min(mch_1, mch_2, mch_3) * 10**-6
-        if verbose:
-            print(f"Mch: {mch} KNm")
+            print("\nHorizontal bending capacity:")
+            print(f"Mch: {mch} KNm for height of {self.height} mm")
+            print(f"Mch: {mch/self.height*1e3:.2f} KNm/m")
         return mch
 
     def horizontal_plane_shear(
