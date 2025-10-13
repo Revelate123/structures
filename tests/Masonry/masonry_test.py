@@ -1,4 +1,5 @@
-import pytest
+"""Contains miscellaneous tests for unreinforced clay masonry"""
+
 import structures.Masonry.unreinforced_masonry as unreinforced_masonry
 
 
@@ -13,31 +14,27 @@ class TestBasicCompressiveCapacity:
         Fo = 0.75 * 6.261 = 4.70 MPa
         """
 
-        wall = unreinforced_masonry.Clay(length = 1000, height = 1000, thickness= 110, fuc = 20, mortar_class=3,bedding_type=True)
-        Fo = wall.basic_compressive_capacity(verbose=False)
-        assert(Fo == 4.70)
+        wall = unreinforced_masonry.Clay(
+            length=1000,
+            height=1000,
+            thickness=110,
+            fuc=20,
+            mortar_class=3,
+            bedding_type=True,
+        )
+        capacity = wall.basic_compressive_capacity()
+        assert capacity == 4.70
+
 
 class TestUnreinforcedMasonry:
 
-    #def test_default_masonry_properties(self):
-       # """
-        
-       # """
-        #wall = masonry.UnreinforcedMasonry()
-       # assert(wall.fmb == 4.4)
-       # assert(wall.fm == 4.4)
-        
-     
-    
+    # def test_default_masonry_properties(self):
+    # """
 
-    
-
-    
-    
-
-    
-
-    
+    # """
+    # wall = masonry.UnreinforcedMasonry()
+    # assert(wall.fmb == 4.4)
+    # assert(wall.fm == 4.4)
 
     def test_horizontal_shear_1(self):
         """
@@ -53,12 +50,11 @@ class TestUnreinforcedMasonry:
         fd = 0
         """
 
-       # wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, kv = 0.2, fmt=0.2, fuc = 20, mortar_class=3)
-       # assert(wall.horizontal_shear() == 16.5)
-    
-    
+    # wall = masonry.UnreinforcedMasonry(length=1000, height=2000, thickness=110, kv = 0.2, fmt=0.2, fuc = 20, mortar_class=3)
+    # assert(wall.horizontal_shear() == 16.5)
 
-  #  def test_horizontal_shear_raises_error(self):
-       # with pytest.raises(ValueError) as e_info:
-           # wall = masonry.UnreinforcedMasonry(length=1000, thickness=110)
-           # wall.horizontal_shear()
+
+#  def test_horizontal_shear_raises_error(self):
+# with pytest.raises(ValueError) as e_info:
+# wall = masonry.UnreinforcedMasonry(length=1000, thickness=110)
+# wall.horizontal_shear()
