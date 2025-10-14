@@ -528,7 +528,7 @@ class Clay:
         fd: float | None = None,
         verbose: bool = True,
     ) -> dict:
-        """Computes the horizontal shear capacity in accordance with AS3700:2018"""
+        """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1"""
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if verbose:
@@ -567,9 +567,6 @@ class Clay:
         if verbose:
             print(f"Vertical shear capacity: {vertical_shear_cap} KN")
         return vertical_shear_cap
-
-    def in_plane_horz_shear(self):
-        """Calculates the in-plane horizontal shear capacity in accordance with AS3700 Cl 7.5.4.1"""
 
     def bracing_capacity(self, fd: float = 0) -> dict:
         """Calculates the in plane bracing capacity of the masonry shear wall"""
