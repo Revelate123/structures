@@ -21,7 +21,7 @@ class Properties:
     depth: float
     breadth: float
     grade: str
-    category: int
+    category: int | None = None
     phi_bending: float | None = None
     phi_shear: float | None = None
     phi_compression: float | None = None
@@ -36,6 +36,7 @@ class Properties:
     pc: float | None = 1
     seasoned: bool | None = None
     epsilon: int = 2
+    latitude: bool | None = None
 
     def __post_init__(self):
         self._set_section_properties(verbose=True)
@@ -75,7 +76,7 @@ class Properties:
             print(f"G:  {self.rigidity_modulus} MPa")
         conn.commit()
         conn.close()
-
+    
     def _set_pb(self, verbose: bool = True) -> None:
         if "LVL" in self.grade:
             self.pb = round_half_up(
@@ -117,26 +118,6 @@ class Properties:
 @dataclass
 class Beam(Properties):
     """Class for designing timber beams in accordance with AS1720.1"""
-
-    latitude: bool | None = None
-
-    def __post_init__(self):
-        super().__post_init__()
-        if self.length is None:
-            raise ValueError(
-                "length is not set. "
-                "This is the length of beam being considered between supports in mm."
-            )
-        if self.depth is None:
-            raise ValueError("depth is not set. This is the depth of the beam in mm.")
-        if self.breadth is None:
-            raise ValueError(
-                "breadth is not set. This is the breadth of the beam in mm."
-            )
-        if self.fb is None:
-            raise ValueError("fb is not set. This is in MPa")
-        if self.phi_bending is None:
-            raise ValueError("phi_bending not set.")
 
     def major_axis_bending(
         self,
@@ -559,6 +540,28 @@ class Beam(Properties):
             if verbose:
                 print(f"k1: {k1}, duration of loading for strength: 50+ years")
         return k1
+
+    def __post_init__(self):
+        if self.length is None:
+            raise ValueError(
+                "length is not set. "
+                "This is the length of beam being considered between supports in mm."
+            )
+        if self.depth is None:
+            raise ValueError("depth is not set. This is the depth of the beam in mm.")
+        if self.breadth is None:
+            raise ValueError(
+                "breadth is not set. This is the breadth of the beam in mm."
+            )
+        if self.category is None:
+            raise ValueError("self.category not set.\n" \
+            "Select 1 for houses in which failure is unlikely to affect an area greater than 25m2\n" \
+            "\t or secondary members in structures other than houses\n" \
+            "Select 2 for primary structural members in structues other than houses or\n" \
+            "\t elements in houses for which failure will affect an area > 25m2\n" \
+            "Select 3 for primary structural members in structures inteded to fulfull\n" \
+            "\t an essential service or post disaster function")
+        super().__post_init__()
 
 
 class Column(Beam):
