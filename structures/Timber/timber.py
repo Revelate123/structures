@@ -306,13 +306,8 @@ class Beam(Properties):
 
     def _calc_k6(self, verbose):
         """Computes k6 using AS1720.1-2010 Cl 2.4.3"""
-        if self.latitude is None:
-            raise ValueError(
-                "latitude not set, set to True if located in coastal Queensland "
-                "north of latitude 25 degrees south or 16 degrees south elsewhere,"
-                " and False otherwise."
-            )
-        elif verbose:
+        
+        if verbose:
             print(f"latitude: {self.latitude}")
         if self.latitude is True:
             k6 = 0.9
@@ -561,6 +556,12 @@ class Beam(Properties):
             "\t elements in houses for which failure will affect an area > 25m2\n" \
             "Select 3 for primary structural members in structures inteded to fulfull\n" \
             "\t an essential service or post disaster function")
+        if self.latitude is None:
+            raise ValueError(
+                "latitude not set, set to True if located in coastal Queensland "
+                "north of latitude 25 degrees south or 16 degrees south elsewhere,"
+                " and False otherwise."
+            )
         super().__post_init__()
 
 
