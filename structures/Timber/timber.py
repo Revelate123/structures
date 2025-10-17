@@ -6,7 +6,7 @@ import math
 import sqlite3
 import os
 from typing import Callable
-from pydantic.dataclasses import dataclass
+from dataclasses import dataclass
 from structures.util import round_half_up
 
 
@@ -76,7 +76,7 @@ class Properties:
             print(f"G:  {self.rigidity_modulus} MPa")
         conn.commit()
         conn.close()
-    
+
     def _set_pb(self, verbose: bool = True) -> None:
         if "LVL" in self.grade:
             self.pb = round_half_up(
@@ -117,7 +117,12 @@ class Properties:
 
 @dataclass
 class Beam(Properties):
-    """Class for designing timber beams in accordance with AS1720.1"""
+    """Class for designing timber beams in accordance with AS1720.1
+
+    seasoned: True if seasoned timber is used and false otherwise.
+    latitude: True if located in coastal Queensland north of latitude 25 degrees south
+                                 or 16 degrees south elsewhere, and False otherwise.
+    """
 
     def major_axis_bending(
         self,
@@ -189,11 +194,8 @@ class Beam(Properties):
 
         Args:
             loads: List of applied loads in kN.
-            seasoned: True if seasoned timber is used and false otherwise.
             moisture_content: precentage moisture content, given as whole numbers,
                                  e.g. for 15% set as 15.
-            latitude: True if located in coastal Queensland north of latitude 25 degrees south
-                                 or 16 degrees south elsewhere, and False otherwise.
             verbose: If True, print internal calculation details.
 
         Returns:
@@ -209,7 +211,20 @@ class Beam(Properties):
         vd = self.phi_shear * k4 * k6 * self.fs * shear_plane_area
         if verbose is True:
             print(f"Vd = {vd} KN (Not including k1)")
-        return vd
+
+        k1_shear_cap = {
+            "k1 = 1": round_half_up(vd, self.epsilon),
+            "5 seconds": round_half_up(vd, self.epsilon),
+            "5 minutes": round_half_up(vd, self.epsilon),
+            "5 hours": round_half_up(0.97 * vd, self.epsilon),
+            "5 days": round_half_up(0.94 * vd, self.epsilon),
+            "5 months": round_half_up(0.8 * vd, self.epsilon),
+            "50+ years": round_half_up(0.57 * vd, self.epsilon),
+        }
+        if verbose is True:
+            for key, value in k1_shear_cap.items():
+                print(f"Md ({key}): {value} KNm")
+        return k1_shear_cap
 
     def _bending(
         self,
@@ -306,7 +321,7 @@ class Beam(Properties):
 
     def _calc_k6(self, verbose):
         """Computes k6 using AS1720.1-2010 Cl 2.4.3"""
-        
+
         if verbose:
             print(f"latitude: {self.latitude}")
         if self.latitude is True:
@@ -549,13 +564,16 @@ class Beam(Properties):
                 "breadth is not set. This is the breadth of the beam in mm."
             )
         if self.category is None:
-            raise ValueError("self.category not set.\n" \
-            "Select 1 for houses in which failure is unlikely to affect an area greater than 25m2\n" \
-            "\t or secondary members in structures other than houses\n" \
-            "Select 2 for primary structural members in structues other than houses or\n" \
-            "\t elements in houses for which failure will affect an area > 25m2\n" \
-            "Select 3 for primary structural members in structures inteded to fulfull\n" \
-            "\t an essential service or post disaster function")
+            raise ValueError(
+                "self.category not set.\n"
+                "Select 1 for houses in which failure is unlikely to affect an"
+                " area greater than 25m2\n"
+                "\t or secondary members in structures other than houses\n"
+                "Select 2 for primary structural members in structues other than houses or\n"
+                "\t elements in houses for which failure will affect an area > 25m2\n"
+                "Select 3 for primary structural members in structures inteded to fulfull\n"
+                "\t an essential service or post disaster function"
+            )
         if self.latitude is None:
             raise ValueError(
                 "latitude not set, set to True if located in coastal Queensland "
