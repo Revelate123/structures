@@ -6,8 +6,11 @@
 <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/Revelate123/structures?style=flat">
 
 </div>
+## Installation
+To install simply ```pip install toms-structures```
+## Usage
 
-BLurb
+
 
 Code formatting tools
 - black formatter
