@@ -84,18 +84,34 @@ class Clay:
         verbose: bool = True,
     ) -> float:
         """
-        Computes the compression capacity of a masonry wall element using the simplified method,
-        described in AS 3700.
+        Computes the compression capacity of a masonry wall using the simplified method in AS3700.
 
-        Args:
-            loads: List of applied loads in kN.
-            simple_av: Coefficient (1 or 2.5) based on lateral support.
-            kt: Coefficient for engaged piers (1 if none).
-            compression_load_type: Type of compression loading (1, 2, or 3).
-            verbose: If True, print internal calculation details.
+        Parameters
+        ==========
+
+        simple_av : float
+            Coefficient (1 or 2.5) based on lateral support.
+
+        kt : float
+            Coefficient for engaged piers (1 if there are no piers).
+
+        compression_load_type : int
+            Type of compression loading:
+                1 - concrete slab
+                2 - other systems (see Table 7.1)
+                3 - wall with load applied to the face (see Table 7.1)
+
+        verbose : bool
+            If True, print internal calculation details.
 
         Returns:
             A dictionary with crushing and buckling capacity in kN.
+
+        Examples
+        ========
+
+        >>> from structures.unreinforced_masonry import Clay
+        >>> wall = Clay()
         """
         if compression_load_type not in [1, 2, 3]:
             raise ValueError(
@@ -183,24 +199,44 @@ class Clay:
     ) -> dict:
         """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
 
-        Parameters:
-            loads (list): Axial loads (kN) to check against capacities.
-            refined_av (float): Coefficient for vertical restraint.
-            refined_ah (float): Coefficient for horizontal restraint.
-            kt (float): Coefficient for engaged piers.
-            w_left, w_direct, w_right (float): Applied loads (kN) from left,
-                            right and center based on applied slab loading.
-                            May be overriden by setting e1, e2.
-            e1, e2 (float): End eccentricities (mm).
-            dist_to_return (float): Distance to return wall (mm).
-            effective_length (float): Length of wall used in calculations (mm).
-            verbose (bool): Whether to print outputs.
+        Parameters
+        ==========
+
+        loads (list):
+            Axial loads (kN) to check against capacities.
+
+        refined_av (float):
+            Coefficient for vertical restraint.
+
+        refined_ah (float):
+            Coefficient for horizontal restraint.
+
+        kt (float):
+            Coefficient for engaged piers.
+
+        e1, e2 (float):
+            End eccentricities (mm).
+
+        dist_to_return (float):
+            Distance to return wall (mm).
+
+        effective_length (float):
+            Length of wall used in calculations (mm).
+
+        verbose (bool):
+            Whether to print outputs.
 
         Returns:
             dict: {
                 'Crushing': crushing_compressive_capacity,
                 'Buckling': kFo,
             }
+
+        Examples
+        ========
+        description
+
+        >>> from ...
         """
 
         if effective_length is None:
@@ -297,6 +333,42 @@ class Clay:
     ) -> dict:
         """Computes the simplified compression capacity
         of a masonry wall under concentrated loads
+
+        Parameters
+        ==========
+
+        simple_av : float
+            Coefficient (1 or 2.5) based on lateral support.
+
+        kt : float
+            Coefficient for engaged piers (1 if there are no piers).
+
+        compression_load_type : int
+            Type of compression loading:
+                1 - concrete slab
+                2 - other systems (see Table 7.1)
+                3 - wall with load applied to the face (see Table 7.1)
+
+        dist_to_end : float
+            !!!!!!!!!!!!!!
+
+        bearing_width : float
+            Width of the bearing area in mm.
+
+        bearing _length : float
+            Length of the bearing area in mm.
+
+        verbose : bool
+            If True, print internal calculation details.
+
+        Returns:
+            A dictionary with crushing and buckling capacity in kN.
+
+        Examples
+        ========
+
+        >>> from structures.unreinforced_masonry import Clay
+        >>> wall = Clay()
         """
         if bearing_width is None:
             raise ValueError(
