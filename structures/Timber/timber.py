@@ -6,7 +6,7 @@ import math
 import sqlite3
 import os
 from typing import Callable
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from structures.util import round_half_up
 
 
