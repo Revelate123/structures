@@ -13,6 +13,34 @@ from structures.util import round_half_up
 class Clay:
     """
     For the design of unreinforced clay brick masonry in accordance with AS3700:2018
+
+    Parameters
+    ==========
+
+    length : float
+        of the wall in mm
+
+    height : float
+        height of the wall in mm
+
+    thickness : float
+        ads
+    fuc : float
+        aasda
+    mortar_class : float
+        ads
+    bedding_type : bool
+        ads
+    hu : float
+        ads
+    tj : float
+        asda
+    Examples
+    ========
+
+    >>> from ..
+
+
     """
 
     length: float | None = None
@@ -96,9 +124,9 @@ class Clay:
             Coefficient for engaged piers (1 if there are no piers).
 
         compression_load_type : int
-            Type of compression loading:
-            1 - concrete slab
-            2 - other systems (see Table 7.1)
+            Type of compression loading:\n
+            1 - concrete slab\n
+            2 - other systems (see Table 7.1)\n
             3 - wall with load applied to the face (see Table 7.1)
 
         verbose : bool
