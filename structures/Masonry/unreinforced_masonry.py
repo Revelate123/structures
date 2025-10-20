@@ -97,9 +97,9 @@ class Clay:
 
         compression_load_type : int
             Type of compression loading:
-                1 - concrete slab
-                2 - other systems (see Table 7.1)
-                3 - wall with load applied to the face (see Table 7.1)
+            1 - concrete slab
+            2 - other systems (see Table 7.1)
+            3 - wall with load applied to the face (see Table 7.1)
 
         verbose : bool
             If True, print internal calculation details.
@@ -344,18 +344,20 @@ class Clay:
             Coefficient for engaged piers (1 if there are no piers).
 
         compression_load_type : int
-            Type of compression loading:
-                1 - concrete slab
-                2 - other systems (see Table 7.1)
-                3 - wall with load applied to the face (see Table 7.1)
+            Type of compression loading:\n
+            1 - concrete slab\n
+            2 - other systems (see Table 7.1)\n
+            3 - wall with load applied to the face (see Table 7.1)
 
         dist_to_end : float
-            !!!!!!!!!!!!!!
+            Defined as the shortest distance
+            from the edge of the bearing area to
+            the edge of the wall, refer AS3700 Cl 7.3.5.4.
 
         bearing_width : float
             Width of the bearing area in mm.
 
-        bearing _length : float
+        bearing_length : float
             Length of the bearing area in mm.
 
         verbose : bool
@@ -445,7 +447,9 @@ class Clay:
             Length of wall used in calculations (mm).
 
         dist_to_end : float
-            !!!!!!!!!!!!!!
+            Defined as the shortest distance
+            from the edge of the bearing area to
+            the edge of the wall, refer AS3700 Cl 7.3.5.4.
 
         bearing_width : float
             Width of the bearing area in mm.
