@@ -420,17 +420,41 @@ class Clay:
     ) -> dict:
         """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
 
-        Parameters:
-            refined_av (float): Coefficient for vertical restraint.
-            refined_ah (float): Coefficient for horizontal restraint.
-            kt (float): Coefficient for engaged piers.
-            w_left, w_direct, w_right (float): Applied loads (kN) from left,
-                        right and center based on applied slab loading.
-                        May be overriden by setting e1, e2.
-            e1, e2 (float): End eccentricities (mm).
-            dist_to_return (float): Distance to return wall (mm).
-            effective_length (float): Length of wall used in calculations (mm).
-            verbose (bool): Whether to print outputs.
+        Parameters
+        ==========
+
+        loads (list):
+            Axial loads (kN) to check against capacities.
+
+        refined_av (float):
+            Coefficient for vertical restraint.
+
+        refined_ah (float):
+            Coefficient for horizontal restraint.
+
+        kt (float):
+            Coefficient for engaged piers.
+
+        e1, e2 (float):
+            End eccentricities (mm).
+
+        dist_to_return (float):
+            Distance to return wall (mm).
+
+        effective_length (float):
+            Length of wall used in calculations (mm).
+
+        dist_to_end : float
+            !!!!!!!!!!!!!!
+
+        bearing_width : float
+            Width of the bearing area in mm.
+
+        bearing _length : float
+            Length of the bearing area in mm.
+
+        verbose : bool
+            If True, print internal calculation details.
 
         Returns:
             dict: {
@@ -438,6 +462,13 @@ class Clay:
                 "Buckling",
                 "Bearing"
             }
+
+        Examples
+        ========
+
+        Description
+
+        >>> from ..
         """
 
         basic_comp_cap = self.basic_compressive_capacity(verbose=False)
@@ -478,7 +509,31 @@ class Clay:
         interface: None | bool = None,
         verbose: bool = True,
     ) -> float:
-        """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2"""
+        """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2
+
+        Parameters
+        ==========
+
+        fd : float
+            minimum design compressive stress on the bed joint
+            at the cross section under consideration, in MPa
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
+
+        verbose : bool
+            Whether to print outputs
+
+        Returns: float
+
+        Examples
+        ========
+
+        Description
+
+        >>> from ...
+        """
         if fd is None:
             raise ValueError(
                 "fd undefined. This is the minimum design compressive stress on the bed joint\n"
