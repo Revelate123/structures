@@ -18,23 +18,30 @@ class Clay:
     ==========
 
     length : float
-        of the wall in mm
+        length of the wall in mm
 
     height : float
         height of the wall in mm
 
     thickness : float
-        ads
+        thickness of the wall in mm
+
     fuc : float
-        aasda
+        unconfined compressive capacity in MPa
+
     mortar_class : float
-        ads
+        Mortar class in accordance with AS3700
+
     bedding_type : bool
-        ads
+        True if fully grout bedding,
+        False if face shell bedding
+
     hu : float
-        ads
+        masonry unit height in mm, defaults to 76
+
     tj : float
-        asda
+        grout thickness between masonry units in mm, defaults to 10mm
+
     Examples
     ========
 
