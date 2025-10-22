@@ -139,10 +139,15 @@ class Clay:
         ==========
 
         simple_av : float
-            Coefficient (1 or 2.5) based on lateral support.
+            Vertical slenderness coefficient\n
+            1 if the member is laterally supported along its top edge\n
+            2.5 if the member is not laterally supported along its top edge
 
         kt : float
-            Coefficient for engaged piers (1 if there are no piers).
+            a thickness coefficient derived from Table 7.2\n
+            1 - if there are no engaged piers\n
+            If the engagement of a pier to the wall does not meet the requirements of\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
 
         compression_load_type : int
             Type of compression loading:\n
@@ -254,6 +259,7 @@ class Clay:
         ==========
 
         refined_av : float
+            Vertical slenderness coefficient\n
             0.75 for a wall laterally supported and partially rotationally
             restrained at both top and bottom\n
             0.85 for a wall laterally supported at top and bottom and
@@ -265,21 +271,35 @@ class Clay:
             refer AS 3700 Cl 7.3.4.3.
 
         refined_ah (float):
-            Coefficient for horizontal restraint.
+            Horizontal slenderness coefficient\n
+            1 - for a wall laterally supported along both vertical edges (regardless of
+            the rotational restraint along these edges)\n
+            2.5 - for a wall laterally supported along one vertical edge, and
+            unsupported along its other vertical edge\n
+            Refer Figure 7.2 AS3700
 
-        kt (float):
-            Coefficient for engaged piers.
+         kt : float
+            A thickness coefficient derived from Table 7.2\n
+            1 - if there are no engaged piers\n
+            If the engagement of a pier to the wall does not meet the requirements of\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
 
-        e1, e2 (float):
-            End eccentricities (mm).
+        e1 : float
+            The larger eccentricity of the vertical force, at either top or bottom of the
+            member in mm
 
-        dist_to_return (float):
-            Distance to return wall (mm).
+        e2 : float
+            The smaller eccentricity of the vertical force, at the other end of the member,
+            not less than el, and negative when the eccentricities are on opposite sides of
+            the member, given in mm
 
-        effective_length (float):
-            Length of wall used in calculations (mm).
+        dist_to_return : float
+            Distance to return wall in mm
 
-        verbose (bool):
+        effective_length : float
+            Length of wall used in calculations in mm
+
+        verbose : bool
             Whether to print outputs.
 
         Returns:
@@ -394,10 +414,15 @@ class Clay:
         ==========
 
         simple_av : float
-            Coefficient (1 or 2.5) based on lateral support.
+            Vertical slenderness coefficient\n
+            1 if the member is laterally supported along its top edge\n
+            2.5 if the member is not laterally supported along its top edge
 
         kt : float
-            Coefficient for engaged piers (1 if there are no piers).
+            a thickness coefficient derived from Table 7.2\n
+            1 - if there are no engaged piers\n
+            If the engagement of a pier to the wall does not meet the requirements of\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
 
         compression_load_type : int
             Type of compression loading:\n
@@ -482,6 +507,7 @@ class Clay:
         ==========
 
         refined_av : float
+            Vertical slenderness coefficient\n
             0.75 for a wall laterally supported and partially rotationally
             restrained at both top and bottom\n
             0.85 for a wall laterally supported at top and bottom and
@@ -492,19 +518,33 @@ class Clay:
             2.5 for freestanding walls\n
             refer AS 3700 Cl 7.3.4.3.
 
-        refined_ah (float):
-            Coefficient for horizontal restraint.
+        refined_ah : float
+            Horizontal slenderness coefficient\n
+            1 - for a wall laterally supported along both vertical edges (regardless of
+            the rotational restraint along these edges)\n
+            2.5 - for a wall laterally supported along one vertical edge, and
+            unsupported along its other vertical edge\n
+            Refer Figure 7.2 AS3700
 
-        kt (float):
-            Coefficient for engaged piers.
+         kt : float
+            A thickness coefficient derived from Table 7.2\n
+            1 - if there are no engaged piers\n
+            If the engagement of a pier to the wall does not meet the requirements of\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
 
-        e1, e2 (float):
-            End eccentricities (mm).
+        e1 : float
+            The larger eccentricity of the vertical force, at either top or bottom of the
+            member
 
-        dist_to_return (float):
+        e2 : float
+            The smaller eccentricity of the vertical force, at the other end of the member,
+            not less than el, and negative when the eccentricities are on opposite sides of
+            the member
+
+        dist_to_return : float
             Distance to return wall (mm).
 
-        effective_length (float):
+        effective_length : float
             Length of wall used in calculations (mm).
 
         dist_to_end : float
@@ -580,8 +620,8 @@ class Clay:
         ==========
 
         fd : float
-            minimum design compressive stress on the bed joint
-            at the cross section under consideration, in MPa
+            the minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
 
         interface : bool
             True if shear plane is masonry to masonry,
@@ -645,9 +685,33 @@ class Clay:
     def horizontal_bending(
         self,
         fd: float | None = None,
+        interface: None | bool = None,
         verbose: bool = True,
     ) -> float:
-        """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2"""
+        """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2
+
+        Parameters
+        ==========
+
+        fd : float
+            the minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
+
+        verbose : bool
+            Whether to print outputs
+
+        Returns: float
+
+        Examples
+        ========
+
+        Description
+
+        >>> from ..."""
         if self.fmt is None:
             raise ValueError(
                 "self.fmt undefined.\n"
@@ -665,6 +729,8 @@ class Clay:
             print(f"fd: {fd} MPa")
 
         kp = self._calc_kp(verbose=verbose)
+
+        self._calc_fmt(interface=interface, verbose=verbose)
 
         zd_horz = round_half_up(
             self.height * self.thickness**2 / 6,
