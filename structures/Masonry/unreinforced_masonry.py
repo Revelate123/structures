@@ -95,7 +95,21 @@ class Clay:
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
-        and returns a value in MPa"""
+        and returns a value in MPa
+
+        Parameters
+        ==========
+
+        verbose : bool
+            True to print calculations
+
+        Examples
+        ========
+
+        Description
+
+        >>> from ..
+        """
         km = self._calc_km(verbose=verbose)
         self._calc_fm(km=km, verbose=verbose)
 
@@ -144,6 +158,8 @@ class Clay:
 
         Examples
         ========
+
+        Description
 
         >>> from structures.unreinforced_masonry import Clay
         >>> wall = Clay()
@@ -237,11 +253,16 @@ class Clay:
         Parameters
         ==========
 
-        loads (list):
-            Axial loads (kN) to check against capacities.
-
-        refined_av (float):
-            Coefficient for vertical restraint.
+        refined_av : float
+            0.75 for a wall laterally supported and partially rotationally
+            restrained at both top and bottom\n
+            0.85 for a wall laterally supported at top and bottom and
+            partially rotationally restrained at one end\n
+            1.0 for a wall laterally supported at both top and bottom\n
+            1.5 for a wall laterally supported and partially rotationally
+            restrained at the bottom and partially laterally supported at the top\n
+            2.5 for freestanding walls\n
+            refer AS 3700 Cl 7.3.4.3.
 
         refined_ah (float):
             Coefficient for horizontal restraint.
@@ -290,7 +311,7 @@ class Clay:
                 "e1 is the larger eccentricity of the vertical force"
             )
         e1, e2 = self._calc_e1_e2(e1, e2, verbose)
-
+        print("WARNING: Test cases incomplete")
         k_local_crushing = round_half_up(
             1 - 2 * e1 / self.thickness,
             self.epsilon,
@@ -413,7 +434,7 @@ class Clay:
             )
         if verbose:
             print(f"bearing width: {bearing_width} mm")
-
+        print("WARNING: Test cases incomplete")
         basic_comp_cap = self.basic_compressive_capacity(verbose=False)
 
         effective_length = self._calc_effective_compression_length(
@@ -460,11 +481,16 @@ class Clay:
         Parameters
         ==========
 
-        loads (list):
-            Axial loads (kN) to check against capacities.
-
-        refined_av (float):
-            Coefficient for vertical restraint.
+        refined_av : float
+            0.75 for a wall laterally supported and partially rotationally
+            restrained at both top and bottom\n
+            0.85 for a wall laterally supported at top and bottom and
+            partially rotationally restrained at one end\n
+            1.0 for a wall laterally supported at both top and bottom\n
+            1.5 for a wall laterally supported and partially rotationally
+            restrained at the bottom and partially laterally supported at the top\n
+            2.5 for freestanding walls\n
+            refer AS 3700 Cl 7.3.4.3.
 
         refined_ah (float):
             Coefficient for horizontal restraint.
@@ -509,7 +535,7 @@ class Clay:
 
         >>> from ..
         """
-
+        print("WARNING: Test cases incomplete")
         basic_comp_cap = self.basic_compressive_capacity(verbose=False)
 
         effective_length = self._calc_effective_compression_length(
@@ -695,6 +721,7 @@ class Clay:
         verbose: bool = True,
     ) -> dict:
         """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1"""
+        print("WARNING: Test cases incomplete")
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if verbose:
@@ -726,6 +753,7 @@ class Clay:
 
     def vertical_plane_shear(self, verbose: bool = True) -> float:
         """Computes the horizontal shear capacity in accordance with AS3700 Cl 7.5.4.2"""
+        print("WARNING: Test cases incomplete")
         fms_vertical = self._calc_fms_vert(verbose=verbose)
         vertical_shear_cap = (
             self.phi_shear * fms_vertical * self.thickness * self.length
@@ -733,17 +761,6 @@ class Clay:
         if verbose:
             print(f"Vertical shear capacity: {vertical_shear_cap} KN")
         return vertical_shear_cap
-
-    def bracing_capacity(self, fd: float = 0) -> dict:
-        """Calculates the in plane bracing capacity of the masonry shear wall"""
-
-        # moment capacity
-
-        # shear capacity
-
-        # Overturning capacity
-
-    # --- Helper Methods --- #
 
     def _calc_effective_compression_length(
         self,
