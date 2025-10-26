@@ -230,7 +230,7 @@ class Clay:
                 print("Load type: Load applied to face of wall (Table 7.1)")
                 print(f"k = min(0.067 - 0.002 * ({srs} - 14), 0.067)")
         else:
-            raise ValueError("")
+            raise ValueError("compression_load_type not in [1,2,3]")
 
         simple_comp_cap = round_half_up(
             k * basic_comp_cap * self.length * self.thickness * 1e-3,

@@ -215,10 +215,9 @@ class TestSimplifiedCompression:
             fuc=15,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=1, simple_av=1, kt=1)
-            == {"Simple":179.08}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=1, simple_av=1, kt=1
+        ) == {"Simple": 179.08}
 
     def test_stocky_concrete_slab_over(self):
         """
@@ -240,10 +239,9 @@ class TestSimplifiedCompression:
             mortar_class=3,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=1, simple_av=1, kt=1)
-            == {"Simple":544.71}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=1, simple_av=1, kt=1
+        ) == {"Simple": 544.71}
 
     def test_slender_other_system_over(self):
         """
@@ -265,10 +263,9 @@ class TestSimplifiedCompression:
             fuc=15,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=2, simple_av=2.5, kt=1)
-            == {"Simple":31.34}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=2, simple_av=2.5, kt=1
+        ) == {"Simple": 31.34}
 
     def test_stocky_other_system_over(self):
         """
@@ -290,10 +287,9 @@ class TestSimplifiedCompression:
             fuc=15,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=2, simple_av=1, kt=1)
-            == {"Simple":259.67}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=2, simple_av=1, kt=1
+        ) == {"Simple": 259.67}
 
     def test_slender_face_loading(self):
         """
@@ -315,10 +311,9 @@ class TestSimplifiedCompression:
             mortar_class=3,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=3, simple_av=1, kt=1)
-            == {"Simple":28.46}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=3, simple_av=1, kt=1
+        ) == {"Simple": 28.46}
 
     def test_stocky_face_loading(self):
         """
@@ -340,10 +335,9 @@ class TestSimplifiedCompression:
             mortar_class=3,
             bedding_type=True,
         )
-        assert (
-            wall.compression_capacity(compression_load_type=3, simple_av=1, kt=1)
-            == {"Simple":52.85}
-        )
+        assert wall.compression_capacity(
+            compression_load_type=3, simple_av=1, kt=1
+        ) == {"Simple": 52.85}
 
 
 class TestRefinedCompression:
@@ -584,7 +578,7 @@ class TestRefinedCompression:
         )
         assert capacity == {"Crushing": 366.3, "Buckling": 126.17}
 
-    def test_horz_capacity_limited_by_Fo(self):
+    def test_horz_capacity_limited(self):
         """
         fm = 5.42 MPa
         Fo = 0.75 * 5.42 MPa = 4.07 MPa
@@ -623,7 +617,7 @@ class TestRefinedCompression:
             bedding_type=True,
         )
         capacity = wall.refined_compression(
-            e1=0, e2=0, refined_av=2.5, refined_ah=1, kt=1,dist_to_return=0
+            e1=0, e2=0, refined_av=2.5, refined_ah=1, kt=1, dist_to_return=0
         )
         assert capacity == {"Crushing": 366.3, "Buckling": 126.17}
 
@@ -692,7 +686,7 @@ class TestRefinedCompression:
         phi = 0.75
         Fo = 3.32MPa
 
-        k = 0.5(1+ e1/e2) * [(1 - 2.082* e1/tw) - (0.025 - 0.037 * e1/tw) * (1.33 * Sr - 8)] 
+        k = 0.5(1+ e1/e2) * [(1 - 2.082* e1/tw) - (0.025 - 0.037 * e1/tw) * (1.33 * Sr - 8)]
         + 0.5 * (1 - 0.6 * e1/tw) * (1 - e2/e1) * (1.18 - 0.03Sr)
 
         k =  1 * [(0.65300) - (0.01883333) * (16.4841)] + 0 = 0.34
@@ -749,7 +743,8 @@ class TestRefinedCompression:
 
 
 class TestConcentratedLoad:
-    """ Tests concentrated bearing load in accordance with AS3700 Cl 7.3.5 """
+    """Tests concentrated bearing load in accordance with AS3700 Cl 7.3.5"""
+
     def test_concetrated_load_1(self):
         """ """
         wall = unreinforced_masonry.Clay(
