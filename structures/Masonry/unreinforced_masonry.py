@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 This module performs engineering calculations in accordance with
 AS3700:2018 for unreinforced masonry
