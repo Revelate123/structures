@@ -18,8 +18,9 @@ class Clay:
         height: float,
         thickness: float,
         fuc: float,
-        mortar_class,
-        bedding_type,
+        mortar_class: int,
+        bedding_type: bool,
+        verbose: bool = True,
         hu: float = 76,
         tj: float = 10,
         fmt: float = 0.2,
@@ -54,10 +55,22 @@ class Clay:
         tj : float
             grout thickness between masonry units in mm, defaults to 10 mm
 
+        verbose : float
+            True to print internal calculations
+            False otherwise
+
         Examples
         ========
 
-        >>> from ..
+        >>> from structures.Masonry.unreinforced_masonry import Clay
+        >>> wall = Clay(
+                    length=1000,
+                    height=3000,
+                    thickness=110,
+                    fuc=20,
+                    mortar_class=3,
+                    bedding_type=True
+                    )
 
 
         """
@@ -71,6 +84,7 @@ class Clay:
         self.tj = tj
         self.fm = None
         self.fmt = fmt
+        self.verbose = verbose
         self.fut = 0.8
         self.phi_shear = 0.6
         self.phi_bending = 0.6
@@ -78,7 +92,6 @@ class Clay:
         self.density = 19
         self.epsilon = 2
 
-    def __post_init__(self, verbose: bool = True) -> None:
         if self.length is None:
             raise ValueError("length not set. This is the length of the wall in mm")
         if verbose:
