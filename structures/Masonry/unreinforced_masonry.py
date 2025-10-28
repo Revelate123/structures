@@ -22,6 +22,7 @@ class Clay:
         bedding_type,
         hu: float = 76,
         tj: float = 10,
+        fmt: float = 0.2,
     ):
         """Initialises the masonry element
 
@@ -69,7 +70,7 @@ class Clay:
         self.hu = hu
         self.tj = tj
         self.fm = None
-        self.fmt = 0.2
+        self.fmt = fmt
         self.fut = 0.8
         self.phi_shear = 0.6
         self.phi_bending = 0.6
