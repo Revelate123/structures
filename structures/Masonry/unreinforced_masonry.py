@@ -5,68 +5,77 @@ AS3700:2018 for unreinforced masonry
 """
 
 import math
-from pydantic.dataclasses import dataclass
 from structures.util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes
-@dataclass
 class Clay:
-    """
-    For the design of unreinforced clay brick masonry in accordance with AS3700:2018
+    """For the design of unreinforced clay brick masonry in accordance with AS3700:2018"""
 
-    Parameters
-    ==========
+    def __init__(
+        self,
+        length: float,
+        height: float,
+        thickness: float,
+        fuc: float,
+        mortar_class,
+        bedding_type,
+        hu: float = 76,
+        tj: float = 10,
+    ):
+        """Initialises the masonry element
 
-    length : float
-        length of the wall in mm
+        Parameters
+        ==========
 
-    height : float
-        height of the wall in mm
+        length : float
+            length of the wall in mm
 
-    thickness : float
-        thickness of the wall in mm
+        height : float
+            height of the wall in mm
 
-    fuc : float
-        unconfined compressive capacity in MPa
+        thickness : float
+            thickness of the wall in mm
 
-    mortar_class : float
-        Mortar class in accordance with AS3700
+        fuc : float
+            unconfined compressive capacity in MPa
 
-    bedding_type : bool
-        True if fully grout bedding,
-        False if face shell bedding
+        mortar_class : float
+            Mortar class in accordance with AS3700
 
-    hu : float
-        masonry unit height in mm, defaults to 76
+        bedding_type : bool
+            True if fully grout bedding,
+            False if face shell bedding
 
-    tj : float
-        grout thickness between masonry units in mm, defaults to 10mm
+        hu : float
+            masonry unit height in mm, defaults to 76 mm
 
-    Examples
-    ========
+        tj : float
+            grout thickness between masonry units in mm, defaults to 10 mm
 
-    >>> from ..
+        Examples
+        ========
+
+        >>> from ..
 
 
-    """
-
-    length: float | None = None
-    height: float | None = None
-    thickness: float | None = None
-    fuc: float | None = None
-    mortar_class: float | None = None
-    bedding_type: bool | None = None
-    fm: float | None = None
-    fmt: float = 0.2
-    fut: float = 0.8
-    hu: float = 76
-    tj: float = 10
-    phi_shear: float = 0.6
-    phi_bending: float = 0.6
-    phi_compression: float = 0.75
-    density: float = 19
-    epsilon: float = 2
+        """
+        self.length = length
+        self.height = height
+        self.thickness = thickness
+        self.fuc = fuc
+        self.mortar_class = mortar_class
+        self.bedding_type = bedding_type
+        self.hu = hu
+        self.tj = tj
+        self.fm = None
+        self.fmt = 0.2
+        self.fut = 0.8
+        self.phi_shear = 0.6
+        self.phi_bending = 0.6
+        self.phi_compression = 0.75
+        self.density = 19
+        self.epsilon = 2
 
     def __post_init__(self, verbose: bool = True) -> None:
         if self.length is None:
