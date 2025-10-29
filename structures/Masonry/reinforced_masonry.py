@@ -1,81 +1,222 @@
-import math
-from dataclasses import dataclass
-import structures.Masonry.masonry as masonry
+"""
+This module performs engineering calculations in accordance with
+AS3700:2018 for reinforced masonry
+"""
 
 
-@dataclass
-class ReinforcedMasonry(masonry.Masonry):
-    hu: float = 200
-    tj: float = 10
-    tu: float = 190
-    lu: float = 400
-    φ_shear: float = 0.75
-    φ_bending: float = 0.75
-    φ_compression: float = 0.75
+class ReinforcedBlock:
 
-    def __post_init__(self):
-        super().__post_init__()
+    def __init__(
+        self,
+        length: float,
+        height: float,
+        thickness: float,
+        fuc: float,
+        mortar_class: float,
+        verbose: bool = True,
+        hu: float = 200,
+        tj: float = 10,
+        lu: float = 400,
+        fmt: float = 0.2,
+    ):
+        """Initialises the masonry element
+
+        Parameters
+        ==========
+
+        length : float
+            length of the wall in mm
+
+        height : float
+            height of the wall in mm
+
+        thickness : float
+            thickness of the masonry unit in mm
+
+        fuc : float
+            unconfined compressive capacity in MPa
+
+        mortar_class : float
+            Mortar class in accordance with AS3700
+
+        verbose : bool
+            True to print internal calculations
+            False otherwise
+
+        hu : float
+            masonry unit height in mm, defaults to 200 mm
+
+        tj : float
+            grout thickness between masonry units in mm, defaults to 10 mm
+
+        lu : float
+            length of the masonry unit in mm, defaults to 400 mm
+
+        fmt : float
+            Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+
+        Examples
+        ========
+
+        >>> from structures.Masonry.reinforced_masonry import ReinforcedBlock
+        >>> wall = ReinforcedBlock(
+                    length=1000,
+                    height=3000,
+                    thickness=110,
+                    fuc=20,
+                    mortar_class=3,
+                    bedding_type=True
+                    )
+
+
+        """
+        self.length = length
+        self.height = height
+        self.thickness = thickness
+        self.fuc = fuc
+        self.mortar_class = mortar_class
+        self.hu = hu
+        self.tj = tj
+        self.lu = lu
+        self.fmt = fmt
+        self.verbose = verbose
+
+        self.phi_shear = 0.75
+        self.phi_bending = 0.75
+        self.phi_compression = 0.75
+        self.fut = 0.8
         if self.mortar_class != 3:
-            raise ValueError("Concrete masonry units undefined for mortar class M4, adopt M3")
+            raise ValueError(
+                "Concrete masonry units undefined for mortar class M4, adopt M3"
+            )
+        self.zd = self.length * self.thickness**2 / 6
+        self.zu = self.zp = self.zd
+        self.zd_horz = self.height * self.thickness**2 / 6
+        self.zu_horz = self.zp_horz = self.zd_horz
 
-
-    def _bending(self, loads=[], fsy = None, d = None, Ast = None, b = None, verbose = True):
+    def _bending(
+        self,
+        d: float,
+        b: float,
+        area_tension_steel: float,
+        fsy: float,
+        verbose: bool = True,
+    ):
         """
         Computes the bending capacity of a reinforced masonry wall element using the methods
         described in AS 3700 Cl 8.6.
 
-        Args:
-            loads: List of applied loads in kN.
-            fsy: the design yield strength of reinforcement (refer Cl 3.6.1)
-            d: the effective depth of the reinforced masonry member.
-            Ast: the cross-sectional area of fully anchored longitudinal reinforcement in the tension zone of the cross-section under consideration.
-            verbose: If True, print internal calculation details.
+        Parameters
+        ==========
 
-        Returns:
-            A dictionary with bending capacity
+        d : float
+            Effective depth of the reinforced masonry member from the extreme compressive
+            fibre of the masonry to the resultant tensile force in the steel in the tensile
+            zone in mm. Typical values are 95 for 190 block walls
+
+        b : float
+            breadth of the masonry member used for calculation,
+            depends on the direction of bending considered.
+
+        area_tension_steel : float
+            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
+            zone of the cross-section under consideration. Denoted Ast in AS3700. Note: the
+            amount of steel used in calculation is limited to effective_area_tension_steel
+
+        fsy : float
+            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        verbose : bool
+            True to print internal calculations
+            False otherwise
+
+        Examples
+        ========
+
+        >>> from ..
         """
-        if fsy == None:
-            raise ValueError("fsy not set, this is the design yield strength of reinforcement (refer Cl 3.6.1) and is typically 500MPa for N grade bars")
-        elif verbose:
+        if fsy is not float:
+            raise ValueError("fsy not set.")
+        if verbose:
             print(f"fsy: {fsy:.2f} MPa")
 
-        if d == None:
-            raise ValueError("d not set, this is the effective depth of the reinforced masonry member from the extreme compressive fibre of the masonry " \
-            "to the resultant tensile force in the steel in the tensile zone, typical values are 95 for 190 block walls")
-        elif verbose:
+        if d is not float:
+            raise ValueError("d not set")
+        if verbose:
             print(f"d: {d:.2f} mm")
 
-        if Ast == None:
-            raise ValueError("Ast not set, this is the quanity of tensile steel. Note: the amount of steel used in calculation is limited to Asd")
-        elif verbose:
-            print(f"Ast: {Ast:.2f} mm2")
+        if area_tension_steel is not float:
+            raise ValueError("area_tension_steel not set.")
+        if verbose:
+            print(f"area_tension_steel: {area_tension_steel:.2f} mm2")
 
-        if b == None:
-            raise ValueError("b is not set, this is the breadth of the masonry member used for calculation, and depends on the direction of bending considered.")
-        elif verbose:
+        if b is not float:
+            raise ValueError("b is not set, this is the ")
+        if verbose:
             print(f"b: {b:.2f} mm")
-        
-        #Step 1: Calculate Asd
-        Asd = min(Ast, (0.29 * 1.3 * self.fm * self.length * d)/fsy)
-        if verbose == True:
-            print(f"Asd: {Asd:.2f} mm2")
 
-        #Step 2: Calculate Md
-        Md = self.φ_bending * fsy * Asd * d * (1 - (0.6 * fsy * Asd)/(1.3*self.fm*self.length*d)) * 1e-6
+        # Step 1: Calculate effective_area_tension_steel
+        effective_area_tension_steel = min(
+            area_tension_steel, (0.29 * 1.3 * self.fm * self.length * d) / fsy
+        )
+        if verbose is True:
+            print(
+                f"effective_area_tension_steel: {effective_area_tension_steel:.2f} mm2"
+            )
+
+        # Step 2: Calculate Md
+        Md = (
+            self.phi_bending
+            * fsy
+            * effective_area_tension_steel
+            * d
+            * (
+                1
+                - (0.6 * fsy * effective_area_tension_steel)
+                / (1.3 * self.fm * self.length * d)
+            )
+            * 1e-6
+        )
         if verbose == True:
             print(f"Md: {Md:.2f} KNm")
+        return Md
 
-    def out_of_plane_vertical_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
-        Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.length, verbose=verbose)
+    def out_of_plane_vertical_bending(
+        self, loads=[], fsy=None, d=None, area_tension_steel=None, verbose=True
+    ):
+        Md = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.length,
+            verbose=verbose,
+        )
         return Md
-    
-    def out_of_plane_horizontal_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
-        Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.height, verbose=verbose)
+
+    def out_of_plane_horizontal_bending(
+        self, loads=[], fsy=None, d=None, area_tension_steel=None, verbose=True
+    ):
+        Md = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.height,
+            verbose=verbose,
+        )
         return Md
-    
-    def in_plane_vertical_bending(self, loads=[], fsy = None, d = None, Ast = None, verbose = True):
-        Md = self._bending(loads=loads, fsy=fsy, d=d, Ast=Ast, b=self.thickness, verbose=verbose)
+
+    def in_plane_vertical_bending(
+        self, loads=[], fsy=None, d=None, area_tension_steel=None, verbose=True
+    ):
+        Md = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.thickness,
+            verbose=verbose,
+        )
         return Md
+
 
 class BondBeam(ReinforcedMasonry):
     pass
