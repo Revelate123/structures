@@ -3,10 +3,11 @@ This module performs engineering calculations in accordance with
 AS3700:2018 for reinforced masonry
 """
 
+from structures.util import round_half_up
 from structures.Masonry import masonry
 
 
-class ReinforcedBlock:
+class Block:
     """For the design of reinforced clay brick masonry in accordance with AS3700:2018"""
 
     def __init__(
@@ -37,7 +38,7 @@ class ReinforcedBlock:
             thickness of the masonry unit in mm
 
         fuc : float
-            unconfined compressive capacity in MPa
+            unconfined compressive capacity in MPa, AS3700 requires not less than 15 MPa
 
         mortar_class : float
             Mortar class in accordance with AS3700
@@ -95,6 +96,8 @@ class ReinforcedBlock:
             raise ValueError(
                 "Concrete masonry units undefined for mortar class M4, adopt M3"
             )
+        if fuc < 15:
+            print("Note: fuc less than minimum required by AS3700 of 15 MPa")
         self.zd = self.length * self.thickness**2 / 6
         self.zu = self.zp = self.zd
         self.zd_horz = self.height * self.thickness**2 / 6
@@ -134,7 +137,7 @@ class ReinforcedBlock:
             )
 
         # Step 2: Calculate moment_cap
-        moment_cap = (
+        moment_cap = round_half_up(
             self.phi_bending
             * fsy
             * effective_area_tension_steel
@@ -144,7 +147,8 @@ class ReinforcedBlock:
                 - (0.6 * fsy * effective_area_tension_steel)
                 / (1.3 * self.fm * self.length * d)
             )
-            * 1e-6
+            * 1e-6,
+            self.epsilon,
         )
         if verbose is True:
             print(f"moment_cap: {moment_cap:.2f} KNm")
@@ -286,7 +290,9 @@ class ReinforcedBlock:
         return moment_cap
 
     def _calc_km(self, verbose: bool = True) -> float:
-        km = 1.4
+        km = 1.6
         if verbose:
+            print("Mortar class M3")
+            print("Bedding type: Face shell")
             print(f"km: {km}")
         return km
