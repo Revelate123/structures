@@ -89,6 +89,8 @@ class ReinforcedBlock:
         self.phi_bending = 0.75
         self.phi_compression = 0.75
         self.fut = 0.8
+        self.epsilon = 2
+
         if self.mortar_class != 3:
             raise ValueError(
                 "Concrete masonry units undefined for mortar class M4, adopt M3"
@@ -110,23 +112,15 @@ class ReinforcedBlock:
         verbose: bool = True,
     ):
 
-        if fsy is not float:
-            raise ValueError("fsy not set.")
         if verbose:
             print(f"fsy: {fsy:.2f} MPa")
 
-        if d is not float:
-            raise ValueError("d not set")
         if verbose:
             print(f"d: {d:.2f} mm")
 
-        if area_tension_steel is not float:
-            raise ValueError("area_tension_steel not set.")
         if verbose:
             print(f"area_tension_steel: {area_tension_steel:.2f} mm2")
 
-        if b is not float:
-            raise ValueError("b is not set, this is the ")
         if verbose:
             print(f"b: {b:.2f} mm")
 
@@ -177,7 +171,7 @@ class ReinforcedBlock:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration. Denoted Ast in AS3700. Note: the
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
             amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
@@ -222,7 +216,7 @@ class ReinforcedBlock:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration. Denoted Ast in AS3700. Note: the
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
             amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
@@ -267,7 +261,7 @@ class ReinforcedBlock:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration. Denoted Ast in AS3700. Note: the
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
             amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
