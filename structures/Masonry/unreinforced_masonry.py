@@ -49,15 +49,18 @@ class Clay:
             True if fully grout bedding,
             False if face shell bedding
 
+        verbose : float
+            True to print internal calculations
+            False otherwise
+
         hu : float
             masonry unit height in mm, defaults to 76 mm
 
         tj : float
             grout thickness between masonry units in mm, defaults to 10 mm
 
-        verbose : float
-            True to print internal calculations
-            False otherwise
+        fmt : float
+            Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
         Examples
         ========
