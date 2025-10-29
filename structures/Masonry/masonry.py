@@ -1,27 +1,46 @@
+"""Contains methods for inheritance"""
+
 import math
-from dataclasses import dataclass
+from structures.util import round_half_up
 
 
-@dataclass
-class Masonry:
-    length: float | None = None
-    height: float | None = None
-    thickness: float | None = None
-    fuc: float | None = None
-    mortar_class: float | None = None
-    fut: float = 0.8  # Cl 3.2 - In absence of test data, fut not to exceed 0.8MPa
-    fmt: float = 0.2
+def calc_fm(
+    self,
+    km: float | None = None,
+    verbose: bool = True,
+):
+    """Computes fm in accordance with AS3700 Cl 3."""
 
-    def __post_init__(self):
-        print(
-            """
-All calculations are based on AS3700:2018
-Units unless specified otherwise, are:
-Pressure: MPa 
-Length: mm
-Forces: KN\n"""
+    if km is None:
+        raise ValueError("km not set.")
+    elif verbose:
+        print(f"km: {km}")
+    if self.hu is not None and self.tj is None:
+        raise ValueError(
+            "Masonry unit height provided but mortar thickness tj not provided"
         )
-        self.Zd = self.length * self.thickness**2 / 6
-        self.Zu = self.Zp = self.Zd
-        self.Zd_horz = self.height * self.thickness**2 / 6
-        self.Zu_horz = self.Zp_horz = self.Zd_horz
+    elif self.hu is None and self.tj is not None:
+        raise ValueError(
+            "joint thickness tj provided but masonry unit height not provided"
+        )
+
+    kh = round_half_up(
+        min(
+            1.3 * (self.hu / (19 * self.tj)) ** 0.29,
+            1.3,
+        ),
+        self.epsilon,
+    )
+    if verbose:
+        print(
+            f"kh: {kh}, based on a masonry unit height of {self.hu} mm"
+            f" and a joint thickness of {self.tj} mm"
+        )
+
+    fmb = round_half_up(math.sqrt(self.fuc) * km, self.epsilon)
+    if verbose:
+        print(f"fmb: {fmb} MPa")
+
+    self.fm = round_half_up(kh * fmb, self.epsilon)
+    if verbose:
+        print(f"fm: {self.fm} MPa")
