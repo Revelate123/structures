@@ -175,8 +175,8 @@ class Block:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
-            amount of steel used in calculation is limited to effective_area_tension_steel
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
             Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
@@ -220,8 +220,8 @@ class Block:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
-            amount of steel used in calculation is limited to effective_area_tension_steel
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
             Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
@@ -265,8 +265,8 @@ class Block:
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note: the
-            amount of steel used in calculation is limited to effective_area_tension_steel
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
 
         fsy : float
             Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
