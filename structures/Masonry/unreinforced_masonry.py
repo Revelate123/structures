@@ -5,14 +5,16 @@ AS3700:2018 for unreinforced masonry
 """
 
 import math
+from abc import ABC, abstractmethod
 from structures.Masonry import masonry
 from structures.util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes
-class Clay:
-    """For the design of unreinforced clay brick masonry in accordance with AS3700:2018"""
+class Unreinforced(ABC):
+    """For the design of unreinforced masonry in accordance with AS3700:2018"""
 
+    @abstractmethod
     def __init__(
         self,
         length: float,
@@ -26,58 +28,7 @@ class Clay:
         tj: float = 10,
         fmt: float = 0.2,
     ):
-        """Initialises the masonry element
 
-        Parameters
-        ==========
-
-        length : float
-            length of the wall in mm
-
-        height : float
-            height of the wall in mm
-
-        thickness : float
-            thickness of the wall in mm
-
-        fuc : float
-            unconfined compressive capacity in MPa
-
-        mortar_class : float
-            Mortar class in accordance with AS3700
-
-        bedding_type : bool
-            True if fully grout bedding,
-            False if face shell bedding
-
-        verbose : float
-            True to print internal calculations
-            False otherwise
-
-        hu : float
-            masonry unit height in mm, defaults to 76 mm
-
-        tj : float
-            grout thickness between masonry units in mm, defaults to 10 mm
-
-        fmt : float
-            Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
-
-        Examples
-        ========
-
-        >>> from structures.Masonry.unreinforced_masonry import Clay
-        >>> wall = Clay(
-                    length=1000,
-                    height=3000,
-                    thickness=110,
-                    fuc=20,
-                    mortar_class=3,
-                    bedding_type=True
-                    )
-
-
-        """
         self.length = length
         self.height = height
         self.thickness = thickness
@@ -96,26 +47,27 @@ class Clay:
         self.density = 19
         self.epsilon = 2
 
+    def __post_init__(self):
         if self.length is None:
             raise ValueError("length not set. This is the length of the wall in mm")
-        if verbose:
+        if self.verbose:
             print(f"length: {self.length} mm")
 
         if self.height is None:
             raise ValueError("height not set. This is the height of the wall in mm")
-        if verbose:
+        if self.verbose:
             print(f"height: {self.height} mm")
 
         if self.height is None:
             raise ValueError("height not set. This is the height of the wall in mm")
-        if verbose:
+        if self.verbose:
             print(f"height: {self.height} mm")
 
         if self.bedding_type is None:
             raise ValueError(
                 "bedding_type not set. set to True for Full bedding or False for Face shell bedding"
             )
-        if verbose:
+        if self.verbose:
             print(
                 f"bedding_type: {'Full bedding' if
                                  self.bedding_type is True else 'Face shell bedding'}"
@@ -920,6 +872,15 @@ class Clay:
             )
             kb = min(kb, 1.5 + a1 / self.length)
             kb = round_half_up(max(kb, 1), self.epsilon)
+            if verbose:
+                print(
+                    "kb = 0.55 * (1 + 0.5 * a1 / length) / "
+                    "((bearing_area / dispersed_area) ** 0.33)"
+                )
+                print(
+                    f"kb = 0.55 * (1 + 0.5 * {a1} / {self.length}) / "
+                    "(({bearing_area} / {dispersed_area}) ** 0.33)"
+                )
         else:
             kb = 1
         if verbose:
@@ -1083,6 +1044,129 @@ class Clay:
         """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""
         return self.density * self.length * self.height * self.thickness
 
+    @abstractmethod
+    def _calc_km(self, verbose: bool = True) -> float:
+        pass
+
+    def _calc_fms_horz(self, verbose: bool = True) -> float:
+        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
+        if verbose:
+            print(f"f'ms (horizontal): {fms_horizontal} MPa")
+        return fms_horizontal
+
+    def _calc_fms_vert(self, verbose: bool = True) -> float:
+        fms_vertical = min(0.15, max(1.25 * self.fm, 0.35))
+        if verbose:
+            print(f"f'ms (vertical): {fms_vertical} MPa")
+        return fms_vertical
+
+    def _calc_fmt(
+        self,
+        interface: None | bool = None,
+        verbose: bool = True,
+    ) -> None:
+        """Computes fmt in accordance with AS3700 Cl 3.3.3"""
+        # 0.2 for clay masonry
+        if interface is None:
+            raise ValueError(
+                "interface not set, set to True if shear plane is masonry to masonry,"
+                " and False if shear_plane is masonry to other material"
+            )
+        if interface is False:
+            self.fmt = 0
+        if verbose:
+            print(
+                f"fmt = {self.fmt} MPa (at interface with "
+                f"{"masonry" if interface else "other materials"})"
+            )
+
+
+class Clay(Unreinforced):
+    """Initialises the masonry element
+
+    Parameters
+    ==========
+
+    length : float
+        length of the wall in mm
+
+    height : float
+        height of the wall in mm
+
+    thickness : float
+        thickness of the wall in mm
+
+    fuc : float
+        unconfined compressive capacity in MPa
+
+    mortar_class : float
+        Mortar class in accordance with AS3700
+
+    bedding_type : bool
+        True if fully grout bedding,
+        False if face shell bedding
+
+    verbose : float
+        True to print internal calculations
+        False otherwise
+
+    hu : float
+        masonry unit height in mm, defaults to 76 mm
+
+    tj : float
+        grout thickness between masonry units in mm, defaults to 10 mm
+
+    fmt : float
+        Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+
+    Examples
+    ========
+
+    >>> from structures.Masonry.unreinforced_masonry import Clay
+    >>> wall = Clay(
+                length=1000,
+                height=3000,
+                thickness=110,
+                fuc=20,
+                mortar_class=3,
+                bedding_type=True
+                )
+
+
+    """
+
+    def __init__(
+        self,
+        length: float,
+        height: float,
+        thickness: float,
+        fuc: float,
+        mortar_class: int,
+        bedding_type: bool,
+        verbose: bool = True,
+        hu: float = 76,
+        tj: float = 10,
+        fmt: float = 0.2,
+    ):
+
+        self.length = length
+        self.height = height
+        self.thickness = thickness
+        self.fuc = fuc
+        self.mortar_class = mortar_class
+        self.bedding_type = bedding_type
+        self.hu = hu
+        self.tj = tj
+        self.fm = None
+        self.fmt = fmt
+        self.verbose = verbose
+        self.fut = 0.8
+        self.phi_shear = 0.6
+        self.phi_bending = 0.6
+        self.phi_compression = 0.75
+        self.density = 19
+        self.epsilon = 2
+
     def _calc_km(self, verbose: bool = True) -> float:
         if self.fuc is None:
             raise ValueError(
@@ -1118,34 +1202,124 @@ class Clay:
             raise ValueError("Invalid mortar class provided")
         return km
 
-    def _calc_fms_horz(self, verbose: bool = True) -> float:
-        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
-        if verbose:
-            print(f"f'ms (horizontal): {fms_horizontal} MPa")
-        return fms_horizontal
 
-    def _calc_fms_vert(self, verbose: bool = True) -> float:
-        fms_vertical = min(0.15, max(1.25 * self.fm, 0.35))
-        if verbose:
-            print(f"f'ms (vertical): {fms_vertical} MPa")
-        return fms_vertical
+class Concrete(Unreinforced):
+    """Initialises the masonry element
 
-    def _calc_fmt(
+    Parameters
+    ==========
+
+    length : float
+        length of the wall in mm
+
+    height : float
+        height of the wall in mm
+
+    thickness : float
+        thickness of the wall in mm
+
+    fuc : float
+        unconfined compressive capacity in MPa
+
+    mortar_class : float
+        Mortar class in accordance with AS3700
+
+    bedding_type : bool
+        True if fully grout bedding,
+        False if face shell bedding
+
+    verbose : float
+        True to print internal calculations
+        False otherwise
+
+    hu : float
+        masonry unit height in mm, defaults to 76 mm
+
+    tj : float
+        grout thickness between masonry units in mm, defaults to 10 mm
+
+    fmt : float
+        Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+
+    Examples
+    ========
+
+    >>> from structures.Masonry.unreinforced_masonry import Clay
+    >>> wall = Concrete(
+                length=1000,
+                height=3000,
+                thickness=110,
+                fuc=20,
+                mortar_class=3,
+                bedding_type=True
+                )
+
+
+    """
+
+    def __init__(
         self,
-        interface: None | bool = None,
+        length: float,
+        height: float,
+        thickness: float,
+        fuc: float,
+        mortar_class: int,
+        bedding_type: bool,
         verbose: bool = True,
-    ) -> None:
-        """Computes fmt in accordance with AS3700 Cl 3.3.3"""
-        # 0.2 for clay masonry
-        if interface is None:
+        hu: float = 76,
+        tj: float = 10,
+        fmt: float = 0.2,
+    ):
+
+        self.length = length
+        self.height = height
+        self.thickness = thickness
+        self.fuc = fuc
+        self.mortar_class = mortar_class
+        self.bedding_type = bedding_type
+        self.hu = hu
+        self.tj = tj
+        self.fm = None
+        self.fmt = fmt
+        self.verbose = verbose
+        self.fut = 0.8
+        self.phi_shear = 0.6
+        self.phi_bending = 0.6
+        self.phi_compression = 0.75
+        self.density = 19
+        self.epsilon = 2
+
+    def _calc_km(self, verbose: bool = True) -> float:
+        if self.fuc is None:
             raise ValueError(
-                "interface not set, set to True if shear plane is masonry to masonry,"
-                " and False if shear_plane is masonry to other material"
+                "fuc undefined, for new structures the value is typically 20 MPa,"
+                " and for existing 10 to 12MPa"
             )
-        if interface is False:
-            self.fmt = 0
+        if self.bedding_type is None:
+            raise ValueError(
+                "bedding_type not set. set to True for Full bedding or False for Face shell bedding"
+            )
+        if self.bedding_type is False and self.mortar_class != 3:
+            raise ValueError(
+                "Face shell bedding_type is only available for mortar class M3."
+                " Change bedding_type or mortar_class"
+            )
         if verbose:
             print(
-                f"fmt = {self.fmt} MPa (at interface with "
-                f"{"masonry" if interface else "other materials"})"
+                f"bedding_type: {"Full" if self.bedding_type is True else "Face shell"}"
             )
+
+        if self.mortar_class is None:
+            raise ValueError("mortar_class undefined, typically 3")
+
+        if self.bedding_type is False:
+            km = 1.6
+        elif self.mortar_class == 4:
+            km = 2
+        elif self.mortar_class == 3:
+            km = 1.4
+        elif self.mortar_class == 2:
+            km = 1.1
+        else:
+            raise ValueError("Invalid mortar class provided")
+        return km
