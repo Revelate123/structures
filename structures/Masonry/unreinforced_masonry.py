@@ -47,26 +47,17 @@ class Unreinforced(ABC):
         self.density = 19
         self.epsilon = 2
 
+    @abstractmethod
     def __post_init__(self):
-        if self.length is None:
-            raise ValueError("length not set. This is the length of the wall in mm")
         if self.verbose:
             print(f"length: {self.length} mm")
 
-        if self.height is None:
-            raise ValueError("height not set. This is the height of the wall in mm")
         if self.verbose:
             print(f"height: {self.height} mm")
 
-        if self.height is None:
-            raise ValueError("height not set. This is the height of the wall in mm")
         if self.verbose:
             print(f"height: {self.height} mm")
 
-        if self.bedding_type is None:
-            raise ValueError(
-                "bedding_type not set. set to True for Full bedding or False for Face shell bedding"
-            )
         if self.verbose:
             print(
                 f"bedding_type: {'Full bedding' if
@@ -1097,7 +1088,8 @@ class Clay(Unreinforced):
         thickness of the wall in mm
 
     fuc : float
-        unconfined compressive capacity in MPa
+        unconfined compressive capacity in MPa,
+        typically 20 MPa in new structures and 10-12 MPa for existing structures
 
     mortar_class : float
         Mortar class in accordance with AS3700
@@ -1167,6 +1159,22 @@ class Clay(Unreinforced):
         self.density = 19
         self.epsilon = 2
 
+    def __post_init__(self):
+        if self.verbose:
+            print(f"length: {self.length} mm")
+
+        if self.verbose:
+            print(f"height: {self.height} mm")
+
+        if self.verbose:
+            print(f"height: {self.height} mm")
+
+        if self.verbose:
+            print(
+                f"bedding_type: {'Full bedding' if
+                                 self.bedding_type is True else 'Face shell bedding'}"
+            )
+
     def _calc_km(self, verbose: bool = True) -> float:
         if self.fuc is None:
             raise ValueError(
@@ -1219,7 +1227,8 @@ class Concrete(Unreinforced):
         thickness of the wall in mm
 
     fuc : float
-        unconfined compressive capacity in MPa
+        unconfined compressive capacity in MPa,
+        typically 10 MPa for full bedding and 15 MPa for face shell bedding
 
     mortar_class : float
         Mortar class in accordance with AS3700
@@ -1233,7 +1242,7 @@ class Concrete(Unreinforced):
         False otherwise
 
     hu : float
-        masonry unit height in mm, defaults to 76 mm
+        masonry unit height in mm, defaults to 200 mm
 
     tj : float
         grout thickness between masonry units in mm, defaults to 10 mm
@@ -1266,7 +1275,7 @@ class Concrete(Unreinforced):
         mortar_class: int,
         bedding_type: bool,
         verbose: bool = True,
-        hu: float = 76,
+        hu: float = 200,
         tj: float = 10,
         fmt: float = 0.2,
     ):
@@ -1289,12 +1298,23 @@ class Concrete(Unreinforced):
         self.density = 19
         self.epsilon = 2
 
-    def _calc_km(self, verbose: bool = True) -> float:
-        if self.fuc is None:
-            raise ValueError(
-                "fuc undefined, for new structures the value is typically 20 MPa,"
-                " and for existing 10 to 12MPa"
+    def __post_init__(self):
+        if self.verbose:
+            print(f"length: {self.length} mm")
+
+        if self.verbose:
+            print(f"height: {self.height} mm")
+
+        if self.verbose:
+            print(f"height: {self.height} mm")
+
+        if self.verbose:
+            print(
+                f"bedding_type: {'Full bedding' if
+                                 self.bedding_type is True else 'Face shell bedding'}"
             )
+
+    def _calc_km(self, verbose: bool = True) -> float:
         if self.bedding_type is None:
             raise ValueError(
                 "bedding_type not set. set to True for Full bedding or False for Face shell bedding"
@@ -1309,17 +1329,10 @@ class Concrete(Unreinforced):
                 f"bedding_type: {"Full" if self.bedding_type is True else "Face shell"}"
             )
 
-        if self.mortar_class is None:
-            raise ValueError("mortar_class undefined, typically 3")
-
-        if self.bedding_type is False:
+        if self.bedding_type is False and self.mortar_class == 3:
             km = 1.6
-        elif self.mortar_class == 4:
-            km = 2
         elif self.mortar_class == 3:
             km = 1.4
-        elif self.mortar_class == 2:
-            km = 1.1
         else:
             raise ValueError("Invalid mortar class provided")
         return km
