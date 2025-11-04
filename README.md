@@ -19,7 +19,7 @@ This project is currently in early alpha.
 ## Installation
 Install from PyPI using:
 
-`pip install toms-structures`
+`$ pip install toms-structures`
 
 
 ## Usage
