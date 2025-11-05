@@ -622,16 +622,233 @@ class TestRefinedCompression:
         assert capacity == {"Crushing": 366.3, "Buckling": 126.17}
 
     def test_stocky_wall(self):
-        pass
+        """
+        fm = 5.42 MPa
+        Fo = 0.75 * 5.42 MPa = 4.07 MPa
+        Sr = 0.75 * 1000 / (1* 200) = 3.75
+        e1 = 0.05 * 200mm = 10mm
+        e2 = 0.05 * 200mm = 10mm
 
-    def test_stocky_wall_two_returns(self):
-        pass
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 10) * [(1 - 2.083 * 10/200) - (0.025 - 0.037 * 10/200)*(1.33*3.75 - 8)]
+            + 0.5(1 - 0.6*10/200)*(1 - 10/10)*(1.18 - 0.03*3.75)
+
+        = 0.5 * (2) * [(0.89585) - (0.02315)*(-3.0125)]
+            + 0.5(1 - 0.6*10/200)*(0)*(1.18 - 0.03*3.75)
+
+        = 0.5 * (2) * [(0.89585) - (0.02315)*(-3.0125)]
+            + 0
+
+        k = 0.965589375 = 0.97
+        Buckling capacity = 0.97 * 4.07 MPa * 200mm * 1000mm = 789.58 KN
+
+        Local Crushing
+        k = 1 - 2*e1/tw
+        = 1 - 2*10/200
+        = 0.9
+        Crushing capacity = 0.9 * 4.07 MPa * 200mm * 1000mm = 732.6 KN
+        """
+        wall = unreinforced_masonry.Clay(
+            length=1000,
+            height=1000,
+            thickness=200,
+            fuc=15,
+            mortar_class=3,
+            bedding_type=True,
+        )
+        capacity = wall.refined_compression(
+            refined_av=0.75, refined_ah=0, kt=1, e1=0, e2=0
+        )
+        assert capacity == {"Crushing": 732.6, "Buckling": 789.58}
+
+    def test_slender_wall_two_returns(self):
+        """
+        fm = 4.43 MPa
+        Fo = 0.75 * 4.43 MPa = 3.32 MPa
+        Vertical slenderness:
+        Sr = 1 * 3000 / (1* 90) = 33.33
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*33.33 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*33.33)
+
+        = 0.5 * (2) * [(0.3056667) - (0.0126667)*(36.3289)]
+            + 0.5(0.8)*(2/3)*(0.1801)
+
+        = -0.1545
+            + 0.0480266
+        = -0.106 (Fails)
+
+        Horizontal slenderness:
+        Sr = 0.7/90 * sqrt(1 * 3000 * 1 * 1000) = 13.47
+        e1 = 30mm
+        e2 = 10mm
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*13.47 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*13.47)
+
+        = 0.5 * (2) * [(0.3056667) - (0.0126667)*(9.9151)]
+            + 0.5(0.8)*(2/3)*(0.7759)
+
+        = 0.180075
+            + 0.2069
+        = 0.386975 (limited to 0.2)
+
+        k = 0.2
+        Buckling capacity = 0.2 * 3.32 MPa * 90mm * 1000mm = 59.76 KN
+
+        Local Crushing
+        k = 1 - 2*e1/tw
+        = 1 - 2*30/90
+        = 0.33
+        Crushing capacity = 0.33 * 3.32 MPa * 90mm * 1000mm = 98.60 KN
+        """
+        wall = unreinforced_masonry.Clay(
+            length=1000,
+            height=3000,
+            thickness=90,
+            mortar_class=3,
+            fuc=10,
+            bedding_type=True,
+        )
+        capacity = wall.refined_compression(
+            refined_av=1, refined_ah=1, kt=1, e1=30, e2=10, dist_to_return=1000
+        )
+        assert capacity == {"Crushing": 98.60, "Buckling": 59.76}
 
     def test_slender_wall_one_return_nearby(self):
-        pass
+        """
+        fm = 4.43 MPa
+        Fo = 0.75 * 4.43 MPa = 3.32 MPa
+        Vertical slenderness:
+        Sr = 1 * 3000 / (1* 90) = 33.33
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*33.33 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*33.33)
+
+        = 0.5 * (2) * [(0.3056667) - (0.0126667)*(36.3289)]
+            + 0.5(0.8)*(2/3)*(0.1801)
+
+        = -0.1545
+            + 0.0480266
+        = -0.106 (Fails)
+
+        Horizontal slenderness:
+        Sr = 0.7/90 * sqrt(1 * 3000 * 2.5 * 1000) = 21.30
+        e1 = 30mm
+        e2 = 10mm
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*21.30 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*21.30)
+
+        = 0.5 * (1.33333) * [(0.3056667) - (0.0126667)*(20.329)]
+            + 0.5(0.8)*(2/3)*(0.541)
+
+        = 0.03211016
+            + 0.1442666
+        = 0.176376
+
+        k = 0.18
+        Buckling capacity = 0.18 * 3.32 MPa * 90mm * 1000mm = 53.78 KN
+
+        Local Crushing
+        k = 1 - 2*e1/tw
+        = 1 - 2*30/90
+        = 0.33
+        Crushing capacity = 0.33 * 3.32 MPa * 90mm * 1000mm = 98.60 KN
+        """
+        wall = unreinforced_masonry.Clay(
+            length=1000,
+            height=3000,
+            thickness=90,
+            mortar_class=3,
+            fuc=10,
+            bedding_type=True,
+        )
+        capacity = wall.refined_compression(
+            refined_av=1, refined_ah=2.5, kt=1, e1=30, e2=10, dist_to_return=1000
+        )
+        assert capacity == {"Crushing": 98.60, "Buckling": 53.78}
 
     def test_slender_wall_two_returns_large_spacing(self):
-        pass
+        """
+        fm = 4.43 MPa
+        Fo = 0.75 * 4.43 MPa = 3.32 MPa
+        Vertical slenderness:
+        Sr = 1 * 3000 / (1* 90) = 33.33
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*33.33 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*33.33)
+
+        = 0.5 * (2) * [(0.3056667) - (0.0126667)*(36.3289)]
+            + 0.5(0.8)*(2/3)*(0.1801)
+
+        = -0.1545
+            + 0.0480266
+        = -0.106 (Fails)
+
+        Horizontal slenderness:
+        Sr = 0.7/90 * sqrt(1 * 3000 * 1 * 3500) = 25.20
+        e1 = 30mm
+        e2 = 10mm
+
+        Lateral stability:
+        k = 0.5 * (1 + e2 / e1) * [(1 - 2.083 * e1/tw) - (0.025 - 0.037 * e1/tw)*(1.33*Sr - 8)]
+            + 0.5(1 - 0.6*e1/tw)*(1 - e2/e1)*(1.18 - 0.03*Sr)
+
+        = 0.5 * (1 + 10 / 30) * [(1 - 2.083 * 30/90) - (0.025 - 0.037 * 30/90)*(1.33*25.20 - 8)]
+            + 0.5(1 - 0.6*30/90)*(1 - 10/30)*(1.18 - 0.03*25.20)
+
+        = 0.5 * (1.33333) * [(0.3056667) - (0.0126667)*(25.516)]
+            + 0.5(0.8)*(2/3)*(0.424)
+
+        = -0.01169118
+            + 0.11306667
+        = 0.101375
+
+        k = 0.1
+        Buckling capacity = 0.1 * 3.32 MPa * 90mm * 1000mm = 29.88 KN
+
+        Local Crushing
+        k = 1 - 2*e1/tw
+        = 1 - 2*30/90
+        = 0.33
+        Crushing capacity = 0.33 * 3.32 MPa * 90mm * 1000mm = 98.60 KN
+        """
+        wall = unreinforced_masonry.Clay(
+            length=1000,
+            height=3000,
+            thickness=90,
+            mortar_class=3,
+            fuc=10,
+            bedding_type=True,
+        )
+        capacity = wall.refined_compression(
+            refined_av=1, refined_ah=1, kt=1, e1=30, e2=10, dist_to_return=3500
+        )
+        assert capacity["Buckling"] == 29.88
 
     def test_slender_wall_one_return_large_spacing(self):
         pass

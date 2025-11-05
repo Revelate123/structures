@@ -47,8 +47,6 @@ class Unreinforced(ABC):
         self.density = 19
         self.epsilon = 2
 
-    @abstractmethod
-    def __post_init__(self):
         if self.verbose:
             print(f"length: {self.length} mm")
 
@@ -177,7 +175,7 @@ class Unreinforced(ABC):
             )
             if verbose:
                 print("Load type: Concrete slab over")
-                print(f"k = min(0.67 - 0.02 * ({srs} - 14), 0.67)")
+                print(f"k = min(0.67 - 0.02 * ({srs:.2f} - 14), 0.67)")
         elif compression_load_type == 2:
             k = round_half_up(
                 min(
@@ -188,7 +186,7 @@ class Unreinforced(ABC):
             )
             if verbose:
                 print("Load type: Other systems (Table 7.1)")
-                print(f"k = min(0.67 - 0.025 * ({srs} - 10), 0.67)")
+                print(f"k = min(0.67 - 0.025 * ({srs:.2f} - 10), 0.67)")
         elif compression_load_type == 3:
             k = round_half_up(
                 min(
@@ -215,11 +213,11 @@ class Unreinforced(ABC):
 
     def refined_compression(
         self,
-        refined_av: float | None = None,
-        refined_ah: float | None = None,
-        kt: float | None = None,
-        e1: float | None = None,
-        e2: float | None = None,
+        refined_av: float,
+        refined_ah: float,
+        kt: float,
+        e1: float,
+        e2: float,
         dist_to_return: float | None = None,
         effective_length: float | None = None,
         verbose: bool = True,
@@ -243,6 +241,7 @@ class Unreinforced(ABC):
 
         refined_ah (float):
             Horizontal slenderness coefficient\n
+            0 - for a wall with no lateral supports\n
             1 - for a wall laterally supported along both vertical edges (regardless of
             the rotational restraint along these edges)\n
             2.5 - for a wall laterally supported along one vertical edge, and
@@ -265,7 +264,8 @@ class Unreinforced(ABC):
             the member, given in mm
 
         dist_to_return : float
-            Distance to return wall in mm
+            Distance to return wall in mm. Note, this may be different from the length of the wall.
+            For example, if only looking at a section of the wall, or a section which extends beyond.
 
         effective_length : float
             Length of wall used in calculations in mm
@@ -993,7 +993,26 @@ class Unreinforced(ABC):
             ) + 0.5 * (1 - 0.6 * e1 / self.thickness) * (1 - e2 / e1) * (
                 1.18 - 0.03 * sr
             )
-
+        print(
+            f"k_lateral = 0.5 * (1 + {e2} / {e1}) * ( "
+            f" (1 - 2.083 * {e1} / {self.thickness}) "
+            f" - (0.025 - 0.037 * {e1} / {self.thickness}) * (1.33 * {sr} - 8) "
+            f") + 0.5 * (1 - 0.6 * {e1} / {self.thickness}) * (1 - {e2} / {e1}) * ("
+            f"   1.18 - 0.03 * {sr}"
+            " )"
+        )
+        print(
+            0.5
+            * (1 + e2 / e1)
+            * (
+                (1 - 2.083 * e1 / self.thickness)
+                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
+            )
+        )
+        print(
+            0.5 * (1 - 0.6 * e1 / self.thickness) * (1 - e2 / e1) * (1.18 - 0.03 * sr)
+        )
+        print(f"k for lateral instability: {k_lateral}")
         k_lateral = round_half_up(max(k_lateral, 0), self.epsilon)
         if verbose:
             print(f"k for lateral instability: {k_lateral}")
@@ -1159,7 +1178,6 @@ class Clay(Unreinforced):
         self.density = 19
         self.epsilon = 2
 
-    def __post_init__(self):
         if self.verbose:
             print(f"length: {self.length} mm")
 
@@ -1231,7 +1249,7 @@ class Concrete(Unreinforced):
         typically 10 MPa for full bedding and 15 MPa for face shell bedding
 
     mortar_class : float
-        Mortar class in accordance with AS3700
+        Mortar class in accordance with AS3700, only 3 is defined for concrete masonry in AS3700
 
     bedding_type : bool
         True if fully grout bedding,
@@ -1298,7 +1316,6 @@ class Concrete(Unreinforced):
         self.density = 19
         self.epsilon = 2
 
-    def __post_init__(self):
         if self.verbose:
             print(f"length: {self.length} mm")
 
