@@ -11,7 +11,7 @@ class TestBasicCompressiveCapacity:
         fmb = km * sqrt(fuc) = 1.4 * sqrt(20) = 6.261 MPa
         fm = kh * fmb = 1 * fmb = 6.261 MPa
         phi = 0.75
-        Fo = 0.75 * 6.261 = 4.70 MPa
+        Fo = 0.75 * 6.26 * 1000 * 110 = 516.45 KN
         """
 
         wall = unreinforced_masonry.Clay(
@@ -23,7 +23,7 @@ class TestBasicCompressiveCapacity:
             bedding_type=True,
         )
         capacity = wall.basic_compressive_capacity()
-        assert capacity == 4.70
+        assert capacity == 516.45
 
 
 class TestUnreinforcedMasonry:
