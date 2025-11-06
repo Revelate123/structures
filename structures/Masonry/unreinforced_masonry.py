@@ -52,21 +52,22 @@ class Unreinforced(ABC):
         self.face_shell_thickness = face_shell_thickness
         self.raking = raking
         self.fcg = 1
+        self.__post_init__()
+
+    def __post_init__(self):
 
         if self.verbose:
             print(f"length: {self.length} mm")
-
-        if self.verbose:
             print(f"height: {self.height} mm")
-
-        if self.verbose:
-            print(f"height: {self.height} mm")
-
-        if self.verbose:
+            print(f"thickness: {self.thickness} mm")
             print(
                 f"bedding_type: {'Full bedding' if
-                                 self.bedding_type is True else 'Face shell bedding'}"
+                                    self.bedding_type is True else 'Face shell bedding'}"
             )
+            print(f"fuc: {self.fuc} MPa")
+            print(f"mortar class: M{self.mortar_class}")
+            print(f"Joint thickness tj: {self.tj} mm")
+            print(f"Masonry unit height hu: {self.hu} mm")
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
@@ -321,7 +322,6 @@ class Unreinforced(ABC):
                 "e1 is the larger eccentricity of the vertical force"
             )
         e1, e2 = self._calc_e1_e2(e1, e2, verbose)
-        print("WARNING: Test cases incomplete")
         k_local_crushing = round_half_up(
             1 - 2 * e1 / self.thickness,
             self.epsilon,
@@ -1023,25 +1023,13 @@ class Unreinforced(ABC):
                 1.18 - 0.03 * sr
             )
         print(
-            f"k_lateral = 0.5 * (1 + {e2} / {e1}) * ( "
+            f"k for lateral instability = 0.5 * (1 + {e2} / {e1}) * ( "
             f" (1 - 2.083 * {e1} / {self.thickness}) "
             f" - (0.025 - 0.037 * {e1} / {self.thickness}) * (1.33 * {sr} - 8) "
             f") + 0.5 * (1 - 0.6 * {e1} / {self.thickness}) * (1 - {e2} / {e1}) * ("
             f"   1.18 - 0.03 * {sr}"
             " )"
         )
-        print(
-            0.5
-            * (1 + e2 / e1)
-            * (
-                (1 - 2.083 * e1 / self.thickness)
-                - (0.025 - 0.037 * e1 / self.thickness) * (1.33 * sr - 8)
-            )
-        )
-        print(
-            0.5 * (1 - 0.6 * e1 / self.thickness) * (1 - e2 / e1) * (1.18 - 0.03 * sr)
-        )
-        print(f"k for lateral instability: {k_lateral}")
         k_lateral = round_half_up(max(k_lateral, 0), self.epsilon)
         if verbose:
             print(f"k for lateral instability: {k_lateral}")
@@ -1232,21 +1220,7 @@ class Clay(Unreinforced):
         self.grouted = False
         self.fcg = 1
         self.epsilon = 2
-
-        if self.verbose:
-            print(f"length: {self.length} mm")
-
-        if self.verbose:
-            print(f"height: {self.height} mm")
-
-        if self.verbose:
-            print(f"height: {self.height} mm")
-
-        if self.verbose:
-            print(
-                f"bedding_type: {'Full bedding' if
-                                 self.bedding_type is True else 'Face shell bedding'}"
-            )
+        self.__post_init__()
 
     def _calc_km(self, verbose: bool = True) -> float:
         if self.fuc is None:
@@ -1287,7 +1261,7 @@ class Clay(Unreinforced):
         return 1.2
 
 
-class HollowConcrete(Unreinforced):
+class Concrete(Unreinforced):
     """Initialises the masonry element
 
     Parameters
@@ -1383,23 +1357,7 @@ class HollowConcrete(Unreinforced):
         self.density = density
         self.fcg = fcg
         self.epsilon = 2
-
-        if self.bedding_type is True and self.grouted is True:
-            raise ValueError("cannot use both grouted and full bedding?")
-        if self.verbose:
-            print(f"length: {self.length} mm")
-
-        if self.verbose:
-            print(f"height: {self.height} mm")
-
-        if self.verbose:
-            print(f"height: {self.height} mm")
-
-        if self.verbose:
-            print(
-                f"bedding_type: {'Full bedding' if
-                                 self.bedding_type is True else 'Face shell bedding'}"
-            )
+        self.__post_init__()
 
     def _calc_km(self, verbose: bool = True) -> float:
         if self.bedding_type is None:
