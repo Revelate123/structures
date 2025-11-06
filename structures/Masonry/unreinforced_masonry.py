@@ -26,6 +26,8 @@ class Unreinforced(ABC):
         verbose: bool = True,
         hu: float = 76,
         tj: float = 10,
+        face_shell_thickness: float = 30,
+        raking: float = 0,
         fmt: float = 0.2,
     ):
 
@@ -46,6 +48,10 @@ class Unreinforced(ABC):
         self.phi_compression = 0.75
         self.density = 19
         self.epsilon = 2
+        self.grouted = False
+        self.face_shell_thickness = face_shell_thickness
+        self.raking = raking
+        self.fcg = 1
 
         if self.verbose:
             print(f"length: {self.length} mm")
@@ -64,7 +70,8 @@ class Unreinforced(ABC):
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
-        and returns a value in MPa
+        and returns the compressive capacity in KN. This does not account for
+        wall geometry, including whether it is face-shell bedding.
 
         Parameters
         ==========
@@ -81,15 +88,26 @@ class Unreinforced(ABC):
         """
         km = self._calc_km(verbose=verbose)
         masonry.calc_fm(self=self, km=km, verbose=verbose)
-
+        bedded_area = self._calc_ab()
+        if verbose:
+            print(f"bedded area Ab: {bedded_area} mm2")
+        grouted_area = self._calc_ag(bedded_area)
+        if verbose:
+            print(f"grouted area Ag: {grouted_area} mm2")
+        kc = self._calc_kc()
         basic_comp_cap = round_half_up(
-            self.phi_compression * self.fm,
+            self.phi_compression
+            * (
+                self.fm * bedded_area
+                + kc * (self.fcg / 1.3) ** (0.55 + 0.005 * self.fcg) * grouted_area
+            )
+            * 1e-3,
             self.epsilon,
         )
         if verbose:
             print(f"phi_compression: {self.phi_compression}")
             print(
-                f"basic_compressive_capacity = {basic_comp_cap} MPa \
+                f"basic_compressive_capacity = {basic_comp_cap} KN \
                 (Basic Compressive Capacity Cl 7.3.2(2))"
             )
         return basic_comp_cap
@@ -202,7 +220,7 @@ class Unreinforced(ABC):
             raise ValueError("compression_load_type not in [1,2,3]")
 
         simple_comp_cap = round_half_up(
-            k * basic_comp_cap * self.length * self.thickness * 1e-3,
+            k * basic_comp_cap,
             self.epsilon,
         )
         if verbose:
@@ -264,8 +282,9 @@ class Unreinforced(ABC):
             the member, given in mm
 
         dist_to_return : float
-            Distance to return wall in mm. Note, this may be different from the length of the wall.
-            For example, if only looking at a section of the wall, or a section which extends beyond.
+            Distance to return wall in mm. Note, this may be different from the length of
+            the wall. For example, if only looking at a section of the wall, or a section
+            which extends beyond.
 
         effective_length : float
             Length of wall used in calculations in mm
@@ -308,11 +327,7 @@ class Unreinforced(ABC):
             self.epsilon,
         )
         crushing_comp_cap = round_half_up(
-            basic_comp_cap
-            * k_local_crushing
-            * effective_length
-            * self.thickness
-            * 1e-3,
+            basic_comp_cap * k_local_crushing * (effective_length / self.length),
             self.epsilon,
         )
         if verbose:
@@ -354,7 +369,7 @@ class Unreinforced(ABC):
         k_lateral = max(k_lateral_horz, k_lateral_vert)
 
         buckling_comp_cap = round_half_up(
-            basic_comp_cap * k_lateral * effective_length * self.thickness * 1e-3,
+            basic_comp_cap * k_lateral * (effective_length / self.length),
             self.epsilon,
         )
         if verbose:
@@ -1090,6 +1105,26 @@ class Unreinforced(ABC):
                 f"{"masonry" if interface else "other materials"})"
             )
 
+    def _calc_ab(self):
+        # Fully grouted
+        if self.bedding_type is True:
+            bedded_area = self.length * (self.thickness - 2 * self.raking)
+        elif self.bedding_type is False:
+            bedded_area = 2 * self.length * (self.face_shell_thickness - self.raking)
+        else:
+            raise ValueError("bedding type not bool")
+        return bedded_area
+
+    def _calc_ag(self, bedded_area: float) -> float:
+        if self.grouted:
+            return self.length * (self.thickness - self.raking) - bedded_area
+        else:
+            return 0
+
+    @abstractmethod
+    def _calc_kc(self):
+        return 1
+
 
 class Clay(Unreinforced):
     """Initialises the masonry element
@@ -1157,6 +1192,8 @@ class Clay(Unreinforced):
         verbose: bool = True,
         hu: float = 76,
         tj: float = 10,
+        face_shell_thickness: float = 0,
+        raking: float = 0,
         fmt: float = 0.2,
     ):
 
@@ -1176,6 +1213,10 @@ class Clay(Unreinforced):
         self.phi_bending = 0.6
         self.phi_compression = 0.75
         self.density = 19
+        self.face_shell_thickness = face_shell_thickness
+        self.raking = raking
+        self.grouted = False
+        self.fcg = 1
         self.epsilon = 2
 
         if self.verbose:
@@ -1228,6 +1269,9 @@ class Clay(Unreinforced):
             raise ValueError("Invalid mortar class provided")
         return km
 
+    def _calc_kc(self):
+        return 1.2
+
 
 class Concrete(Unreinforced):
     """Initialises the masonry element
@@ -1252,7 +1296,7 @@ class Concrete(Unreinforced):
         Mortar class in accordance with AS3700, only 3 is defined for concrete masonry in AS3700
 
     bedding_type : bool
-        True if fully grout bedding,
+        True if fully grouted bedding,
         False if face shell bedding
 
     verbose : float
@@ -1292,9 +1336,14 @@ class Concrete(Unreinforced):
         fuc: float,
         mortar_class: int,
         bedding_type: bool,
+        grouted: bool = False,
         verbose: bool = True,
         hu: float = 200,
         tj: float = 10,
+        face_shell_thickness: float = 30,
+        raking: float = 0,
+        density: float = 25,
+        fcg: float = 15,
         fmt: float = 0.2,
     ):
 
@@ -1314,8 +1363,15 @@ class Concrete(Unreinforced):
         self.phi_bending = 0.6
         self.phi_compression = 0.75
         self.density = 19
+        self.grouted = grouted
+        self.face_shell_thickness = face_shell_thickness
+        self.raking = raking
+        self.density = density
+        self.fcg = fcg
         self.epsilon = 2
 
+        if self.bedding_type is True and self.grouted is True:
+            raise ValueError("cannot use both grouted and full bedding?")
         if self.verbose:
             print(f"length: {self.length} mm")
 
@@ -1353,3 +1409,9 @@ class Concrete(Unreinforced):
         else:
             raise ValueError("Invalid mortar class provided")
         return km
+
+    def _calc_kc(self):
+        if self.density > 20:
+            return 1.4
+        else:
+            return 1.2
