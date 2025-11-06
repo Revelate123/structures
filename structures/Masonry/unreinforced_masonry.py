@@ -466,7 +466,14 @@ class Unreinforced(ABC):
             effective_length=effective_length,
             verbose=verbose,
         )
-        bearing_comp_cap = kb * basic_comp_cap * bearing_length * bearing_width * 1e-3
+        bearing_comp_cap = (
+            kb
+            * basic_comp_cap
+            / (self.length * self.thickness)
+            * bearing_length
+            * bearing_width
+            * 1e-3
+        )
         if verbose:
             print(f"kbFo: {bearing_comp_cap} KN")
 
@@ -586,7 +593,14 @@ class Unreinforced(ABC):
             effective_length=effective_length,
             verbose=verbose,
         )
-        bearing_comp_cap = kb * basic_comp_cap * bearing_length * bearing_width * 1e-3
+        bearing_comp_cap = (
+            kb
+            * basic_comp_cap
+            / (self.length * self.thickness)
+            * bearing_length
+            * bearing_width
+            * 1e-3
+        )
         if verbose:
             print(f"kbFo: {bearing_comp_cap} KN")
 
