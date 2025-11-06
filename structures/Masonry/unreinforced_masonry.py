@@ -1287,7 +1287,7 @@ class Clay(Unreinforced):
         return 1.2
 
 
-class Concrete(Unreinforced):
+class HollowConcrete(Unreinforced):
     """Initialises the masonry element
 
     Parameters
@@ -1375,7 +1375,7 @@ class Concrete(Unreinforced):
         self.fut = 0.8
         self.phi_shear = 0.6
         self.phi_bending = 0.6
-        self.phi_compression = 0.75
+        self.phi_compression = 0.6 if grouted else 0.5
         self.density = 19
         self.grouted = grouted
         self.face_shell_thickness = face_shell_thickness
