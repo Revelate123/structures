@@ -64,8 +64,9 @@ class Unreinforced(ABC):
                 f"bedding_type: {'Full bedding' if
                                     self.bedding_type is True else 'Face shell bedding'}"
             )
-            print(f"fuc: {self.fuc} MPa")
             print(f"mortar class: M{self.mortar_class}")
+            print(f"fuc: {self.fuc} MPa")
+            print(f"fmt: {self.fmt} MPa")
             print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
 
@@ -1101,6 +1102,8 @@ class Unreinforced(ABC):
             )
         if interface is False:
             self.fmt = 0
+        elif interface is True:
+            self.fmt = 0.2
         if verbose:
             print(
                 f"fmt = {self.fmt} MPa (at interface with "
