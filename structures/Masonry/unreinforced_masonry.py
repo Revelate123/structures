@@ -647,7 +647,7 @@ class Unreinforced(ABC):
             )
         if verbose:
             print(f"fd: {fd} MPa")
-        self._calc_fmt(interface=interface, verbose=verbose)
+        fmt = self._calc_fmt(interface=interface, verbose=verbose)
 
         zd_vert = round_half_up(
             self.length * self.thickness**2 / 6,
@@ -656,18 +656,18 @@ class Unreinforced(ABC):
         if verbose:
             print(f"Zd (horizontal plane): {zd_vert} mm3")
 
-        if self.fmt > 0:
-            m_cv_1 = self.phi_bending * self.fmt * zd_vert + min(fd, 0.36) * zd_vert
-            m_cv_2 = 3 * self.phi_bending * self.fmt * zd_vert
+        if fmt > 0:
+            m_cv_1 = self.phi_bending * fmt * zd_vert + min(fd, 0.36) * zd_vert
+            m_cv_2 = 3 * self.phi_bending * fmt * zd_vert
             m_cv = min(m_cv_1, m_cv_2)
             if verbose:
                 print(
-                    f"Mcv = {self.phi_bending} * {self.fmt} *"
+                    f"Mcv = {self.phi_bending} * {fmt} *"
                     f"{zd_vert} + {min(fd,0.36)} = "
                     f"{round_half_up(m_cv_1* 1e-6,self.epsilon)} KNm (7.4.2(2))"
                 )
                 print(
-                    f"Mcv = 3 * {self.phi_bending} * {self.fmt} *"
+                    f"Mcv = 3 * {self.phi_bending} * {fmt} *"
                     f" {zd_vert} = {round_half_up(m_cv_2* 1e-6,self.epsilon)} KNm (7.4.2(3))"
                 )
         else:
@@ -1101,14 +1101,17 @@ class Unreinforced(ABC):
                 " and False if shear_plane is masonry to other material"
             )
         if interface is False:
-            self.fmt = 0
+            fmt = 0
         elif interface is True:
-            self.fmt = 0.2
+            fmt = self.fmt
+        else:
+            raise ValueError("fmt not bool")
         if verbose:
             print(
-                f"fmt = {self.fmt} MPa (at interface with "
+                f"fmt = {fmt} MPa (at interface with "
                 f"{"masonry" if interface else "other materials"})"
             )
+        return fmt
 
     def _calc_ab(self):
         # Fully grouted
