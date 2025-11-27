@@ -70,6 +70,9 @@ class Unreinforced(ABC):
             print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
 
+            km = self._calc_km(verbose=self.verbose)
+            masonry.calc_fm(self=self, km=km, verbose=self.verbose)
+
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
         and returns the compressive capacity in KN. This does not account for
@@ -181,7 +184,7 @@ class Unreinforced(ABC):
         srs = (simple_av * self.height) / (kt * self.thickness)
         if srs < 0:
             raise ValueError(
-                "srs is negative, either decrease wall height or increase thickness"
+                "Srs is negative, either decrease wall height or increase thickness"
             )
         if verbose:
             print("\nBuckling capacity:")
@@ -783,39 +786,67 @@ class Unreinforced(ABC):
 
     def horizontal_plane_shear(
         self,
-        kv: float | None = None,
-        fd: float | None = None,
+        kv: float,
+        interface: float,
+        fd: float,
         verbose: bool = True,
     ) -> dict:
-        """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1"""
+        """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1
+
+        Parameters
+        ==========
+
+        kv : float
+            shear factor (see AS3700 T3.3). At mortar bed joints or interfaces with concrete = 0.3\n
+            At interfaces with steel = 0.2\n
+            At slip joints comprising two layers of membrane-type DPC material = 0.1\n
+            For other locations see AS3700 T3.3 or assume 0.
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
+
+        fd : float
+            the minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        verbose : bool
+            Whether to print outputs
+
+        Returns: float
+
+        Examples
+        ========
+
+        Description
+
+        >>> from ..."""
         print("WARNING: Test cases incomplete")
         if kv is None:
             raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if verbose:
-            print(f"kv: {kv}")
+            print(f"kv: {kv} (AS3700 T3.3)")
         if self.fmt is None:
             raise ValueError(
                 "fmt undefined, fms is calculated using fmt, set fmt = 0.2 "
                 "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
             )
+        fmt = self._calc_fmt(interface=interface, verbose=verbose)
         if verbose:
-            print(f"fmt: {self.fmt} MPa")
+            print(f"fmt: {fmt} MPa")
 
         bedding_area = self.length * self.thickness
-        fms_horizontal = self._calc_fms_horz(verbose=verbose)
+        fms_horizontal = self._calc_fms_horz(fmt=fmt, verbose=verbose)
 
         v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
         if verbose:
-            print(
-                f"V0, the shear bond strength of section: {v0} KN."
-                "To be taken as 0 at interfaces with DPC/flashings etc."
-            )
+            print(f"V0: {v0} KN (bond strength)")
         v1 = kv * fd * bedding_area * 1e-3
         if verbose:
-            print(f"V1, the shear friction of the section: {v1} KN.")
+            print(f"V1: {v1} KN (shear friction)")
         vd = v0 + v1
         if verbose:
-            print(f"V0 + V1, combined shear strength: {vd}")
+            print(f"V0 + V1: {vd}")
         return {"bond": v0, "friction": v1}
 
     def vertical_plane_shear(self, verbose: bool = True) -> float:
@@ -1076,8 +1107,8 @@ class Unreinforced(ABC):
     def _calc_km(self, verbose: bool = True) -> float:
         pass
 
-    def _calc_fms_horz(self, verbose: bool = True) -> float:
-        fms_horizontal = min(0.15, max(1.25 * self.fm, 0.35))
+    def _calc_fms_horz(self, fmt: float, verbose: bool = True) -> float:
+        fms_horizontal = min(0.15, max(1.25 * fmt, 0.35))
         if verbose:
             print(f"f'ms (horizontal): {fms_horizontal} MPa")
         return fms_horizontal
@@ -1105,7 +1136,7 @@ class Unreinforced(ABC):
         elif interface is True:
             fmt = self.fmt
         else:
-            raise ValueError("fmt not bool")
+            raise ValueError("interface not bool")
         if verbose:
             print(
                 f"fmt = {fmt} MPa (at interface with "
