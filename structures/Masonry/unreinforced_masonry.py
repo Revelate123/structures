@@ -1106,13 +1106,13 @@ class Unreinforced(ABC):
         pass
 
     def _calc_fms_horz(self, fmt: float, verbose: bool = True) -> float:
-        fms_horizontal = min(0.15, max(1.25 * fmt, 0.35))
+        fms_horizontal = max(0.15, min(1.25 * fmt, 0.35))
         if verbose:
             print(f"f'ms (horizontal): {fms_horizontal} MPa")
         return fms_horizontal
 
     def _calc_fms_vert(self, verbose: bool = True) -> float:
-        fms_vertical = min(0.15, max(1.25 * self.fm, 0.35))
+        fms_vertical = max(0.15, min(1.25 * self.fm, 0.35))
         if verbose:
             print(f"f'ms (vertical): {fms_vertical} MPa")
         return fms_vertical
