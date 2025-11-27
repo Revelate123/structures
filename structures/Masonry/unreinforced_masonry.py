@@ -822,31 +822,25 @@ class Unreinforced(ABC):
 
         >>> from ..."""
         print("WARNING: Test cases incomplete")
-        if kv is None:
-            raise ValueError("kv undefined, select kv from AS3700 T3.3")
         if verbose:
             print(f"kv: {kv} (AS3700 T3.3)")
-        if self.fmt is None:
-            raise ValueError(
-                "fmt undefined, fms is calculated using fmt, set fmt = 0.2 "
-                "under wind load, or 0 elsewhere, refer AS3700 Cl 3.3.3"
-            )
         fmt = self._calc_fmt(interface=interface, verbose=verbose)
-        if verbose:
-            print(f"fmt: {fmt} MPa")
 
         bedding_area = self.length * self.thickness
         fms_horizontal = self._calc_fms_horz(fmt=fmt, verbose=verbose)
 
-        v0 = self.phi_shear * fms_horizontal * bedding_area * 1e-3
+        v0 = round_half_up(
+            self.phi_shear * fms_horizontal * bedding_area * 1e-3, self.epsilon
+        )
         if verbose:
             print(f"V0: {v0} KN (bond strength)")
-        v1 = kv * fd * bedding_area * 1e-3
+        v1 = round_half_up(kv * fd * bedding_area * 1e-3, self.epsilon)
         if verbose:
             print(f"V1: {v1} KN (shear friction)")
         vd = v0 + v1
         if verbose:
-            print(f"V0 + V1: {vd}")
+            print(f"V0 + V1: {vd} KN")
+            print(f"V0 + V1: {vd/self.length*1e3:.2f} KN/m")
         return {"bond": v0, "friction": v1}
 
     def vertical_plane_shear(self, verbose: bool = True) -> float:
