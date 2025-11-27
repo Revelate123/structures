@@ -833,9 +833,13 @@ class Unreinforced(ABC):
             self.phi_shear * fms_horizontal * bedding_area * 1e-3, self.epsilon
         )
         if verbose:
+            print("V0: phi_shear * fms_horizontal * bedding_area")
+            print(f"V0: {self.phi_shear} * {fms_horizontal} * {bedding_area * 1e-3}")
             print(f"V0: {v0} KN (bond strength)")
         v1 = round_half_up(kv * fd * bedding_area * 1e-3, self.epsilon)
         if verbose:
+            print("V1: kv * fd * bedding_area")
+            print(f"V1: {kv} * {fd} * {bedding_area * 1e-3}")
             print(f"V1: {v1} KN (shear friction)")
         vd = v0 + v1
         if verbose:
