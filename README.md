@@ -9,10 +9,10 @@
 
 A library of structural engineering calculations based on Australian standards.
 
-Why does this project exist?
+### Why does this project exist?
 Many strucutral engineers in Australia rely on a combination of industry software / excel spreadsheets / hand calculations. It is common for a dubious excel spreadsheet to be passed around with variable amounts documentation, little or no testing, and no verification that the spreadsheet was not broken by a user at some point in the past. Efforts to fix these issues exist and there certainly are quality excel spreadsheets, but it is generally difficult to achieve and requires outsized organisational efforts to maintain. This project aims to replace several of these excel spreadsheets with python code. 
 
-Project goals:
+### Project goals:
 1. Provide extensive testing such that outputs are reliable. 
 2. Provide thorough documentation such that structural engineers without extensive software engineering training can clearly understand how calculations are performed, why they are written the way they are, what the intended use cases are, what the limitations of the project are, and how they can raise issues/contribute.
 
