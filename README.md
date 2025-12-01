@@ -30,7 +30,7 @@ Design of unreinforced masonry
 
 
 
-## Suport
+## Support
 
 Issue Tracker: https://github.com/Revelate123/structures/issues
 
