@@ -822,6 +822,8 @@ class Unreinforced(ABC):
 
         >>> from ..."""
         print("WARNING: Test cases incomplete")
+        if kv > 0.3:
+            raise ValueError("kv > 0.3 is outside the scope of AS3700")
         if verbose:
             print(f"kv: {kv} (AS3700 T3.3)")
         fmt = self._calc_fmt(interface=interface, verbose=verbose)
