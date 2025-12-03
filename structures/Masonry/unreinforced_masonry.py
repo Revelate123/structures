@@ -821,7 +821,6 @@ class Unreinforced(ABC):
         Description
 
         >>> from ..."""
-        print("WARNING: Test cases incomplete")
         if kv > 0.3:
             raise ValueError("kv > 0.3 is outside the scope of AS3700")
         if verbose:
