@@ -1,8 +1,5 @@
-Usage
-=====
-
 Installation
-------------
+============
 
 To use Toms-structures, first install it using pip:
 

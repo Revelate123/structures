@@ -10,20 +10,18 @@ Welcome to the documentation for **Toms Structures!**
 
 blurb 
 
-Check out the :doc:`usage` section for further information.
+Check out the :doc:`installation` section for further information.
 
 .. note::
    This project is under active development
-
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
 
 Contents
 --------
 
 .. toctree::
-   usage
+   installation
+   user_guide
+   examples
    api
    :maxdepth: 2
    :caption: Contents:

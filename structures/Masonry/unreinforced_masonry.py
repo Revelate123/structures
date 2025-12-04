@@ -79,15 +79,16 @@ class Unreinforced(ABC):
         wall geometry, including whether it is face-shell bedding.
 
         Parameters
-        ==========
+        ----------
 
         verbose : bool
             True to print calculations
 
-        Examples
-        ========
+        Returns
+        -------
 
-        Description
+            basic compressive capacity in KN
+
 
         >>> from structures.Masonry.unreinforced_masonry import Clay
         >>> wall = Clay()
@@ -140,7 +141,7 @@ class Unreinforced(ABC):
             a thickness coefficient derived from Table 7.2\n
             1 - if there are no engaged piers\n
             If the engagement of a pier to the wall does not meet the requirements of\n
-            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.
 
         compression_load_type : int
             Type of compression loading:\n
@@ -263,7 +264,7 @@ class Unreinforced(ABC):
             2.5 for freestanding walls\n
             refer AS 3700 Cl 7.3.4.3.
 
-        refined_ah (float):
+        refined_ah : float
             Horizontal slenderness coefficient\n
             0 - for a wall with no lateral supports\n
             1 - for a wall laterally supported along both vertical edges (regardless of
@@ -413,7 +414,7 @@ class Unreinforced(ABC):
             a thickness coefficient derived from Table 7.2\n
             1 - if there are no engaged piers\n
             If the engagement of a pier to the wall does not meet the requirements of\n
-            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.\n
+            Clause 4.11 for bonding or tying, the value of kt shall be taken as 1.0.
 
         compression_load_type : int
             Type of compression loading:\n

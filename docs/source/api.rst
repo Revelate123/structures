@@ -8,3 +8,4 @@ API
    :recursive:
 
    structures
+   structures.Masonry
