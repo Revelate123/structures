@@ -107,3 +107,7 @@ desktop.ini
 #Working related files
 work/
 misc/
+
+# doc generated
+docs/_build
+docs/gen
