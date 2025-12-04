@@ -89,7 +89,8 @@ class Unreinforced(ABC):
 
         Description
 
-        >>> from ..
+        >>> from structures.Masonry.unreinforced_masonry import Clay
+        >>> wall = Clay()
         """
         km = self._calc_km(verbose=verbose)
         masonry.calc_fm(self=self, km=km, verbose=verbose)
@@ -1173,44 +1174,42 @@ class Unreinforced(ABC):
 class Clay(Unreinforced):
     """Initialises the masonry element
 
-    Parameters
-    ==========
+    Parameters:
 
-    length : float
-        length of the wall in mm
+        length : float
+            length of the wall in mm
 
-    height : float
-        height of the wall in mm
+        height : float
+            height of the wall in mm
 
-    thickness : float
-        thickness of the wall in mm
+        thickness : float
+            thickness of the wall in mm
 
-    fuc : float
-        unconfined compressive capacity in MPa,
-        typically 20 MPa in new structures and 10-12 MPa for existing structures
+        fuc : float
+            unconfined compressive capacity in MPa,
+            typically 20 MPa in new structures and 10-12 MPa for existing structures
 
-    mortar_class : float
-        Mortar class in accordance with AS3700
+        mortar_class : float
+            Mortar class in accordance with AS3700
 
-    bedding_type : bool
-        True if fully grout bedding,
-        False if face shell bedding
+        bedding_type : bool
+            True if fully grout bedding,
+            False if face shell bedding
 
-    verbose : float
-        True to print internal calculations
-        False otherwise
+        verbose : float
+            True to print internal calculations
+            False otherwise
 
-    hu : float
-        masonry unit height in mm, defaults to 76 mm
+        hu : float
+            masonry unit height in mm, defaults to 76 mm
 
-    tj : float
-        grout thickness between masonry units in mm, defaults to 10 mm
+        tj : float
+            grout thickness between masonry units in mm, defaults to 10 mm
 
-    fmt : float
-        Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+        fmt : float
+            Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
-    Examples
-    ========
+    Examples:
 
     >>> from structures.Masonry.unreinforced_masonry import Clay
     >>> wall = Clay(
