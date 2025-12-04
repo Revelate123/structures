@@ -1,7 +1,7 @@
-structures.Masonry.reinforced\_masonry
-======================================
+structures.Timber.timber
+========================
 
-.. automodule:: structures.Masonry.reinforced_masonry
+.. automodule:: structures.Timber.timber
 
    
    
@@ -20,7 +20,9 @@ structures.Masonry.reinforced\_masonry
       :template: custom-class-template.rst
       :nosignatures:
    
-      Block
+      Beam
+      Column
+      Properties
    
    
 

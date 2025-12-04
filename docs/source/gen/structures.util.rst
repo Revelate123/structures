@@ -1,7 +1,7 @@
-structures.Masonry.masonry
-==========================
+structures.util
+===============
 
-.. automodule:: structures.Masonry.masonry
+.. automodule:: structures.util
 
    
    
@@ -16,7 +16,9 @@ structures.Masonry.masonry
       :template: custom-function-template.rst
       :nosignatures:
    
-      calc_fm
+      export_calc
+      job_number
+      round_half_up
    
    
 
