@@ -112,7 +112,12 @@ class TestUnreinforcedMasonryBending:
         Mcv = 0.2 KNm
         """
         wall = unreinforced_masonry.Clay(
-            length=1000, height=1000, thickness=100, fuc=20, bedding_type=True
+            length=1000,
+            height=1000,
+            thickness=100,
+            fuc=20,
+            mortar_class=3,
+            bedding_type=True,
         )
         assert wall.vertical_bending(fd=0, interface=True) == 0.2
 
@@ -135,7 +140,13 @@ class TestUnreinforcedMasonryBending:
         Mcv = 0.24 KNm
         """
         wall = unreinforced_masonry.Clay(
-            length=1000, height=2000, thickness=110, fmt=0.2, fuc=20, bedding_type=True
+            length=1000,
+            height=2000,
+            thickness=110,
+            fmt=0.2,
+            fuc=20,
+            mortar_class=3,
+            bedding_type=True,
         )
         assert wall.vertical_bending(fd=0, interface=True) == 0.24
 
