@@ -8,12 +8,14 @@ Toms Structures documentation
 
 Welcome to the documentation for **Toms Structures!**
 
-blurb 
+``toms-structures`` is an unofficial python package companion to AS 3700 2018 Masonry Structures. ``toms-structures`` can be
+used to determine masonry element capacities in accordance with AS 3700.
 
 Check out the :doc:`installation` section for further information.
 
 .. note::
-   This project is under active development
+   This project is under active development.
+   Additional standards may be added in the future.
 
 Contents
 --------
