@@ -9,9 +9,3 @@ Next, navigate to the location of the downloaded examples and run jupyter notebo
 Finally, double click an example file to open the notebook, and execute each cell by clicking the play button. More information on jupyter notebooks can be found here.
 Don’t be afraid to raise an issue or post in the discussions page if you have trouble running any of the examples!
 
-
-.. nbgallery::
-    :name: example
-    :maxdepth: 1
-
-    examples/masonry_wall_compression
