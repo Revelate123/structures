@@ -11,8 +11,8 @@ from structures.util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes
-class Unreinforced(ABC):
-    """For the design of unreinforced masonry in accordance with AS3700:2018"""
+class _Unreinforced(ABC):
+    """Abstract Base Class For the design of unreinforced masonry in accordance with AS3700:2018"""
 
     @abstractmethod
     def __init__(
@@ -80,13 +80,11 @@ class Unreinforced(ABC):
 
         Parameters
         ----------
-
         verbose : bool
             True to print calculations
 
         Returns
         -------
-
             basic compressive capacity in KN
 
 
@@ -1172,10 +1170,11 @@ class Unreinforced(ABC):
         return 1
 
 
-class Clay(Unreinforced):
-    """Initialises the masonry element
+class Clay(_Unreinforced):
+    """Clay Masonry object
 
-    Parameters:
+    Parameters
+    ----------
 
         length : float
             length of the wall in mm
@@ -1210,7 +1209,8 @@ class Clay(Unreinforced):
         fmt : float
             Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
-    Examples:
+    Examples
+    --------
 
     >>> from structures.Masonry.unreinforced_masonry import Clay
     >>> wall = Clay(
@@ -1303,8 +1303,8 @@ class Clay(Unreinforced):
         return 1.2
 
 
-class Concrete(Unreinforced):
-    """Initialises the masonry element
+class Concrete(_Unreinforced):
+    """Concrete Masonry object
 
     Parameters
     ==========
@@ -1345,7 +1345,7 @@ class Concrete(Unreinforced):
     Examples
     ========
 
-    >>> from structures.Masonry.unreinforced_masonry import Clay
+    >>> from structures.Masonry.unreinforced_masonry import Concrete
     >>> wall = Concrete(
                 length=1000,
                 height=3000,

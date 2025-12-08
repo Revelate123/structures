@@ -22,7 +22,6 @@ structures.Masonry.unreinforced\_masonry
    
       Clay
       Concrete
-      Unreinforced
    
    
 
