@@ -1,4 +1,4 @@
-structures.Masonry
+﻿structures.Masonry
 ==================
 
 .. automodule:: structures.Masonry

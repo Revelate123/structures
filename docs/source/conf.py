@@ -22,11 +22,7 @@ release = "v0.0.37"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
-    "matplotlib.sphinxext.plot_directive",
 ]
 
 templates_path = ["_templates"]
