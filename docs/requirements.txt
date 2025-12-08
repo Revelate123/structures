@@ -1,3 +1,4 @@
 furo
 ipynbname
+ipykernel
 nbsphinx
