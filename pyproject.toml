@@ -17,7 +17,8 @@ dependencies = [
     "concreteproperties>=0.7.0",
     "pytest",
     "ipynbname",
-    "pydantic"
+    "pydantic",
+    "nbsphinx",
 ]
 authors = [
   { name="Thomas Duffett", email="thomasduffett4@gmail.com" },
