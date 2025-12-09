@@ -57,6 +57,8 @@ class _Unreinforced(ABC):
     def __post_init__(self):
 
         if self.verbose:
+            print("Properties")
+            print("==========")
             print(f"length: {self.length} mm")
             print(f"height: {self.height} mm")
             print(f"thickness: {self.thickness} mm")
@@ -70,8 +72,8 @@ class _Unreinforced(ABC):
             print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
 
-            km = self._calc_km(verbose=self.verbose)
-            masonry.calc_fm(self=self, km=km, verbose=self.verbose)
+            # km = self._calc_km(verbose=self.verbose)
+            # masonry.calc_fm(self=self, km=km, verbose=self.verbose)
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
@@ -91,6 +93,9 @@ class _Unreinforced(ABC):
         >>> from structures.Masonry.unreinforced_masonry import Clay
         >>> wall = Clay()
         """
+        if verbose:
+            print("Basic Compressive Capacity, refer Cl 7.3.2(2) AS3700")
+            print("====================================================")
         km = self._calc_km(verbose=verbose)
         masonry.calc_fm(self=self, km=km, verbose=verbose)
         bedded_area = self._calc_ab()
@@ -111,10 +116,7 @@ class _Unreinforced(ABC):
         )
         if verbose:
             print(f"phi_compression: {self.phi_compression}")
-            print(
-                f"basic_compressive_capacity = {basic_comp_cap} KN \
-                (Basic Compressive Capacity Cl 7.3.2(2))"
-            )
+            print(f"basic_compressive_capacity = {basic_comp_cap} KN\n")
         return basic_comp_cap
 
     def compression_capacity(
@@ -180,14 +182,17 @@ class _Unreinforced(ABC):
             )
 
         basic_comp_cap = self.basic_compressive_capacity(verbose)
-
+        if verbose:
+            print("Compresion Capacity, refer Cl 7.3.3.3 AS3700")
+            print("============================================")
         srs = (simple_av * self.height) / (kt * self.thickness)
         if srs < 0:
             raise ValueError(
                 "Srs is negative, either decrease wall height or increase thickness"
             )
         if verbose:
-            print("\nBuckling capacity:")
+            print("Buckling capacity")
+            print("-----------------")
             print(f"Srs = {simple_av} * {self.height} / {kt} * {self.thickness} ")
             print(f"Srs = {srs:.2f} (Simplified slenderness ratio Cl 7.3.3.3)")
 
@@ -230,7 +235,7 @@ class _Unreinforced(ABC):
         )
         if verbose:
             print(f"k = {k}")
-            print(f"Simple compression capacity kFo: {simple_comp_cap}")
+            print(f"Simple compression capacity kFo: {simple_comp_cap} KN\n")
 
         return {"Simple": simple_comp_cap}
 
@@ -309,6 +314,11 @@ class _Unreinforced(ABC):
 
         >>> from ...
         """
+        basic_comp_cap = self.basic_compressive_capacity(verbose)
+
+        if verbose:
+            print("Refined Compression Capacity, refer Cl 7.3 AS3700")
+            print("=================================================")
 
         if effective_length is None:
             effective_length = self.length
@@ -317,14 +327,15 @@ class _Unreinforced(ABC):
                 f"effective length of wall used in calculation: {effective_length} mm"
             )
 
-        basic_comp_cap = self.basic_compressive_capacity(verbose)
-
         if e1 is None or e2 is None:
             raise ValueError(
                 "e1 and/or e2 is not set. "
                 "This is the eccentricity of the applied loads, where"
                 "e1 is the larger eccentricity of the vertical force"
             )
+        if verbose:
+            print("\nCrushing capacity")
+            print("-----------------")
         e1, e2 = self._calc_e1_e2(e1, e2, verbose)
         k_local_crushing = round_half_up(
             1 - 2 * e1 / self.thickness,
@@ -335,10 +346,12 @@ class _Unreinforced(ABC):
             self.epsilon,
         )
         if verbose:
-            print("\nCrushing capacity:")
-            print(f"  k (crushing): {k_local_crushing:.3f}")
-            print(f"  crushing_compressive_capacity = {crushing_comp_cap} kN")
+            print(f"k (crushing): {k_local_crushing:.3f}")
+            print(f"crushing_compressive_capacity = {crushing_comp_cap} kN")
 
+        if verbose:
+            print("\nBuckling capacity")
+            print("-----------------")
         sr_vertical, sr_horizontal = self._calc_refined_slenderness(
             refined_ah=refined_ah,
             refined_av=refined_av,
@@ -377,10 +390,9 @@ class _Unreinforced(ABC):
             self.epsilon,
         )
         if verbose:
-            print("\nBuckling capacity:")
-            print(f"  k (buckling): {k_lateral}")
-            print(f"  Effective length: {effective_length:.1f} mm")
-            print(f"  kFo = {buckling_comp_cap} kN")
+            print(f"k (buckling): {k_lateral}")
+            print(f"Effective length: {effective_length:.1f} mm")
+            print(f"kFo = {buckling_comp_cap} kN\n")
 
         return {
             "Crushing": crushing_comp_cap,

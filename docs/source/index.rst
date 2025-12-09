@@ -15,14 +15,12 @@ Check out the :doc:`installation` section for further information.
 
 .. note::
    This project is under active development.
-   Additional standards may be added in the future.
 
 Contents
 --------
 
 .. toctree::
-   installation
-   user_guide
+   quickstart
    examples
    api
    :maxdepth: 2
