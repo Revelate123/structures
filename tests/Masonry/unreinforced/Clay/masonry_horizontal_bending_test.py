@@ -74,3 +74,7 @@ class TestUnreinforcedMasonryHorizontalBending:
             bedding_type=True,
         )
         assert wall.horizontal_bending(fd=0, interface=True) == 1.47
+
+    def test_raked_joints(self):
+        """ """
+        pass

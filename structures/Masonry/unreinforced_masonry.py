@@ -71,6 +71,7 @@ class _Unreinforced(ABC):
             print(f"fmt: {self.fmt} MPa")
             print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
+            print(f"Raking depth: {self.raking} mm")
 
             # km = self._calc_km(verbose=self.verbose)
             # masonry.calc_fm(self=self, km=km, verbose=self.verbose)
@@ -636,7 +637,7 @@ class _Unreinforced(ABC):
         ==========
 
         fd : float
-            the minimum design compressive stress on the bed joint at the
+            The minimum design compressive stress on the bed joint at the
             cross-section under consideration (see Clause 7.4.3.3), in MPa
 
         interface : bool
@@ -710,7 +711,7 @@ class _Unreinforced(ABC):
         ==========
 
         fd : float
-            the minimum design compressive stress on the bed joint at the
+            The minimum design compressive stress on the bed joint at the
             cross-section under consideration (see Clause 7.4.3.3), in MPa
 
         interface : bool
@@ -728,6 +729,9 @@ class _Unreinforced(ABC):
         Description
 
         >>> from ..."""
+        if verbose:
+            print("Horizontal Bending Capacity, refer Cl 7.4.3.2 AS3700")
+            print("====================================================")
         if self.fmt is None:
             raise ValueError(
                 "self.fmt undefined.\n"
@@ -1218,6 +1222,9 @@ class Clay(_Unreinforced):
         tj : float
             grout thickness between masonry units in mm, defaults to 10 mm
 
+        raking : float
+            depth of raking in mm, defaults to 0 mm
+
         fmt : float
             Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
@@ -1350,6 +1357,9 @@ class Concrete(_Unreinforced):
 
     tj : float
         grout thickness between masonry units in mm, defaults to 10 mm
+
+    raking : float
+        depth of raking in mm, defaults to 0 mm
 
     fmt : float
         Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
