@@ -71,6 +71,11 @@ class _Unreinforced(ABC):
             print(f"fmt: {self.fmt} MPa")
             print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
+        if self.raking <= 3:
+            self.raking = 0
+            if self.verbose:
+                print(f"Raking depth <= 3 mm, refer Cl 4.5.1 AS3700:2018")
+        if self.verbose:
             print(f"Raking depth: {self.raking} mm")
 
             # km = self._calc_km(verbose=self.verbose)
@@ -752,24 +757,18 @@ class _Unreinforced(ABC):
 
         self._calc_fmt(interface=interface, verbose=verbose)
 
-        zd_horz = round_half_up(
-            self.height * self.thickness**2 / 6,
-            self.epsilon,
-        )
+        # The plane is normal to the direction under consideration
+        zd_horz = self._calc_zd(horizontal=False)
         if verbose:
             print(f"Zd (horizontal): {zd_horz} mm3")
 
-        zu_horz = zd_horz
+        zu_horz = self.height * self.thickness**2 / 6
         if verbose:
-            print(
-                f"Zu (horizontal): {zu_horz} mm3, assumed full perpends with no raking"
-            )
+            print(f"Zu (horizontal): {zu_horz} mm3")
 
         zp_horz = zd_horz
         if verbose:
-            print(
-                f"Zp (horizontal): {zp_horz} mm3, assumed full perpends with no raking"
-            )
+            print(f"Zp (horizontal): {zp_horz} mm3")
 
         mch_1 = (
             2
@@ -1174,6 +1173,30 @@ class _Unreinforced(ABC):
         else:
             raise ValueError("bedding type not bool")
         return bedded_area
+
+    def _calc_zd(self, horizontal):
+        # Horizontal
+        if horizontal is True:
+            if self.bedding_type is True:
+                zd = self.length * (self.thickness - 2 * self.raking) ** 2 / 6
+            elif self.bedding_type is False:
+                zd = (
+                    2 * self.length * (self.face_shell_thickness - self.raking) ** 2 / 6
+                )
+            else:
+                raise ValueError("bedding type not bool")
+        elif horizontal is False:
+            if self.bedding_type is True:
+                zd = (self.height) * (self.thickness - 2 * self.raking) ** 2 / 6
+            elif self.bedding_type is False:
+                zd = (
+                    2 * self.height * (self.face_shell_thickness - self.raking) ** 2 / 6
+                )
+            else:
+                raise ValueError("bedding type not bool")
+        else:
+            raise ValueError("horizontal type not bool")
+        return zd
 
     def _calc_ag(self, bedded_area: float) -> float:
         if self.grouted:

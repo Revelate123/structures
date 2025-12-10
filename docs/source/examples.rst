@@ -15,3 +15,4 @@ Don’t be afraid to raise an issue or post in the discussions page if you have 
     :maxdepth: 1
 
     examples/masonry_wall_compression
+    examples/unreinforced_clay_bending
