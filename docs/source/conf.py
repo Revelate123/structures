@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 project = "Toms Structures"
 copyright = "2025, Thomas Duffett"
 author = "Thomas Duffett"
-release = "v0.0.37"
+release = "latest"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
