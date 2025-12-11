@@ -1,7 +1,9 @@
-.. Toms Structures documentation master file, created by
-   sphinx-quickstart on Thu Dec  4 15:10:25 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. image:: _static/Toms Structures dark mode.png
+    :class: only-light
+
+.. image:: _static/Toms Structures dark mode.png
+    :class: only-dark
+
 
 Toms Structures documentation
 =============================
