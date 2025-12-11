@@ -7,7 +7,7 @@ import sqlite3
 import os
 from typing import Callable
 from pydantic.dataclasses import dataclass
-from structures.util import round_half_up
+from toms_structures.util import round_half_up
 
 
 db_path = os.path.join(os.path.dirname(__file__), "tables.db")

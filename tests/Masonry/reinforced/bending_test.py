@@ -1,6 +1,6 @@
 """Contains tests for reinforced block masonry in bending"""
 
-from structures.Masonry.reinforced_masonry import Block
+from toms_structures.Masonry.reinforced_masonry import Block
 
 
 class TestOutOfPlaneVerticalBending:

@@ -1,6 +1,6 @@
 """Test cases for Timber bending capacities"""
 
-from structures.Timber import timber
+from toms_structures.Timber import timber
 
 
 class TestInPlaneBending:

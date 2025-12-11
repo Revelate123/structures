@@ -1,4 +1,4 @@
-import structures.Timber.timber as timber
+import toms_structures.Timber.timber as timber
 
 
 class TestTimberCompression:

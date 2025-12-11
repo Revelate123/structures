@@ -1,7 +1,7 @@
 """Contains methods for inheritance"""
 
 import math
-from structures.util import round_half_up
+from toms_structures.util import round_half_up
 
 
 def calc_fm(

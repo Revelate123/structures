@@ -6,8 +6,8 @@ AS3700:2018 for unreinforced masonry
 
 import math
 from abc import ABC, abstractmethod
-from structures.Masonry import masonry
-from structures.util import round_half_up
+from toms_structures.Masonry import masonry
+from toms_structures.util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes

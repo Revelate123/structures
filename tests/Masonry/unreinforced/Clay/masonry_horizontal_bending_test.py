@@ -1,6 +1,6 @@
 """Contains tests for unreinforced clay masonry in horizontal bending"""
 
-from structures.Masonry import unreinforced_masonry
+from toms_structures.Masonry import unreinforced_masonry
 
 
 class TestUnreinforcedMasonryHorizontalBending:
