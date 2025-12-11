@@ -6,16 +6,16 @@
 <div align="left">
 
 [![PyPI](https://img.shields.io/pypi/v/toms-structures.svg)][pypi_]
-[![Status](https://img.shields.io/pypi/status/sectionproperties.svg)][status]
+[![Status](https://img.shields.io/pypi/status/toms-structures.svg)][status]
 [![Python Version](https://img.shields.io/pypi/pyversions/toms-structures)][python version]
 [![License](https://img.shields.io/pypi/l/toms-structures)][license]
 [![Read the documentation at https://toms-structures.readthedocs.io/](https://img.shields.io/readthedocs/toms-structures/stable.svg?label=Read%20the%20Docs)][read the docs]
 [![Tests](https://github.com/Revelate123/structures/actions/workflows/main.yml/badge.svg?branch=main)][tests]
 
-[pypi_]: https://pypi.org/project/sectionproperties/
-[status]: https://pypi.org/project/sectionproperties/
-[python version]: https://pypi.org/project/sectionproperties
-[read the docs]: https://sectionproperties.readthedocs.io/
+[pypi_]: https://pypi.org/project/toms-structures/
+[status]: https://pypi.org/project/toms-structures/
+[python version]: https://pypi.org/project/toms-structures
+[read the docs]: https://toms-structures.readthedocs.io/
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [tests]: https://github.com/Revelate123/structures/actions/workflows/main.yml
 [license]: https://github.com/Revelate123/structures/blob/main/LICENSE
