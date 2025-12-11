@@ -1,7 +1,7 @@
-.. image:: _static/Toms-Structures.png
+.. image:: _static/logo-light.png
     :class: only-light
 
-.. image:: _static/Toms-Structures-dark-mode.png
+.. image:: _static/logo-dark.png
     :class: only-dark
 
 
