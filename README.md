@@ -26,6 +26,7 @@
 
 </div>
 
+
 An unofficial python library companion to AS 3700:2018 Masonry Structures.
 
 ## Installation
@@ -40,7 +41,7 @@ Documentation for `toms-structures` is currently under construction. The documen
 
 
 ### Why does this project exist?
-Many structural engineers in Australia rely on a combination of industry software / excel spreadsheets / hand calculations. It is common for an excel spreadsheet to be passed around with variable amounts of documentation, little or no testing, and no verification that the spreadsheet was not broken at some point in the past. Efforts to fix these issues exist and there certainly are quality excel spreadsheets, but it is generally difficult to achieve and requires outsized organisational efforts to maintain. This project aims to replace some of these excel spreadsheets. 
+Many structural engineers in Australia rely on a combination of industry software / excel spreadsheets / hand calculations. It is common for an excel spreadsheet to be passed around with variable amounts of documentation, little or no testing, and no verification that the spreadsheet was not broken at some point in the past. Efforts to fix these issues exist and there certainly are quality excel spreadsheets, but it is generally difficult to achieve and requires outsized organisational efforts to maintain. This project aims to replace some of those excel spreadsheets. 
 
 ### Project goals:
 1. Provide extensive testing such that outputs are reliable. 
