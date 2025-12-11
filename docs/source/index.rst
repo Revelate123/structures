@@ -1,7 +1,7 @@
-.. image:: _static/Toms Structures dark mode.png
+.. image:: _static/Toms-Structures.png
     :class: only-light
 
-.. image:: _static/Toms Structures dark mode.png
+.. image:: _static/Toms-Structures-dark-mode.png
     :class: only-dark
 
 

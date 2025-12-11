@@ -37,8 +37,8 @@ html_theme = "furo"
 html_static_path = ["_static"]
 #html_favicon = "_static/favicon.ico"
 html_theme_options = {
-    "light_logo": "Toms Structures.png",  # add light mode logo
-    "dark_logo": "Toms Structures dark mode.png",  # add dark mode logo
+    "light_logo": "Toms-Structures.png",  # add light mode logo
+    "dark_logo": "Toms-Structures-dark-mode.png",  # add dark mode logo
     "sidebar_hide_name": True,  # hide name of project in sidebar (already in logo)
     "source_repository": "https://github.com/Revelate123/structures",
     "source_branch": "main",
