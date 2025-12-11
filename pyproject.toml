@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"  # Get version from Git tags
-path = "structures/__init__.py"
+path = "toms_structures/__init__.py"
 template = '__version__ = "{version}"\n'
 
 [tool.hatch.build.targets.wheel]
-packages = ["structures"]
+packages = ["toms_structures"]
 
 [project]
 name = "toms_structures"

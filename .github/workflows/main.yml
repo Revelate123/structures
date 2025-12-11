@@ -44,8 +44,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            dist/structures-*.whl
-            dist/structures-*.tar.gz
+            dist/toms_structures-*.whl
+            dist/toms_structures-*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
