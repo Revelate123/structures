@@ -42,7 +42,7 @@ html_theme_options = {
     "sidebar_hide_name": True,  # hide name of project in sidebar (already in logo)
     "source_repository": "https://github.com/Revelate123/structures",
     "source_branch": "main",
-    "source_directory": "docs/",
+    "source_directory": "docs/source",
 }
 pygments_style = "sphinx"
 #pygments_dark_style = "monokai"
