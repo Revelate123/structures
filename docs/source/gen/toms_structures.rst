@@ -1,7 +1,7 @@
-﻿structures.Masonry
-==================
+﻿toms\_structures
+================
 
-.. automodule:: structures.Masonry
+.. automodule:: toms_structures
 
    
    
@@ -26,7 +26,7 @@
    :template: custom-module-template.rst
    :recursive:
 
-   masonry
    reinforced_masonry
    unreinforced_masonry
+   util
 

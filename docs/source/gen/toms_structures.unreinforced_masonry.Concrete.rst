@@ -1,7 +1,7 @@
 Concrete
 ========
 
-.. currentmodule:: structures.Masonry.unreinforced_masonry
+.. currentmodule:: toms_structures.unreinforced_masonry
 
 .. autoclass:: Concrete
    :members:

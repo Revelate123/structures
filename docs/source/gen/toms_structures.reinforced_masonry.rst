@@ -1,7 +1,7 @@
-structures.Masonry.unreinforced\_masonry
-========================================
+toms\_structures.reinforced\_masonry
+====================================
 
-.. automodule:: structures.Masonry.unreinforced_masonry
+.. automodule:: toms_structures.reinforced_masonry
 
    
    
@@ -20,8 +20,7 @@ structures.Masonry.unreinforced\_masonry
       :template: custom-class-template.rst
       :nosignatures:
    
-      Clay
-      Concrete
+      Block
    
    
 

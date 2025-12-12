@@ -1,7 +1,7 @@
 Block
 =====
 
-.. currentmodule:: structures.Masonry.reinforced_masonry
+.. currentmodule:: toms_structures.reinforced_masonry
 
 .. autoclass:: Block
    :members:
