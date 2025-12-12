@@ -7,4 +7,4 @@ API
    :template: custom-module-template.rst
    :recursive:
 
-   structures.Masonry
+   toms_structures
