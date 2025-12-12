@@ -4,7 +4,7 @@ AS3700:2018 for reinforced masonry
 """
 
 from toms_structures.util import round_half_up
-from toms_structures.Masonry import masonry
+from toms_structures import _masonry
 
 
 class Block:
@@ -104,7 +104,7 @@ class Block:
         self.zu_horz = self.zp_horz = self.zd_horz
 
         km = self._calc_km(verbose=verbose)
-        masonry.calc_fm(self=self, km=km, verbose=verbose)
+        _masonry.calc_fm(self=self, km=km, verbose=verbose)
 
     def _bending(
         self,

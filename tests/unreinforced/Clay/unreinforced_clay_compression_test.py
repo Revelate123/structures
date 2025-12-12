@@ -1,7 +1,7 @@
 """Contains tests for unreinforced clay masonry in compression"""
 
 import pytest
-import toms_structures.Masonry.unreinforced_masonry as unreinforced_masonry
+import toms_structures.unreinforced_masonry as unreinforced_masonry
 
 
 class TestBasicCompressiveCapacity:

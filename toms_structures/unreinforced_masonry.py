@@ -6,7 +6,7 @@ AS3700:2018 for unreinforced masonry
 
 import math
 from abc import ABC, abstractmethod
-from toms_structures.Masonry import masonry
+from toms_structures import _masonry
 from toms_structures.util import round_half_up
 
 
@@ -74,7 +74,7 @@ class _Unreinforced(ABC):
         if self.raking <= 3:
             self.raking = 0
             if self.verbose:
-                print(f"Raking depth <= 3 mm, refer Cl 4.5.1 AS3700:2018")
+                print("Raking depth <= 3 mm, refer Cl 4.5.1 AS3700:2018")
         if self.verbose:
             print(f"Raking depth: {self.raking} mm")
 
@@ -103,7 +103,7 @@ class _Unreinforced(ABC):
             print("Basic Compressive Capacity, refer Cl 7.3.2(2) AS3700")
             print("====================================================")
         km = self._calc_km(verbose=verbose)
-        masonry.calc_fm(self=self, km=km, verbose=verbose)
+        _masonry.calc_fm(self=self, km=km, verbose=verbose)
         bedded_area = self._calc_ab()
         if verbose:
             print(f"bedded area Ab: {bedded_area} mm2")

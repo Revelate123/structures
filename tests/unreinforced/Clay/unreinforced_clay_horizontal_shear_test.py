@@ -1,7 +1,7 @@
 """Contains tests for unreinforced clay masonry in horizontal shear"""
 
 import pytest
-from toms_structures.Masonry.unreinforced_masonry import Clay
+from toms_structures.unreinforced_masonry import Clay
 
 
 class TestHorizontalShear:
