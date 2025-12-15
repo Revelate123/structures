@@ -5,10 +5,9 @@ AS3700:2018 for reinforced masonry
 
 from toms_structures._util import round_half_up
 from toms_structures import _masonry
-from toms_structures.unreinforced_masonry import _Unreinforced
 
 
-class HollowConcrete(_Unreinforced):
+class HollowConcrete:
     """For the design of reinforced block masonry in accordance with AS3700:2018"""
 
     def __init__(
@@ -308,9 +307,3 @@ class HollowConcrete(_Unreinforced):
             print("Bedding type: Face shell")
             print(f"km: {km}")
         return km
-
-    def _calc_kc(self) -> float:
-        if self.density > 20:
-            return 1.4
-        else:
-            return 1.2
