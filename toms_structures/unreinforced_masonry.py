@@ -7,7 +7,7 @@ AS3700:2018 for unreinforced masonry
 import math
 from abc import ABC, abstractmethod
 from toms_structures import _masonry
-from toms_structures.util import round_half_up
+from toms_structures._util import round_half_up
 
 
 # pylint: disable=too-many-instance-attributes
@@ -95,9 +95,6 @@ class _Unreinforced(ABC):
         -------
             basic compressive capacity in KN
 
-
-        >>> from structures.Masonry.unreinforced_masonry import Clay
-        >>> wall = Clay()
         """
         if verbose:
             print("Basic Compressive Capacity, refer Cl 7.3.2(2) AS3700")
@@ -136,7 +133,7 @@ class _Unreinforced(ABC):
         Computes the compression capacity of a masonry wall using the simplified method in AS3700.
 
         Parameters
-        ==========
+        ----------
 
         simple_av : float
             Vertical slenderness coefficient\n
@@ -158,16 +155,9 @@ class _Unreinforced(ABC):
         verbose : bool
             If True, print internal calculation details.
 
-        Returns:
+        Returns
+        -------
             A dictionary with crushing and buckling capacity in kN.
-
-        Examples
-        ========
-
-        Description
-
-        >>> from structures.unreinforced_masonry import Clay
-        >>> wall = Clay()
         """
         if compression_load_type not in [1, 2, 3]:
             raise ValueError(
@@ -259,7 +249,7 @@ class _Unreinforced(ABC):
         """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
 
         Parameters
-        ==========
+        ----------
 
         refined_av : float
             Vertical slenderness coefficient\n
@@ -308,17 +298,13 @@ class _Unreinforced(ABC):
         verbose : bool
             Whether to print outputs.
 
-        Returns:
+        Returns
+        -------
             dict: {
                 'Crushing': crushing_compressive_capacity,
                 'Buckling': kFo,
             }
 
-        Examples
-        ========
-        description
-
-        >>> from ...
         """
         basic_comp_cap = self.basic_compressive_capacity(verbose)
 
@@ -419,7 +405,7 @@ class _Unreinforced(ABC):
         of a masonry wall under concentrated loads
 
         Parameters
-        ==========
+        ----------
 
         simple_av : float
             Vertical slenderness coefficient\n
@@ -452,14 +438,10 @@ class _Unreinforced(ABC):
         verbose : bool
             If True, print internal calculation details.
 
-        Returns:
+        Returns
+        -------
             A dictionary with crushing and buckling capacity in kN.
 
-        Examples
-        ========
-
-        >>> from structures.unreinforced_masonry import Clay
-        >>> wall = Clay()
         """
         if bearing_width is None:
             raise ValueError(
@@ -519,7 +501,7 @@ class _Unreinforced(ABC):
         """Computes the refined compressive capacity of a masonry wall per AS3700 Cl 7.3.
 
         Parameters
-        ==========
+        ----------
 
         refined_av : float
             Vertical slenderness coefficient\n
@@ -576,19 +558,13 @@ class _Unreinforced(ABC):
         verbose : bool
             If True, print internal calculation details.
 
-        Returns:
+        Returns
+        -------
             dict: {
                 "Crushing",
                 "Buckling",
                 "Bearing"
             }
-
-        Examples
-        ========
-
-        Description
-
-        >>> from ..
         """
         print("WARNING: Test cases incomplete")
         basic_comp_cap = self.basic_compressive_capacity(verbose=False)
@@ -639,7 +615,7 @@ class _Unreinforced(ABC):
         """Computes the vertical bending capacity in accordance with AS 3700 Cl 7.4.2
 
         Parameters
-        ==========
+        ----------
 
         fd : float
             The minimum design compressive stress on the bed joint at the
@@ -652,14 +628,9 @@ class _Unreinforced(ABC):
         verbose : bool
             Whether to print outputs
 
-        Returns: float
-
-        Examples
-        ========
-
-        Description
-
-        >>> from ...
+        Returns
+        -------
+            m_cv : float
         """
         if fd is None:
             raise ValueError(
@@ -713,7 +684,7 @@ class _Unreinforced(ABC):
         """Computes the horizontal bending capacity in accordance with AS3700 Cl 7.4.3.2
 
         Parameters
-        ==========
+        ----------
 
         fd : float
             The minimum design compressive stress on the bed joint at the
@@ -726,14 +697,10 @@ class _Unreinforced(ABC):
         verbose : bool
             Whether to print outputs
 
-        Returns: float
-
-        Examples
-        ========
-
-        Description
-
-        >>> from ..."""
+        Returns
+        -------
+            Horizontal bending capacity in KN : float
+        """
         if verbose:
             print("Horizontal Bending Capacity, refer Cl 7.4.3.2 AS3700")
             print("====================================================")
@@ -809,7 +776,7 @@ class _Unreinforced(ABC):
         """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1
 
         Parameters
-        ==========
+        ----------
 
         kv : float
             shear factor (see AS3700 T3.3). At mortar bed joints or interfaces with concrete = 0.3\n
@@ -828,14 +795,10 @@ class _Unreinforced(ABC):
         verbose : bool
             Whether to print outputs
 
-        Returns: float
-
-        Examples
-        ========
-
-        Description
-
-        >>> from ..."""
+        Returns
+        -------
+            Horizontal shear capacity in KN : float
+        """
         if kv > 0.3:
             raise ValueError("kv > 0.3 is outside the scope of AS3700")
         if verbose:
@@ -1251,20 +1214,6 @@ class Clay(_Unreinforced):
         fmt : float
             Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
-    Examples
-    --------
-
-    >>> from structures.Masonry.unreinforced_masonry import Clay
-    >>> wall = Clay(
-                length=1000,
-                height=3000,
-                thickness=110,
-                fuc=20,
-                mortar_class=3,
-                bedding_type=True
-                )
-
-
     """
 
     def __init__(
@@ -1349,7 +1298,7 @@ class Concrete(_Unreinforced):
     """Concrete Masonry object
 
     Parameters
-    ==========
+    ----------
 
     length : float
         length of the wall in mm
@@ -1386,20 +1335,6 @@ class Concrete(_Unreinforced):
 
     fmt : float
         Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
-
-    Examples
-    ========
-
-    >>> from structures.Masonry.unreinforced_masonry import Concrete
-    >>> wall = Concrete(
-                length=1000,
-                height=3000,
-                thickness=110,
-                fuc=20,
-                mortar_class=3,
-                bedding_type=True
-                )
-
 
     """
 

@@ -2,7 +2,7 @@ Examples
 ========
 
 The following examples showcase the features of ``toms-structures`` and how they might be incorporated into engineering design. 
-The below examples are available as jupyter notebooks and can be downloaded here. 
+The below examples are available as jupyter notebooks and can be downloaded from the source repository here. 
 
 To run these notebooks you must first install jupyter notebook by running pip install notebook in the same virtual environment in which ``toms-structures`` is installed.
 Next, navigate to the location of the downloaded examples and run jupyter notebook to open jupyter in the browser.

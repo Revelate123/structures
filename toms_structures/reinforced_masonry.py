@@ -3,7 +3,7 @@ This module performs engineering calculations in accordance with
 AS3700:2018 for reinforced masonry
 """
 
-from toms_structures.util import round_half_up
+from toms_structures._util import round_half_up
 from toms_structures import _masonry
 
 
