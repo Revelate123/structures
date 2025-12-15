@@ -26,7 +26,7 @@ class Block:
         """Initialises the masonry element
 
         Parameters
-        ==========
+        ----------
 
         length : float
             length of the wall in mm
@@ -58,20 +58,6 @@ class Block:
 
         fmt : float
             Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
-
-        Examples
-        ========
-
-        >>> from structures.Masonry.reinforced_masonry import ReinforcedBlock
-        >>> wall = ReinforcedBlock(
-                    length=1000,
-                    height=3000,
-                    thickness=110,
-                    fuc=20,
-                    mortar_class=3,
-                    bedding_type=True
-                    )
-
 
         """
         self.length = length
@@ -166,7 +152,7 @@ class Block:
         described in AS 3700 Cl 8.6.
 
         Parameters
-        ==========
+        ----------
 
         d : float
             Effective depth of the reinforced masonry member from the extreme compressive
@@ -185,10 +171,6 @@ class Block:
             True to print internal calculations
             False otherwise
 
-        Examples
-        ========
-
-        >>> from ..
         """
         moment_cap = self._bending(
             fsy=fsy,
@@ -211,7 +193,7 @@ class Block:
         described in AS 3700 Cl 8.6.
 
         Parameters
-        ==========
+        ----------
 
         d : float
             Effective depth of the reinforced masonry member from the extreme compressive
@@ -230,10 +212,6 @@ class Block:
             True to print internal calculations
             False otherwise
 
-        Examples
-        ========
-
-        >>> from ..
         """
         moment_cap = self._bending(
             fsy=fsy,
@@ -256,7 +234,7 @@ class Block:
         described in AS 3700 Cl 8.6.
 
         Parameters
-        ==========
+        ----------
 
         d : float
             Effective depth of the reinforced masonry member from the extreme compressive
@@ -275,10 +253,6 @@ class Block:
             True to print internal calculations
             False otherwise
 
-        Examples
-        ========
-
-        >>> from ..
         """
         moment_cap = self._bending(
             fsy=fsy,
