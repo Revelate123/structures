@@ -1169,6 +1169,7 @@ class _Unreinforced(ABC):
 
     @abstractmethod
     def _calc_kc(self):
+        """Strength factor for grout in compression, refer Cl 7.3.2 & Cl 8.5.1"""
         return 1
 
 
@@ -1294,7 +1295,7 @@ class Clay(_Unreinforced):
         return 1.2
 
 
-class Concrete(_Unreinforced):
+class HollowConcrete(_Unreinforced):
     """Concrete Masonry object
 
     Parameters
@@ -1362,7 +1363,7 @@ class Concrete(_Unreinforced):
         self.thickness = thickness
         self.fuc = fuc
         self.mortar_class = mortar_class
-        self.bedding_type = bedding_type
+        self.bedding_type = False
         self.hu = hu
         self.tj = tj
         self.fm = None
@@ -1404,7 +1405,7 @@ class Concrete(_Unreinforced):
             raise ValueError("Invalid mortar class provided")
         return km
 
-    def _calc_kc(self):
+    def _calc_kc(self) -> float:
         if self.density > 20:
             return 1.4
         else:

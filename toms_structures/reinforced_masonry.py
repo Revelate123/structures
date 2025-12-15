@@ -5,9 +5,10 @@ AS3700:2018 for reinforced masonry
 
 from toms_structures._util import round_half_up
 from toms_structures import _masonry
+from toms_structures.unreinforced_masonry import _Unreinforced
 
 
-class Block:
+class HollowConcrete(_Unreinforced):
     """For the design of reinforced block masonry in accordance with AS3700:2018"""
 
     def __init__(
@@ -97,6 +98,8 @@ class Block:
         d: float,
         area_tension_steel: float,
         fsy: float,
+        fd: float,
+        interface: bool,
         verbose: bool = True,
     ) -> float:
         """
@@ -111,6 +114,10 @@ class Block:
             fibre of the masonry to the resultant tensile force in the steel in the tensile
             zone in mm. Typical values are 95 for 190 block walls
 
+        b : float
+            Width of the masonry member of solid rectangular cross-section or the effective
+            width of a member in accordance with Cl 4.5.2
+
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
             zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
@@ -118,6 +125,10 @@ class Block:
 
         fsy : float
             Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        fd : float
+            The minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
 
         verbose : bool
             True to print internal calculations
@@ -141,6 +152,8 @@ class Block:
         d: float,
         area_tension_steel: float,
         fsy: float,
+        fd: float,
+        interface: bool,
         verbose: bool = True,
     ) -> float:
         """
@@ -155,6 +168,10 @@ class Block:
             fibre of the masonry to the resultant tensile force in the steel in the tensile
             zone in mm. Typical values are 95 for 190 block walls
 
+        b : float
+            Width of the masonry member of solid rectangular cross-section or the effective
+            width of a member in accordance with Cl 4.5.2
+
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
             zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
@@ -162,6 +179,10 @@ class Block:
 
         fsy : float
             Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        fd : float
+            The minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
 
         verbose : bool
             True to print internal calculations
@@ -198,6 +219,10 @@ class Block:
             Effective depth of the reinforced masonry member from the extreme compressive
             fibre of the masonry to the resultant tensile force in the steel in the tensile
             zone in mm. Typical values are 95 for 190 block walls
+
+        b : float
+            Width of the masonry member of solid rectangular cross-section or the effective
+            width of a member in accordance with Cl 4.5.2
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
@@ -283,3 +308,9 @@ class Block:
             print("Bedding type: Face shell")
             print(f"km: {km}")
         return km
+
+    def _calc_kc(self) -> float:
+        if self.density > 20:
+            return 1.4
+        else:
+            return 1.2
