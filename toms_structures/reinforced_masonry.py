@@ -8,7 +8,7 @@ from toms_structures import _masonry
 
 
 class Block:
-    """For the design of reinforced clay brick masonry in accordance with AS3700:2018"""
+    """For the design of reinforced block masonry in accordance with AS3700:2018"""
 
     def __init__(
         self,
@@ -92,6 +92,139 @@ class Block:
         km = self._calc_km(verbose=verbose)
         _masonry.calc_fm(self=self, km=km, verbose=verbose)
 
+    def out_of_plane_vertical_bending(
+        self,
+        d: float,
+        area_tension_steel: float,
+        fsy: float,
+        verbose: bool = True,
+    ) -> float:
+        """
+        Computes the bending capacity of a reinforced masonry wall element in accordance with
+        AS3700:2018 Cl 8.6.
+
+        Parameters
+        ----------
+
+        d : float
+            Effective depth of the reinforced masonry member from the extreme compressive
+            fibre of the masonry to the resultant tensile force in the steel in the tensile
+            zone in mm. Typical values are 95 for 190 block walls
+
+        area_tension_steel : float
+            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
+
+        fsy : float
+            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        verbose : bool
+            True to print internal calculations
+            False otherwise
+
+        Returns
+        -------
+            Moment capacity in KN : float
+        """
+        moment_cap = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.length,
+            verbose=verbose,
+        )
+        return moment_cap
+
+    def out_of_plane_horizontal_bending(
+        self,
+        d: float,
+        area_tension_steel: float,
+        fsy: float,
+        verbose: bool = True,
+    ) -> float:
+        """
+        Computes the bending capacity of a reinforced masonry wall element in accordanc with
+        AS 3700 Cl 8.6.
+
+        Parameters
+        ----------
+
+        d : float
+            Effective depth of the reinforced masonry member from the extreme compressive
+            fibre of the masonry to the resultant tensile force in the steel in the tensile
+            zone in mm. Typical values are 95 for 190 block walls
+
+        area_tension_steel : float
+            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
+
+        fsy : float
+            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        verbose : bool
+            True to print internal calculations
+            False otherwise
+
+        Returns
+        -------
+            Moment capacity in KN : float
+        """
+        moment_cap = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.height,
+            verbose=verbose,
+        )
+        return moment_cap
+
+    def in_plane_vertical_bending(
+        self,
+        d: float,
+        area_tension_steel: float,
+        fsy: float,
+        verbose: bool = True,
+    ) -> float:
+        """
+        Computes the bending capacity of a reinforced masonry wall element using the methods
+        described in AS 3700 Cl 8.6.
+
+        Parameters
+        ----------
+
+        d : float
+            Effective depth of the reinforced masonry member from the extreme compressive
+            fibre of the masonry to the resultant tensile force in the steel in the tensile
+            zone in mm. Typical values are 95 for 190 block walls
+
+        area_tension_steel : float
+            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
+            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
+            the amount of steel used in calculation is limited to effective_area_tension_steel
+
+        fsy : float
+            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
+
+        verbose : bool
+            True to print internal calculations
+            False otherwise
+
+        Returns
+        -------
+            Moment capacity in KN : float
+
+        """
+        moment_cap = self._bending(
+            fsy=fsy,
+            d=d,
+            area_tension_steel=area_tension_steel,
+            b=self.thickness,
+            verbose=verbose,
+        )
+        return moment_cap
+
     def _bending(
         self,
         d: float,
@@ -109,6 +242,9 @@ class Block:
 
         if verbose:
             print(f"area_tension_steel: {area_tension_steel:.2f} mm2")
+            print(
+                f"Minimum quantity of secondary reinforcement: {0.00035*d * b:.2f} mm2, Cl 8.4.3"
+            )
 
         if verbose:
             print(f"b: {b:.2f} mm")
@@ -138,129 +274,6 @@ class Block:
         )
         if verbose is True:
             print(f"moment_cap: {moment_cap:.2f} KNm")
-        return moment_cap
-
-    def out_of_plane_vertical_bending(
-        self,
-        d: float,
-        area_tension_steel: float,
-        fsy: float,
-        verbose: bool = True,
-    ):
-        """
-        Computes the bending capacity of a reinforced masonry wall element using the methods
-        described in AS 3700 Cl 8.6.
-
-        Parameters
-        ----------
-
-        d : float
-            Effective depth of the reinforced masonry member from the extreme compressive
-            fibre of the masonry to the resultant tensile force in the steel in the tensile
-            zone in mm. Typical values are 95 for 190 block walls
-
-        area_tension_steel : float
-            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
-            the amount of steel used in calculation is limited to effective_area_tension_steel
-
-        fsy : float
-            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
-
-        verbose : bool
-            True to print internal calculations
-            False otherwise
-
-        """
-        moment_cap = self._bending(
-            fsy=fsy,
-            d=d,
-            area_tension_steel=area_tension_steel,
-            b=self.length,
-            verbose=verbose,
-        )
-        return moment_cap
-
-    def out_of_plane_horizontal_bending(
-        self,
-        d: float,
-        area_tension_steel: float,
-        fsy: float,
-        verbose: bool = True,
-    ):
-        """
-        Computes the bending capacity of a reinforced masonry wall element using the methods
-        described in AS 3700 Cl 8.6.
-
-        Parameters
-        ----------
-
-        d : float
-            Effective depth of the reinforced masonry member from the extreme compressive
-            fibre of the masonry to the resultant tensile force in the steel in the tensile
-            zone in mm. Typical values are 95 for 190 block walls
-
-        area_tension_steel : float
-            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
-            the amount of steel used in calculation is limited to effective_area_tension_steel
-
-        fsy : float
-            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
-
-        verbose : bool
-            True to print internal calculations
-            False otherwise
-
-        """
-        moment_cap = self._bending(
-            fsy=fsy,
-            d=d,
-            area_tension_steel=area_tension_steel,
-            b=self.height,
-            verbose=verbose,
-        )
-        return moment_cap
-
-    def in_plane_vertical_bending(
-        self,
-        d: float,
-        area_tension_steel: float,
-        fsy: float,
-        verbose: bool = True,
-    ):
-        """
-        Computes the bending capacity of a reinforced masonry wall element using the methods
-        described in AS 3700 Cl 8.6.
-
-        Parameters
-        ----------
-
-        d : float
-            Effective depth of the reinforced masonry member from the extreme compressive
-            fibre of the masonry to the resultant tensile force in the steel in the tensile
-            zone in mm. Typical values are 95 for 190 block walls
-
-        area_tension_steel : float
-            Cross-sectional area of fully anchored longitudinal reinforcement in the tension
-            zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
-            the amount of steel used in calculation is limited to effective_area_tension_steel
-
-        fsy : float
-            Design yield strength of reinforcement in MPa (refer Cl 3.6.1), typically 500 MPa
-
-        verbose : bool
-            True to print internal calculations
-            False otherwise
-
-        """
-        moment_cap = self._bending(
-            fsy=fsy,
-            d=d,
-            area_tension_steel=area_tension_steel,
-            b=self.thickness,
-            verbose=verbose,
-        )
         return moment_cap
 
     def _calc_km(self, verbose: bool = True) -> float:

@@ -65,3 +65,6 @@ class TestOutOfPlaneVerticalBending:
             )
             == 95.3
         )
+
+    def test_capacity_less_than_unreinforced(self):
+        pass
