@@ -8,89 +8,57 @@ from toms_structures._reinforced_masonry import _ReinforcedMasonry
 
 
 class HollowConcrete(_ReinforcedMasonry):
-    """For the design of reinforced block masonry in accordance with AS3700:2018"""
+    """For the design of reinforced block masonry in accordance with AS3700:2018
 
-    def __init__(
-        self,
-        length: float,
-        height: float,
-        thickness: float,
-        fuc: float,
-        mortar_class: float,
-        verbose: bool = True,
-        hu: float = 200,
-        tj: float = 10,
-        lu: float = 400,
-        fmt: float = 0.2,
-    ):
-        """Initialises the masonry element
+    Parameters
+    ----------
 
-        Parameters
-        ----------
+    length : float
+        length of the wall in mm
 
-        length : float
-            length of the wall in mm
+    height : float
+        height of the wall in mm
 
-        height : float
-            height of the wall in mm
+    thickness : float
+        thickness of the masonry unit in mm
 
-        thickness : float
-            thickness of the masonry unit in mm
+    fuc : float
+        unconfined compressive capacity in MPa, AS3700 requires not less than 15 MPa
 
-        fuc : float
-            unconfined compressive capacity in MPa, AS3700 requires not less than 15 MPa
+    mortar_class : float
+        Mortar class in accordance with AS3700
 
-        mortar_class : float
-            Mortar class in accordance with AS3700
+    verbose : bool
+        True to print internal calculations
+        False otherwise
 
-        verbose : bool
-            True to print internal calculations
-            False otherwise
+    hu : float
+        masonry unit height in mm, defaults to 200 mm
 
-        hu : float
-            masonry unit height in mm, defaults to 200 mm
+    tj : float
+        grout thickness between masonry units in mm, defaults to 10 mm
 
-        tj : float
-            grout thickness between masonry units in mm, defaults to 10 mm
+    lu : float
+        length of the masonry unit in mm, defaults to 400 mm
 
-        lu : float
-            length of the masonry unit in mm, defaults to 400 mm
+    fmt : float
+        Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
 
-        fmt : float
-            Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+    """
 
-        """
-        self.length = length
-        self.height = height
-        self.thickness = thickness
-        self.fuc = fuc
-        self.mortar_class = mortar_class
-        self.hu = hu
-        self.tj = tj
-        self.lu = lu
-        self.fmt = fmt
-        self.verbose = verbose
-
-        self.fm = 0
-        self.phi_shear = 0.75
-        self.phi_bending = 0.75
-        self.phi_compression = 0.75
-        self.fut = 0.8
-        self.epsilon = 2
-
-        if self.mortar_class != 3:
-            raise ValueError(
-                "Concrete masonry units undefined for mortar class M4, adopt M3"
-            )
-        if fuc < 15:
-            print("Note: fuc less than minimum required by AS3700 of 15 MPa")
-        self.zd = self.length * self.thickness**2 / 6
-        self.zu = self.zp = self.zd
-        self.zd_horz = self.height * self.thickness**2 / 6
-        self.zu_horz = self.zp_horz = self.zd_horz
-
-        km = self._calc_km(verbose=verbose)
-        self._calc_fm(km=km, verbose=verbose)
+    hu: float = 200
+    tj: float = 10
+    lu: float = 400
+    face_shell_thickness: float = 10
+    raking: float = 0
+    fmt: float = 0.2
+    fut: float = 0.8
+    phi_shear: float = 0.75
+    phi_bending: float = 0.75
+    phi_compression: float = 0.75
+    density: float = 19
+    grouted: bool = False
+    fcg: float = 15
 
     def out_of_plane_vertical_bending(
         self,

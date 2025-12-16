@@ -30,13 +30,15 @@ class _Masonry(ABC):
         thickness: float,
         fuc: float,
         mortar_class: int,
-        bedding_type: bool,
+        bedding_type: bool = None,
         verbose: bool = True,
-        hu: float = 76,
-        tj: float = 10,
-        face_shell_thickness: float = 30,
-        raking: float = 0,
-        fmt: float = 0.2,
+        hu: float = None,
+        tj: float = None,
+        face_shell_thickness: float = None,
+        raking: float = None,
+        fmt: float = None,
+        grouted: float = None,
+        fcg: float = None,
     ):
 
         self.length = length
@@ -44,11 +46,13 @@ class _Masonry(ABC):
         self.thickness = thickness
         self.fuc = fuc
         self.mortar_class = mortar_class
-        self.bedding_type = bedding_type
-        self.hu = hu
-        self.tj = tj
+        self.bedding_type = (
+            bedding_type if bedding_type is not None else self.bedding_type
+        )
+        self.hu = hu if hu is not None else self.hu
+        self.tj = tj if tj is not None else self.tj
         self.fm = None
-        self.fmt = fmt
+        self.fmt = fmt if fmt is not None else self.fmt
         self.verbose = verbose
         self.fut = self.fut
         self.phi_shear = self.phi_shear
@@ -56,10 +60,14 @@ class _Masonry(ABC):
         self.phi_compression = self.phi_compression
         self.density = self.density
         self.epsilon = 2
-        self.grouted = self.grouted
-        self.face_shell_thickness = face_shell_thickness
-        self.raking = raking
-        self.fcg = self.fcg
+        self.grouted = self.grouted if grouted is not None else self.grouted
+        self.face_shell_thickness = (
+            face_shell_thickness
+            if face_shell_thickness is not None
+            else self.face_shell_thickness
+        )
+        self.raking = raking if raking is not None else self.raking
+        self.fcg = fcg if fcg is not None else self.fcg
         self.__post_init__()
 
     def __post_init__(self):

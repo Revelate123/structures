@@ -6,6 +6,8 @@ from toms_structures._util import round_half_up
 
 
 class _ReinforcedMasonry(_Masonry):
+    bedding_type = False
+
     def _reinforced_bending(
         self,
         d: float,
@@ -14,7 +16,11 @@ class _ReinforcedMasonry(_Masonry):
         fsy: float,
         verbose: bool = True,
     ):
-
+        if verbose:
+            print("Bending capacity, refer Cl 8.6 AS3700")
+            print("=====================================")
+        km = self._calc_km(verbose=verbose)
+        self._calc_fm(km=km, verbose=verbose)
         if verbose:
             print(f"fsy: {fsy:.2f} MPa")
 
