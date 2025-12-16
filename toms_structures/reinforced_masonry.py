@@ -4,10 +4,10 @@ AS3700:2018 for reinforced masonry
 """
 
 from toms_structures._util import round_half_up
-from toms_structures import _masonry
+from toms_structures._reinforced_masonry import _ReinforcedMasonry
 
 
-class HollowConcrete:
+class HollowConcrete(_ReinforcedMasonry):
     """For the design of reinforced block masonry in accordance with AS3700:2018"""
 
     def __init__(
@@ -90,7 +90,7 @@ class HollowConcrete:
         self.zu_horz = self.zp_horz = self.zd_horz
 
         km = self._calc_km(verbose=verbose)
-        _masonry.calc_fm(self=self, km=km, verbose=verbose)
+        self._calc_fm(km=km, verbose=verbose)
 
     def out_of_plane_vertical_bending(
         self,
@@ -137,7 +137,7 @@ class HollowConcrete:
         -------
             Moment capacity in KN : float
         """
-        moment_cap = self._bending(
+        moment_cap = self._reinforced_bending(
             fsy=fsy,
             d=d,
             area_tension_steel=area_tension_steel,
@@ -191,7 +191,7 @@ class HollowConcrete:
         -------
             Moment capacity in KN : float
         """
-        moment_cap = self._bending(
+        moment_cap = self._reinforced_bending(
             fsy=fsy,
             d=d,
             area_tension_steel=area_tension_steel,
@@ -240,64 +240,13 @@ class HollowConcrete:
             Moment capacity in KN : float
 
         """
-        moment_cap = self._bending(
+        moment_cap = self._reinforced_bending(
             fsy=fsy,
             d=d,
             area_tension_steel=area_tension_steel,
             b=self.thickness,
             verbose=verbose,
         )
-        return moment_cap
-
-    def _bending(
-        self,
-        d: float,
-        b: float,
-        area_tension_steel: float,
-        fsy: float,
-        verbose: bool = True,
-    ):
-
-        if verbose:
-            print(f"fsy: {fsy:.2f} MPa")
-
-        if verbose:
-            print(f"d: {d:.2f} mm")
-
-        if verbose:
-            print(f"area_tension_steel: {area_tension_steel:.2f} mm2")
-            print(
-                f"Minimum quantity of secondary reinforcement: {0.00035*d * b:.2f} mm2, Cl 8.4.3"
-            )
-
-        if verbose:
-            print(f"b: {b:.2f} mm")
-
-        # Step 1: Calculate effective_area_tension_steel
-        effective_area_tension_steel = min(
-            area_tension_steel, (0.29 * 1.3 * self.fm * self.length * d) / fsy
-        )
-        if verbose is True:
-            print(
-                f"effective_area_tension_steel: {effective_area_tension_steel:.2f} mm2"
-            )
-
-        # Step 2: Calculate moment_cap
-        moment_cap = round_half_up(
-            self.phi_bending
-            * fsy
-            * effective_area_tension_steel
-            * d
-            * (
-                1
-                - (0.6 * fsy * effective_area_tension_steel)
-                / (1.3 * self.fm * self.length * d)
-            )
-            * 1e-6,
-            self.epsilon,
-        )
-        if verbose is True:
-            print(f"moment_cap: {moment_cap:.2f} KNm")
         return moment_cap
 
     def _calc_km(self, verbose: bool = True) -> float:
@@ -307,3 +256,9 @@ class HollowConcrete:
             print("Bedding type: Face shell")
             print(f"km: {km}")
         return km
+
+    def _calc_kc(self) -> float:
+        if self.density > 20:
+            return 1.4
+        else:
+            return 1.2
