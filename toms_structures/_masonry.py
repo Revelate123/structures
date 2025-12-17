@@ -97,7 +97,7 @@ class _Masonry(ABC):
             # km = self._calc_km(verbose=self.verbose)
             # masonry.calc_fm(self=self, km=km, verbose=self.verbose)
 
-    def basic_compressive_capacity(self, verbose: bool = True) -> float:
+    def _basic_compressive_capacity(self, verbose: bool = True) -> float:
         """Computes the Basic Compressive strength to AS3700 Cl 7.3.2(2)
         and returns the compressive capacity in KN. This does not account for
         wall geometry, including whether it is face-shell bedding.
@@ -138,7 +138,7 @@ class _Masonry(ABC):
             print(f"basic_compressive_capacity = {basic_comp_cap} KN\n")
         return basic_comp_cap
 
-    def compression_capacity(
+    def _compression_capacity(
         self,
         simple_av: float | None = None,
         kt: float | None = None,
@@ -193,7 +193,7 @@ class _Masonry(ABC):
                 "kt undefined, refer AS 3700 Cl 7.3.4.2, set to 1 if there are no engaged piers"
             )
 
-        basic_comp_cap = self.basic_compressive_capacity(verbose)
+        basic_comp_cap = self._basic_compressive_capacity(verbose)
         if verbose:
             print("Compresion Capacity, refer Cl 7.3.3.3 AS3700")
             print("============================================")
@@ -251,7 +251,7 @@ class _Masonry(ABC):
 
         return {"Simple": simple_comp_cap}
 
-    def refined_compression(
+    def _refined_compression(
         self,
         refined_av: float,
         refined_ah: float,
@@ -322,7 +322,7 @@ class _Masonry(ABC):
             }
 
         """
-        basic_comp_cap = self.basic_compressive_capacity(verbose)
+        basic_comp_cap = self._basic_compressive_capacity(verbose)
 
         if verbose:
             print("Refined Compression Capacity, refer Cl 7.3 AS3700")
@@ -407,7 +407,7 @@ class _Masonry(ABC):
             "Buckling": buckling_comp_cap,
         }
 
-    def concentrated_load(
+    def _concentrated_load(
         self,
         simple_av: float | None = None,
         kt: float | None = None,
@@ -466,14 +466,14 @@ class _Masonry(ABC):
         if verbose:
             print(f"bearing width: {bearing_width} mm")
         print("WARNING: Test cases incomplete")
-        basic_comp_cap = self.basic_compressive_capacity(verbose=False)
+        basic_comp_cap = self._basic_compressive_capacity(verbose=False)
 
         effective_length = self._calc_effective_compression_length(
             bearing_length=bearing_length,
             dist_to_end=dist_to_end,
             verbose=verbose,
         )
-        capacity = self.compression_capacity(
+        capacity = self._compression_capacity(
             simple_av=simple_av,
             kt=kt,
             compression_load_type=compression_load_type,
@@ -501,7 +501,7 @@ class _Masonry(ABC):
 
         return capacity
 
-    def refined_concentrated_load(
+    def _refined_concentrated_load(
         self,
         refined_av: float | None = None,
         refined_ah: float | None = None,
@@ -583,14 +583,14 @@ class _Masonry(ABC):
             }
         """
         print("WARNING: Test cases incomplete")
-        basic_comp_cap = self.basic_compressive_capacity(verbose=False)
+        basic_comp_cap = self._basic_compressive_capacity(verbose=False)
 
         effective_length = self._calc_effective_compression_length(
             bearing_length=bearing_length,
             dist_to_end=dist_to_end,
             verbose=verbose,
         )
-        capacity = self.refined_compression(
+        capacity = self._refined_compression(
             refined_av=refined_av,
             refined_ah=refined_ah,
             kt=kt,
@@ -622,7 +622,7 @@ class _Masonry(ABC):
 
         return capacity
 
-    def vertical_bending(
+    def _vertical_bending(
         self,
         fd: float | None = None,
         interface: None | bool = None,
@@ -691,7 +691,7 @@ class _Masonry(ABC):
             print(f"Mcv = {m_cv/self.length*1e3} KNm/m")
         return m_cv
 
-    def horizontal_bending(
+    def _horizontal_bending(
         self,
         fd: float | None = None,
         interface: None | bool = None,
@@ -782,7 +782,7 @@ class _Masonry(ABC):
             print(f"Mch: {mch/self.height*1e3:.2f} KNm/m")
         return mch
 
-    def horizontal_plane_shear(
+    def _horizontal_plane_shear(
         self,
         kv: float,
         interface: float,
@@ -848,7 +848,7 @@ class _Masonry(ABC):
             print(f"V0 + V1: {vd/self.length*1e3:.2f} KN/m")
         return {"bond": v0, "friction": v1}
 
-    def vertical_plane_shear(self, verbose: bool = True) -> float:
+    def _vertical_plane_shear(self, verbose: bool = True) -> float:
         """Computes the horizontal shear capacity in accordance with AS3700 Cl 7.5.4.2"""
         print("WARNING: Test cases incomplete")
         fms_vertical = self._calc_fms_vert(verbose=verbose)

@@ -3,7 +3,6 @@ This module performs engineering calculations in accordance with
 AS3700:2018 for reinforced masonry
 """
 
-from toms_structures._util import round_half_up
 from toms_structures._reinforced_masonry import _ReinforcedMasonry
 
 
@@ -135,10 +134,6 @@ class HollowConcrete(_ReinforcedMasonry):
             fibre of the masonry to the resultant tensile force in the steel in the tensile
             zone in mm. Typical values are 95 for 190 block walls
 
-        b : float
-            Width of the masonry member of solid rectangular cross-section or the effective
-            width of a member in accordance with Cl 4.5.2
-
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
             zone of the cross-section under consideration in mm². Denoted as Ast in AS3700. Note:
@@ -186,10 +181,6 @@ class HollowConcrete(_ReinforcedMasonry):
             Effective depth of the reinforced masonry member from the extreme compressive
             fibre of the masonry to the resultant tensile force in the steel in the tensile
             zone in mm. Typical values are 95 for 190 block walls
-
-        b : float
-            Width of the masonry member of solid rectangular cross-section or the effective
-            width of a member in accordance with Cl 4.5.2
 
         area_tension_steel : float
             Cross-sectional area of fully anchored longitudinal reinforcement in the tension
