@@ -12,6 +12,7 @@ class _Masonry(ABC):
 
     hu: float = 76
     tj: float = 10
+    lu: float = 230
     face_shell_thickness: float = 30
     raking: float = 0
     fmt: float = 0.2
@@ -34,6 +35,7 @@ class _Masonry(ABC):
         verbose: bool = True,
         hu: float = None,
         tj: float = None,
+        lu: float = None,
         face_shell_thickness: float = None,
         raking: float = None,
         fmt: float = None,
@@ -51,6 +53,7 @@ class _Masonry(ABC):
         )
         self.hu = hu if hu is not None else self.hu
         self.tj = tj if tj is not None else self.tj
+        self.lu = lu if lu is not None else self.lu
         self.fm = None
         self.fmt = fmt if fmt is not None else self.fmt
         self.verbose = verbose
@@ -150,7 +153,6 @@ class _Masonry(ABC):
 
         Parameters
         ----------
-
         simple_av : float
             Vertical slenderness coefficient\n
             1 if the member is laterally supported along its top edge\n
@@ -1072,31 +1074,50 @@ class _Masonry(ABC):
             print(f"kp: {kp} Cl 7.4.3.4")
         return kp
 
-    def _diagonal_bending(self, hu, fd, tj, lu, tu, Ld, Mch) -> float:
-        """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4"""
-        G = 2 * (hu + tj) / (lu + tj)
-        Hd = 2900 / 2
-        alpha = G * Ld / Hd
-        print("alpha", alpha)
-        af = alpha / (1 - 1 / (3 * alpha))
-        k1 = 0
-        k2 = 1 + 1 / G**2
-        φ = 0.6
-        ft = 2.25 * math.sqrt(self.fmt) + 0.15 * fd
-        B = (hu + tj) / math.sqrt(1 + G**2)
-        if B >= tu:
-            Zt = ((2 * B**2 * tu**2) / (3 * B + 1.8 * tu)) / (
-                (lu + tj) * math.sqrt(1 + G**2)
-            )
-        else:
-            Zt = ((2 * B**2 * tu**2) / (3 * tu + 1.8 * B)) / (
-                (lu + tj) * math.sqrt(1 + G**2)
-            )
-        Mcd = φ * ft * Zt
-        print(Mcd)
-        # Cl 7.4.4.2
-        w = (2 * af) / (Ld**2) * (k1 * Mch + k2 * Mcd)
-        print(w)
+    def _diagonal_bending(
+        self, fd: float, interface: bool, verbose: bool = True
+    ) -> float:
+        """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4
+
+        Parameters
+        ----------
+
+        af : float
+            Aspect factor, refer Table 7.5
+
+        fd : float
+            The minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
+
+        verbose : bool
+            Whether to print outputs
+
+        Returns
+        -------
+            Two-way bending capacity of the wall in KPa : float
+
+        """
+        print("WARNING: TEST CASES INCOMPLETE")
+        horizontal_bending_capacity = self._horizontal_bending(
+            fd=fd, interface=interface, verbose=verbose
+        )
+        slope = 2 * (self.hu + self.tj) / (self.lu + self.tj)
+        design_length = 1
+        alpha = slope * design_length
+        k1 = 1
+        k2 = 1
+        diagonal_bending_capacity = 1
+        w = (
+            2
+            * alpha
+            / design_length
+            * (k1 * horizontal_bending_capacity + k2 * diagonal_bending_capacity)
+        )
+        return 1
 
     def _self_weight(self) -> float:
         """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""

@@ -52,6 +52,7 @@ class Clay(_Masonry):
 
     hu: float = 76
     tj: float = 10
+    lu: float = 230
     face_shell_thickness: float = 0
     raking: float = 0
     fmt: float = 0.2
@@ -555,6 +556,7 @@ class HollowConcrete(_Masonry):
 
     hu: float = 200
     tj: float = 10
+    lu: float = 400
     face_shell_thickness: float = 30
     raking: float = 0
     fmt: float = 0.2
