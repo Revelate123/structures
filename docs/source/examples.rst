@@ -17,3 +17,4 @@ Don’t be afraid to raise an issue or post in the discussions page if you have 
     examples/masonry_wall_compression
     examples/unreinforced_clay_bending
     examples/reinforced_block_wall
+    examples/partially_grouted_concrete_block
