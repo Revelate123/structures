@@ -21,7 +21,7 @@ class _Masonry(ABC):
     phi_bending = 0.6
     phi_compression = 0.75
     density = 19
-    grouted = False
+    grouted = 0
     fcg = 15
 
     def __init__(
