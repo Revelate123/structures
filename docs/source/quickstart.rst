@@ -30,4 +30,4 @@ masonry element. For example:
    from toms_structures.unreinforced_masonry import Clay
    wall = Clay(fuc=20,length=1000,thickness=110,height=3000,bedding_type=True,mortar_class=3)
 
-Once created, various methods can be applied to the object to determine capacities. Check out the :doc:`examples <examples>` page for more information
+Once created, various methods can be applied to the object to determine capacities. Check out the :doc:`examples <examples>` page for more information.
