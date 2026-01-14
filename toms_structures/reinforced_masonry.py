@@ -56,7 +56,7 @@ class HollowConcrete(_ReinforcedMasonry):
     phi_bending: float = 0.75
     phi_compression: float = 0.75
     density: float = 19
-    grouted: bool = False
+    grouted: float = 0
     fcg: float = 15
 
     def out_of_plane_vertical_bending(
@@ -95,6 +95,10 @@ class HollowConcrete(_ReinforcedMasonry):
         fd : float
             The minimum design compressive stress on the bed joint at the
             cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
 
         verbose : bool
             True to print internal calculations
@@ -145,6 +149,10 @@ class HollowConcrete(_ReinforcedMasonry):
         fd : float
             The minimum design compressive stress on the bed joint at the
             cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        interface : bool
+            True if shear plane is masonry to masonry,
+            and False if shear_plane is masonry to other material
 
         verbose : bool
             True to print internal calculations
