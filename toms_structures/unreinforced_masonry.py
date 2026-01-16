@@ -42,6 +42,9 @@ class Clay(_Masonry):
         tj : float
             grout thickness between masonry units in mm, defaults to 10 mm
 
+        face_shell_thickness : float
+            masonry shell thickness in mm, defaults to 0 mm
+
         raking : float
             depth of raking in mm, defaults to 0 mm
 
@@ -546,8 +549,12 @@ class HollowConcrete(_Masonry):
     tj : float
         grout thickness between masonry units in mm, defaults to 10 mm
 
+    face_shell_thickness : float
+        masonry shell thickness in mm, defaults to 0 mm
+
+
     raking : float
-        depth of raking in mm, defaults to 0 mm
+        depth of raking in mm, defaults to 30 mm
 
     fmt : float
         Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa

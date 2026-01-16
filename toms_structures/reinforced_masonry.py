@@ -37,6 +37,9 @@ class HollowConcrete(_ReinforcedMasonry):
     tj : float
         grout thickness between masonry units in mm, defaults to 10 mm
 
+    face_shell_thickness : float
+        masonry shell thickness in mm, defaults to 0 mm
+
     lu : float
         length of the masonry unit in mm, defaults to 400 mm
 
