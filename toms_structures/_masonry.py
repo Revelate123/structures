@@ -123,7 +123,7 @@ class _Masonry(ABC):
         bedded_area = self._calc_ab()
         if verbose:
             print(f"bedded area Ab: {bedded_area} mm2")
-        grouted_area = self._calc_ag(bedded_area)
+        grouted_area = self._calc_ag()
         if verbose:
             print(f"grouted area Ag: {grouted_area} mm2")
         kc = self._calc_kc()
@@ -1198,11 +1198,15 @@ class _Masonry(ABC):
             raise ValueError("horizontal type not bool")
         return zd
 
-    def _calc_ag(self, bedded_area: float) -> float:
-        if self.grouted:
-            return self.length * (self.thickness - self.raking) - bedded_area
-        else:
-            return 0
+    def _calc_ag(self) -> float:
+        if self.grouted > 1:
+            raise ValueError("grouted > 1.0")
+        if self.grouted < 0:
+            raise ValueError("grouted < 0")
+        area_of_cell = (self.lu - 2 * self.face_shell_thickness) * (
+            self.thickness - 2 * self.face_shell_thickness
+        )
+        return self.grouted * area_of_cell * (self.length / self.lu)
 
     @abstractmethod
     def _calc_kc(self):
