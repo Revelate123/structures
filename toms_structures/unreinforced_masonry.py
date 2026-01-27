@@ -570,9 +570,8 @@ class HollowConcrete(_Masonry):
     fut: float = 0.8
     phi_shear: float = 0.6
     phi_bending: float = 0.6
-    phi_compression: float = 0.75
+    phi_compression: float = 0.6
     density: float = 19
-    grouted: bool = False
     fcg: float = 15
 
     def basic_compressive_capacity(self, verbose: bool = True) -> float:
