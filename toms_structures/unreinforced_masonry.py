@@ -3,6 +3,7 @@ This module performs engineering calculations in accordance with
 AS3700:2018 for unreinforced masonry
 """
 
+import math
 from toms_structures._masonry import _Masonry
 
 
@@ -1009,3 +1010,32 @@ class HollowConcrete(_Masonry):
             return 1.4
         else:
             return 1.2
+
+    def _calc_zt(self, crack_slope: float, verbose: bool = True):
+
+        if verbose:
+            print(f"Assumed slope of crack line, G: {crack_slope}")
+
+        b = (self.hu + self.tj) / math.sqrt(1 + crack_slope ^ 2)
+        if verbose:
+            print(f"B: {b}")
+
+        if self.grouted < 1:
+            if verbose:
+                print("section not fully grouted, treating as hollow")
+
+            zt = (
+                2
+                * b
+                * self.face_shell_thickness
+                * (
+                    (b * self.face_shell_thickness)
+                    / (1.5 * b + 0.9 * self.face_shell_thickness)
+                    + self.tu
+                    - self.face_shell_thickness
+                )
+                / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+            )
+            if verbose:
+                print(f"Zt: {zt} mm3")
+        return zt

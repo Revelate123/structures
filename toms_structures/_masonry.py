@@ -8,11 +8,66 @@ from toms_structures._util import round_half_up
 
 # pylint: disable=too-many-instance-attributes
 class _Masonry(ABC):
-    """Abstract Base Class For the design of unreinforced masonry in accordance with AS3700:2018"""
+    """Abstract Base Class For the design of unreinforced masonry in accordance with AS3700:2018
+
+    Parameters
+    ----------
+
+    length : float
+        length of the wall in mm
+
+    height : float
+        height of the wall in mm
+
+    thickness : float
+        thickness of the wall in mm
+
+    fuc : float
+        unconfined compressive capacity in MPa,
+        typically 10 MPa for full bedding and 15 MPa for face shell bedding
+
+    mortar_class : float
+        Mortar class in accordance with AS3700, only 3 is defined for concrete masonry in AS3700
+
+    bedding_type : bool
+        True if fully grouted bedding,
+        False if face shell bedding
+
+    verbose : float
+        True to print internal calculations
+        False otherwise
+
+    hu : float
+        masonry unit height in mm, defaults to 200 mm
+
+    tj : float
+        grout thickness between masonry units in mm, defaults to 10 mm
+
+    lu : float
+        masonry unit length in mm, defaults to 230 mm
+
+    tu : float
+        masonry unit width in mm, measured through the wall, defaults to 230 mm
+
+    face_shell_thickness : float
+        masonry shell thickness in mm, defaults to 0 mm
+
+    raking : float
+        depth of raking in mm, defaults to 30 mm
+
+    fmt : float
+        Characteristic flexural tensile strength of masonry in MPa, defaults to 0.2 MPa
+
+    grouted : float
+        Proportion of hollow cores grout filled, defaults to 0.
+        Maximum value of 1 for completely corefilled.
+
+    """
 
     hu: float = 76
     tj: float = 10
     lu: float = 230
+    tu = 110
     face_shell_thickness: float = 30
     raking: float = 0
     fmt: float = 0.2
@@ -36,6 +91,7 @@ class _Masonry(ABC):
         hu: float = None,
         tj: float = None,
         lu: float = None,
+        tu: float = None,
         face_shell_thickness: float = None,
         raking: float = None,
         fmt: float = None,
@@ -54,6 +110,7 @@ class _Masonry(ABC):
         self.hu = hu if hu is not None else self.hu
         self.tj = tj if tj is not None else self.tj
         self.lu = lu if lu is not None else self.lu
+        self.tu = tu if tu is not None else self.tu
         self.fm = None
         self.fmt = fmt if fmt is not None else self.fmt
         self.verbose = verbose
@@ -1074,8 +1131,67 @@ class _Masonry(ABC):
             print(f"kp: {kp} Cl 7.4.3.4")
         return kp
 
+    def _two_way_bending(
+        self,
+        vert_supports: float,
+        rot_rest_1: float,
+        rot_rest_2: float = 0,
+        verbose: bool = True,
+    ):
+        if vert_supports > 2 or vert_supports <= 0:
+            raise ValueError(
+                "Either 1 or 2 vertical edges must be supported for two_way bending"
+            )
+
+        design_length = self.length / vert_supports
+        if verbose:
+            print(f"design length, Ld: {design_length} mm")
+        af = self.calc_af(vert_supports)
+        k1 = self._calc_k1()
+        w = 2 * af / design_length**2 * (k1 * Mch + k2 * Mcd)
+        crack_slope = 2 * (self.hu + self.tj) / (self.lu + self.tj)
+        alpha = crack_slope * design_length / Hd
+
+    def _calc_af(
+        self,
+        vert_supports: int,
+        openings: bool,
+        alpha: float,
+        design_length: float,
+        opening_length: float = 0,
+        verbose: bool = True,
+    ):
+        if openings is False:
+            if alpha <= 1:
+                af = 1 / (1 - alpha / 3)
+
+            elif alpha > 1:
+                af = alpha / (1 - 1 / (3 * alpha))
+        elif openings is True and vert_supports == 2:
+            if alpha <= 1:
+                1 / ((1 - alpha / 3) + opening_length / design_length * (1 - alpha / 2))
+            elif alpha > 1:
+                alpha / ((1 - 1 / (3 * alpha)) + opening_length / (2 * design_length))
+
+        else:
+            raise ValueError("Configuration not valid for two-way bending")
+        if verbose:
+            print(f"alpha_f: {af}")
+            return af
+
+    def _calc_k1(
+        self,
+        vert_supports: int,
+        openings: bool,
+        alpha: float,
+        rot_rest_1: float,
+        rot_rest_2: float,
+        verbose: bool,
+    ):
+        return 1
+
     def _diagonal_bending(
-        self, fd: float, interface: bool, verbose: bool = True
+        self, fd: float, crack_slope: float, verbose: bool = True
     ) -> float:
         """Computes the two bending capacity in accordance with AS3700 Cl 7.4.4
 
@@ -1101,23 +1217,23 @@ class _Masonry(ABC):
             Two-way bending capacity of the wall in KPa : float
 
         """
-        print("WARNING: TEST CASES INCOMPLETE")
-        horizontal_bending_capacity = self._horizontal_bending(
-            fd=fd, interface=interface, verbose=verbose
-        )
-        slope = 2 * (self.hu + self.tj) / (self.lu + self.tj)
-        design_length = 1
-        alpha = slope * design_length
-        k1 = 1
-        k2 = 1
-        diagonal_bending_capacity = 1
-        w = (
-            2
-            * alpha
-            / design_length
-            * (k1 * horizontal_bending_capacity + k2 * diagonal_bending_capacity)
-        )
-        return 1
+        ft = self._calc_ft(fd=fd, verbose=verbose)
+        zt = self._calc_zt(crack_slope=crack_slope, verbose=verbose)
+        diagonal_bending_cap = self.phi_bending * ft * zt
+        if verbose:
+            print(f"Mcd: {diagonal_bending_cap} KNm")
+        return diagonal_bending_cap
+
+    def _calc_ft(self, fd: float, verbose: bool = True) -> float:
+        """Returns the equivalent characteristic torsional strength, refer Cl. 7.4.4.3"""
+        ft = 2.25 * math.sqrt(self.fmt) + 0.15 * fd
+        if verbose:
+            print(f"f't: {ft} MPa")
+        return ft
+
+    @abstractmethod
+    def _calc_zt(self, crack_slope: float, verbose: bool = True) -> float:
+        pass
 
     def _self_weight(self) -> float:
         """Returns the seld weight of the masonry, exlcuding any applied actions such as Fd."""
