@@ -49,6 +49,9 @@ class _Masonry(ABC):
     tu : float
         masonry unit width in mm, measured through the wall, defaults to 230 mm
 
+    sp : float
+        minimum overlap of masonry units in successive courses
+
     face_shell_thickness : float
         masonry shell thickness in mm, defaults to 0 mm
 
@@ -67,7 +70,7 @@ class _Masonry(ABC):
     hu: float = 76
     tj: float = 10
     lu: float = 230
-    tu = 110
+    sp: float = 115
     face_shell_thickness: float = 30
     raking: float = 0
     fmt: float = 0.2
@@ -92,13 +95,14 @@ class _Masonry(ABC):
         tj: float = None,
         lu: float = None,
         tu: float = None,
+        sp: float = None,
         face_shell_thickness: float = None,
         raking: float = None,
         fmt: float = None,
         grouted: float = None,
         fcg: float = None,
     ):
-
+        self.epsilon = 2
         self.length = length
         self.height = height
         self.thickness = thickness
@@ -110,7 +114,8 @@ class _Masonry(ABC):
         self.hu = hu if hu is not None else self.hu
         self.tj = tj if tj is not None else self.tj
         self.lu = lu if lu is not None else self.lu
-        self.tu = tu if tu is not None else self.tu
+        self.tu = tu if tu is not None else self.thickness
+        self.sp = sp if sp is not None else round_half_up(self.lu / 2, self.epsilon)
         self.fm = None
         self.fmt = fmt if fmt is not None else self.fmt
         self.verbose = verbose
@@ -119,7 +124,7 @@ class _Masonry(ABC):
         self.phi_bending = self.phi_bending
         self.phi_compression = self.phi_compression
         self.density = self.density
-        self.epsilon = 2
+
         self.grouted = self.grouted if grouted is not None else self.grouted
         self.face_shell_thickness = (
             face_shell_thickness
@@ -149,6 +154,7 @@ class _Masonry(ABC):
             print(f"Masonry unit length lu: {self.lu} mm")
             print(f"Masonry unit width tu: {self.tu} mm")
             print(f"Joint thickness tj: {self.tj} mm")
+            print(f"Masonry unit overlap, sp: {self.sp} mm")
             print(f"Face shell thickness, ts: {self.face_shell_thickness} mm")
         if self.raking <= 3:
             self.raking = 0
@@ -1129,9 +1135,15 @@ class _Masonry(ABC):
         return k_lateral
 
     def _calc_kp(self, verbose: bool):
-        kp = 1
+        kp1 = self.sp / self.tu
+        kp2 = self.sp / self.hu
+        kp3 = 1
         if verbose:
-            print(f"kp: {kp} Cl 7.4.3.4")
+            print("kp: min(sp/tu, sp/hu, 1), refer AS3700 Cl 7.4.3.4")
+            print(f"kp: min({kp1:.2f}, {kp2:.2f}, {kp3:.2f})")
+        kp = round_half_up(min(kp1, kp2, kp3), self.epsilon)
+        if verbose:
+            print(f"kp: {kp}")
         return kp
 
     def _two_way_bending(
@@ -1379,11 +1391,15 @@ class _Masonry(ABC):
             raise ValueError("bedding type not bool")
         return bedded_area
 
-    def _calc_zd(self, horizontal):
+    def _calc_zd(self, horizontal: bool, verbose: bool = True) -> float:
         # Horizontal
         if horizontal is True:
             if self.bedding_type is True:
                 zd = self.length * (self.thickness - 2 * self.raking) ** 2 / 6
+                if verbose:
+                    print(
+                        f"zd = {self.length} * ({self.thickness} - 2 * {self.raking}) ** 2 / 6"
+                    )
             elif self.bedding_type is False:
                 zd = (
                     2 * self.length * (self.face_shell_thickness - self.raking) ** 2 / 6
