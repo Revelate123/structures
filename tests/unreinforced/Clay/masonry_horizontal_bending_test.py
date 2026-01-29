@@ -72,6 +72,7 @@ class TestUnreinforcedMasonryHorizontalBending:
             fuc=20,
             mortar_class=4,
             bedding_type=True,
+            tu=110,
         )
         assert wall.horizontal_bending(fd=0, interface=True) == 1.47
 
