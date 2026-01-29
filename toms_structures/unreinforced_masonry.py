@@ -5,6 +5,7 @@ AS3700:2018 for unreinforced masonry
 
 import math
 from toms_structures._masonry import _Masonry
+from toms_structures._util import round_half_up
 
 
 class Clay(_Masonry):
@@ -431,6 +432,62 @@ class Clay(_Masonry):
             verbose=verbose,
         )
 
+    def two_way_bending(
+        self,
+        vert_supports: float,
+        top_support: bool,
+        rot_rest_1: float,
+        rot_rest_2: float = 0,
+        fd: float = 0,
+        openings: bool = False,
+        opening_length: float = 0,
+        verbose: bool = True,
+    ) -> float:
+        """Calculates the two way bending capacity in accordance with AS3700:2018 Cl 7.4.4
+
+        Parameters
+        ----------
+
+        vert_supports : float
+            Number of vertical edges laterally supported. Either 1 or 2.
+
+        top_support : float
+            Whether the top of the wall is laterally supported
+
+        rot_rest_1 : float
+            Restraint factor for the first supported edge of the wall.
+            Set to 0 if no rotational restraint.
+            Set to 1 if fully restrained against rotation.
+            Set to an intermediate value if there is partial restraint.
+
+        rot_rest_2 : float
+            Restraint factor for the second supported edge of the wall.
+            Set to 0 if no rotational restraint.
+            Set to 1 if fully restrained against rotation.
+            Set to an intermediate value if there is partial restraint.
+
+        fd : float
+            The minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        openings : bool
+            Whether the wall contains openings
+
+        opening_length : float
+            The length of the opening in mm, if any.
+
+        """
+        return self._two_way_bending(
+            vert_supports=vert_supports,
+            top_support=top_support,
+            rot_rest_1=rot_rest_1,
+            rot_rest_2=rot_rest_2,
+            fd=fd,
+            openings=openings,
+            opening_length=opening_length,
+            verbose=verbose,
+        )
+
     def horizontal_plane_shear(
         self,
         kv: float,
@@ -438,7 +495,7 @@ class Clay(_Masonry):
         fd: float,
         verbose: bool = True,
     ) -> dict:
-        """Calculates the  horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1
+        """Calculates the horizontal shear capacity in accordance with AS3700:2018 Cl 7.5.4.1
 
         Parameters
         ----------
@@ -513,6 +570,36 @@ class Clay(_Masonry):
     def _calc_kc(self):
         return 1.2
 
+    def _calc_zt(self, crack_slope: float, verbose: bool = True):
+
+        if verbose:
+            print(f"Assumed slope of crack line, G: {crack_slope}")
+
+        b = round_half_up(
+            (self.hu + self.tj) / math.sqrt(1 + crack_slope**2), self.epsilon
+        )
+        if verbose:
+            print(f"B: {b}")
+
+        if b >= self.tu:
+            zt = (
+                ((2 * b**2 * self.tu**2) / (3 * b + 1.8 * self.tu))
+                / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+                * 1e3
+            )
+
+        else:
+            zt = (
+                ((2 * b**2 * self.tu**2) / (3 * self.tu + 1.8 * b))
+                / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+                * 1e3
+            )
+        zt = round_half_up(zt, self.epsilon)
+
+        if verbose:
+            print(f"Zt: {zt} mm3")
+        return zt
+
 
 class HollowConcrete(_Masonry):
     """Concrete Masonry object
@@ -565,6 +652,7 @@ class HollowConcrete(_Masonry):
     hu: float = 200
     tj: float = 10
     lu: float = 400
+    tu: float = 140
     face_shell_thickness: float = 30
     raking: float = 0
     fmt: float = 0.2
@@ -938,6 +1026,62 @@ class HollowConcrete(_Masonry):
             verbose=verbose,
         )
 
+    def two_way_bending(
+        self,
+        vert_supports: float,
+        top_support: bool,
+        rot_rest_1: float,
+        rot_rest_2: float = 0,
+        fd: float = 0,
+        openings: bool = False,
+        opening_length: float = 0,
+        verbose: bool = True,
+    ) -> float:
+        """Calculates the two way bending capacity in accordance with AS3700:2018 Cl 7.4.4
+
+        Parameters
+        ----------
+
+        vert_supports : float
+            Number of vertical edges laterally supported. Either 1 or 2.
+
+        top_support : float
+            Whether the top of the wall is laterally supported
+
+        rot_rest_1 : float
+            Restraint factor for the first supported edge of the wall.
+            Set to 0 if no rotational restraint.
+            Set to 1 if fully restrained against rotation.
+            Set to an intermediate value if there is partial restraint.
+
+        rot_rest_2 : float
+            Restraint factor for the second supported edge of the wall.
+            Set to 0 if no rotational restraint.
+            Set to 1 if fully restrained against rotation.
+            Set to an intermediate value if there is partial restraint.
+
+        fd : float
+            The minimum design compressive stress on the bed joint at the
+            cross-section under consideration (see Clause 7.4.3.3), in MPa
+
+        openings : bool
+            Whether the wall contains openings
+
+        opening_length : float
+            The length of the opening in mm, if any.
+
+        """
+        return self._two_way_bending(
+            vert_supports=vert_supports,
+            top_support=top_support,
+            rot_rest_1=rot_rest_1,
+            rot_rest_2=rot_rest_2,
+            fd=fd,
+            openings=openings,
+            opening_length=opening_length,
+            verbose=verbose,
+        )
+
     def horizontal_plane_shear(
         self,
         kv: float,
@@ -1016,7 +1160,9 @@ class HollowConcrete(_Masonry):
         if verbose:
             print(f"Assumed slope of crack line, G: {crack_slope}")
 
-        b = (self.hu + self.tj) / math.sqrt(1 + crack_slope ^ 2)
+        b = round_half_up(
+            (self.hu + self.tj) / math.sqrt(1 + crack_slope**2), self.epsilon
+        )
         if verbose:
             print(f"B: {b}")
 
@@ -1035,7 +1181,22 @@ class HollowConcrete(_Masonry):
                     - self.face_shell_thickness
                 )
                 / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+            ) * 1e3
+
+        elif b >= self.tu:
+            zt = (
+                ((2 * b**2 * self.tu**2) / (3 * b + 1.8 * self.tu))
+                / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+                * 1e3
             )
-            if verbose:
-                print(f"Zt: {zt} mm3")
+
+        else:
+            zt = (
+                ((2 * b**2 * self.tu**2) / (3 * self.tu + 1.8 * b))
+                / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
+                * 1e3
+            )
+        zt = round_half_up(zt, self.epsilon)
+        if verbose:
+            print(f"Zt: {zt} mm3")
         return zt
