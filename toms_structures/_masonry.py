@@ -836,7 +836,7 @@ class _Masonry(ABC):
             * 10**-6
         )
         if verbose:
-            print(f"Mch_3: {mch_3:.2f} KNm  # Cl 7.4.3.2(4)")
+            print(f"Mch_3: {mch_3:.2f} KNm Cl 7.4.3.2(4)")
         mch = round_half_up(min(mch_1, mch_2, mch_3), self.epsilon)
         if verbose:
             print("\nHorizontal bending capacity:")
@@ -1164,6 +1164,8 @@ class _Masonry(ABC):
         )
         if verbose:
             print()
+            print("Two-Way Bending Capacity, refer Cl 7.4.4 AS3700")
+            print("====================================================")
         design_length = round_half_up(self.length / vert_supports, self.epsilon)
 
         if verbose:
