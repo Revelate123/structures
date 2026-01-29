@@ -145,8 +145,11 @@ class _Masonry(ABC):
             print(f"mortar class: M{self.mortar_class}")
             print(f"fuc: {self.fuc} MPa")
             print(f"fmt: {self.fmt} MPa")
-            print(f"Joint thickness tj: {self.tj} mm")
             print(f"Masonry unit height hu: {self.hu} mm")
+            print(f"Masonry unit length lu: {self.lu} mm")
+            print(f"Masonry unit width tu: {self.tu} mm")
+            print(f"Joint thickness tj: {self.tj} mm")
+            print(f"Face shell thickness, ts: {self.face_shell_thickness} mm")
         if self.raking <= 3:
             self.raking = 0
             if self.verbose:
@@ -1134,23 +1137,75 @@ class _Masonry(ABC):
     def _two_way_bending(
         self,
         vert_supports: float,
+        top_support: bool,
         rot_rest_1: float,
         rot_rest_2: float = 0,
+        fd: float = 0,
+        openings: bool = False,
+        opening_length: float = 0,
         verbose: bool = True,
-    ):
+    ) -> float:
         if vert_supports > 2 or vert_supports <= 0:
             raise ValueError(
                 "Either 1 or 2 vertical edges must be supported for two_way bending"
             )
+        horz_capacity = (
+            self._horizontal_bending(fd=fd, interface=True, verbose=verbose)
+            / self.height
+            * 1e3
+        )
+        crack_slope = round_half_up(
+            2 * (self.hu + self.tj) / (self.lu + self.tj), self.epsilon
+        )
+        if verbose:
+            print()
+        diag_capacity = self._diagonal_bending(
+            fd=fd, crack_slope=crack_slope, verbose=verbose
+        )
+        if verbose:
+            print()
+        design_length = round_half_up(self.length / vert_supports, self.epsilon)
 
-        design_length = self.length / vert_supports
         if verbose:
             print(f"design length, Ld: {design_length} mm")
-        af = self.calc_af(vert_supports)
-        k1 = self._calc_k1()
-        w = 2 * af / design_length**2 * (k1 * Mch + k2 * Mcd)
-        crack_slope = 2 * (self.hu + self.tj) / (self.lu + self.tj)
-        alpha = crack_slope * design_length / Hd
+
+        if top_support:
+            design_height = round_half_up(self.height / 2, self.epsilon)
+        else:
+            design_height = self.height
+        if verbose:
+            print(f"Design height, Hd: {design_height} mm")
+        alpha = round_half_up(crack_slope * design_length / design_height, self.epsilon)
+        if verbose:
+            print(f"alpha: {alpha}")
+        af = self._calc_af(
+            vert_supports,
+            openings=openings,
+            alpha=alpha,
+            design_length=design_length,
+            opening_length=opening_length,
+            verbose=verbose,
+        )
+        k1 = self._calc_k1(
+            vert_supports=vert_supports,
+            openings=openings,
+            alpha=alpha,
+            rot_rest_1=rot_rest_1,
+            rot_rest_2=rot_rest_2,
+            verbose=verbose,
+        )
+        k2 = self._calc_k2(alpha=alpha, crack_slope=crack_slope, verbose=verbose)
+
+        two_way_capacity = (
+            2
+            * af
+            / (design_length**2 * 1e-6)
+            * (k1 * horz_capacity + k2 * diag_capacity)
+        )
+        two_way_capacity = round_half_up(two_way_capacity, self.epsilon)
+        if verbose:
+            print(f"two-way capacity: {two_way_capacity} KPa")
+        return two_way_capacity
 
     def _calc_af(
         self,
@@ -1167,17 +1222,25 @@ class _Masonry(ABC):
 
             elif alpha > 1:
                 af = alpha / (1 - 1 / (3 * alpha))
+            else:
+                raise ValueError("Configuration not valid for two-way bending")
         elif openings is True and vert_supports == 2:
             if alpha <= 1:
-                1 / ((1 - alpha / 3) + opening_length / design_length * (1 - alpha / 2))
+                af = 1 / (
+                    (1 - alpha / 3) + opening_length / design_length * (1 - alpha / 2)
+                )
             elif alpha > 1:
-                alpha / ((1 - 1 / (3 * alpha)) + opening_length / (2 * design_length))
-
+                af = alpha / (
+                    (1 - 1 / (3 * alpha)) + opening_length / (2 * design_length)
+                )
+            else:
+                raise ValueError("Configuration not valid for two-way bending")
         else:
             raise ValueError("Configuration not valid for two-way bending")
+        af = round_half_up(af, self.epsilon)
         if verbose:
             print(f"alpha_f: {af}")
-            return af
+        return af
 
     def _calc_k1(
         self,
@@ -1188,7 +1251,26 @@ class _Masonry(ABC):
         rot_rest_2: float,
         verbose: bool,
     ):
-        return 1
+        if openings is False and vert_supports == 2 and alpha <= 1:
+            k1 = (rot_rest_1 + rot_rest_2) / 2 + 1 - alpha
+        elif openings is False and vert_supports == 2 and alpha < 1:
+            k1 = (rot_rest_1 + rot_rest_2) / 2
+        else:
+            k1 = rot_rest_1
+        k1 = round_half_up(k1, self.epsilon)
+        if verbose:
+            print(f"k1: {k1}")
+        return k1
+
+    def _calc_k2(self, alpha: float, crack_slope: float, verbose: bool) -> float:
+        if alpha <= 1:
+            k2 = alpha * (1 + 1 / crack_slope**2)
+        else:
+            k2 = alpha * (1 + 1 / crack_slope**2)
+        k2 = round_half_up(k2, self.epsilon)
+        if verbose:
+            print(f"k2: {k2}")
+        return k2
 
     def _diagonal_bending(
         self, fd: float, crack_slope: float, verbose: bool = True
@@ -1217,16 +1299,21 @@ class _Masonry(ABC):
             Two-way bending capacity of the wall in KPa : float
 
         """
+        if verbose:
+            print("Diagonal Bending Capacity, refer Cl 7.4.4.3 AS3700")
+            print("====================================================")
         ft = self._calc_ft(fd=fd, verbose=verbose)
         zt = self._calc_zt(crack_slope=crack_slope, verbose=verbose)
-        diagonal_bending_cap = self.phi_bending * ft * zt
+        diagonal_bending_cap = round_half_up(
+            self.phi_bending * ft * zt * 10**-6, self.epsilon
+        )
         if verbose:
             print(f"Mcd: {diagonal_bending_cap} KNm")
         return diagonal_bending_cap
 
     def _calc_ft(self, fd: float, verbose: bool = True) -> float:
         """Returns the equivalent characteristic torsional strength, refer Cl. 7.4.4.3"""
-        ft = 2.25 * math.sqrt(self.fmt) + 0.15 * fd
+        ft = round_half_up(2.25 * math.sqrt(self.fmt) + 0.15 * fd, self.epsilon)
         if verbose:
             print(f"f't: {ft} MPa")
         return ft
