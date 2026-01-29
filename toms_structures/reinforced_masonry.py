@@ -51,6 +51,7 @@ class HollowConcrete(_ReinforcedMasonry):
     hu: float = 200
     tj: float = 10
     lu: float = 400
+    ts: float = 140
     face_shell_thickness: float = 10
     raking: float = 0
     fmt: float = 0.2
@@ -232,3 +233,6 @@ class HollowConcrete(_ReinforcedMasonry):
             return 1.4
         else:
             return 1.2
+
+    def _calc_zt(self, crack_slope: float, verbose: bool = True) -> float:
+        return 1
