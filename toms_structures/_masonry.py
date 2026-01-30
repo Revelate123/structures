@@ -1172,10 +1172,11 @@ class _Masonry(ABC):
             raise ValueError(
                 "Either 1 or 2 vertical edges must be supported for two_way bending"
             )
-        horz_capacity = (
+        horz_capacity = round_half_up(
             self._horizontal_bending(fd=fd, interface=True, verbose=verbose)
             / self.height
-            * 1e3
+            * 1e3,
+            self.epsilon,
         )
         if verbose:
             print("\nDiagonal Bending Capacity, refer Cl 7.4.4.3 AS3700")
@@ -1236,6 +1237,9 @@ class _Masonry(ABC):
         )
         two_way_capacity = round_half_up(two_way_capacity, self.epsilon)
         if verbose:
+            print(
+                f"two_way_capacity = 2 * {af} / ({design_length}**2 * 1e-6) * ({k1} * {horz_capacity} + {k2} * {diag_capacity})"
+            )
             print(f"two-way capacity: {two_way_capacity} KPa")
         return two_way_capacity
 
@@ -1357,7 +1361,7 @@ class _Masonry(ABC):
             self.phi_bending * ft * zt * 10**-6, self.epsilon
         )
         if verbose:
-            print(f"Mcd: {diagonal_bending_cap} KNm")
+            print(f"Mcd: {diagonal_bending_cap} KNm/m")
         return diagonal_bending_cap
 
     def _calc_ft(self, fd: float, verbose: bool = True) -> float:
