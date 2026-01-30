@@ -573,7 +573,7 @@ class Clay(_Masonry):
     def _calc_zt(self, crack_slope: float, verbose: bool = True):
 
         if verbose:
-            print(f"Assumed slope of crack line, G: {crack_slope}")
+            print(f"Assumed crack slope, G: {crack_slope}")
 
         b = round_half_up(
             (self.hu + self.tj) / math.sqrt(1 + crack_slope**2), self.epsilon
@@ -1070,6 +1070,10 @@ class HollowConcrete(_Masonry):
         opening_length : float
             The length of the opening in mm, if any.
 
+        Returns
+        -------
+            Two way bending capacity in KPa : float
+
         """
         return self._two_way_bending(
             vert_supports=vert_supports,
@@ -1158,12 +1162,13 @@ class HollowConcrete(_Masonry):
     def _calc_zt(self, crack_slope: float, verbose: bool = True):
 
         if verbose:
-            print(f"Assumed slope of crack line, G: {crack_slope}")
+            print(f"Assumed crack slope, G: {crack_slope}")
 
         b = round_half_up(
             (self.hu + self.tj) / math.sqrt(1 + crack_slope**2), self.epsilon
         )
         if verbose:
+            print(f"B: ({self.hu} + {self.tj}) / math.sqrt(1 + {crack_slope}**2)")
             print(f"B: {b}")
 
         if self.grouted < 1:
@@ -1182,7 +1187,6 @@ class HollowConcrete(_Masonry):
                 )
                 / ((self.lu + self.tj) * math.sqrt(1 + crack_slope**2))
             ) * 1e3
-
         elif b >= self.tu:
             zt = (
                 ((2 * b**2 * self.tu**2) / (3 * b + 1.8 * self.tu))

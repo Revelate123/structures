@@ -809,17 +809,19 @@ class _Masonry(ABC):
         self._calc_fmt(interface=interface, verbose=verbose)
 
         # The plane is normal to the direction under consideration
-        zd_horz = self._calc_zd(horizontal=False)
+        zd_horz = self._calc_zd(horizontal=False, verbose=verbose)
         if verbose:
-            print(f"Zd (horizontal): {zd_horz} mm3")
+            print(f"Zd (horizontal): {zd_horz} mm3\n")
 
         zu_horz = self.height * self.thickness**2 / 6
         if verbose:
-            print(f"Zu (horizontal): {zu_horz} mm3")
+            print(f"Zu (horizontal): {self.height} * {self.thickness}**2 / 6")
+            print(f"Zu (horizontal): {zu_horz} mm3\n")
 
         zp_horz = zd_horz
         if verbose:
-            print(f"Zp (horizontal): {zp_horz} mm3")
+            print("Zp (horizontal) = Zu (horizontal)")
+            print(f"Zp (horizontal): {zp_horz} mm3\n")
 
         mch_1 = (
             2
@@ -830,11 +832,17 @@ class _Masonry(ABC):
             * zd_horz
         ) * 10**-6
         if verbose:
-            print(f"Mch_1: {mch_1:.2f} KNm Cl 7.4.3.2(2)")
+            print(
+                f"Mch_1 = (2 * {self.phi_shear} * {kp} * math.sqrt({self.fmt}) * (1 + {fd} / {self.fmt}) * {zd_horz}) * 10**-6"
+            )
+            print(f"Mch_1: {mch_1:.2f} KNm, refer AS3700 Cl 7.4.3.2(2)\n")
 
         mch_2 = 4 * self.phi_shear * kp * math.sqrt(self.fmt) * zd_horz * 10**-6
         if verbose:
-            print(f"Mch_2: {mch_2:.2f} KNm Cl 7.4.3.2(3)")
+            print(
+                f"Mch_2 = 4 * {self.phi_shear} * {kp} * math.sqrt({self.fmt}) * {zd_horz} * 10**-6"
+            )
+            print(f"Mch_2: {mch_2:.2f} KNm, refer AS3700 Cl 7.4.3.2(3)\n")
 
         mch_3 = (
             self.phi_shear
@@ -842,10 +850,13 @@ class _Masonry(ABC):
             * 10**-6
         )
         if verbose:
-            print(f"Mch_3: {mch_3:.2f} KNm Cl 7.4.3.2(4)")
+            print(
+                f"Mch_3 = {self.phi_shear} * (0.44 * {self.fut} * {zu_horz} + 0.56 * {self.fmt} * {zp_horz}) * 10**-6"
+            )
+            print(f"Mch_3: {mch_3:.2f} KNm, refer AS3700 Cl 7.4.3.2(4)\n")
         mch = round_half_up(min(mch_1, mch_2, mch_3), self.epsilon)
         if verbose:
-            print("\nHorizontal bending capacity:")
+            print("Horizontal bending capacity:")
             print(f"Mch: {mch} KNm for height of {self.height} mm")
             print(f"Mch: {mch/self.height*1e3:.2f} KNm/m")
         return mch
@@ -1166,11 +1177,17 @@ class _Masonry(ABC):
             / self.height
             * 1e3
         )
+        if verbose:
+            print("\nDiagonal Bending Capacity, refer Cl 7.4.4.3 AS3700")
+            print("====================================================")
         crack_slope = round_half_up(
             2 * (self.hu + self.tj) / (self.lu + self.tj), self.epsilon
         )
         if verbose:
-            print()
+            print(
+                f"Assumed crack slope, G = 2 * ({self.hu} + {self.tj}) / ({self.lu} + {self.tj})"
+            )
+
         diag_capacity = self._diagonal_bending(
             fd=fd, crack_slope=crack_slope, verbose=verbose
         )
@@ -1191,6 +1208,7 @@ class _Masonry(ABC):
             print(f"Design height, Hd: {design_height} mm")
         alpha = round_half_up(crack_slope * design_length / design_height, self.epsilon)
         if verbose:
+            print(f"alpha = {crack_slope} * {design_length} / {design_height}")
             print(f"alpha: {alpha}")
         af = self._calc_af(
             vert_supports,
@@ -1232,29 +1250,40 @@ class _Masonry(ABC):
     ):
         if openings is False:
             if alpha <= 1:
-                af = 1 / (1 - alpha / 3)
-
+                alpha_f = 1 / (1 - alpha / 3)
+                if verbose:
+                    print(f"alpha_f = 1 / (1 - {alpha} / 3)")
             elif alpha > 1:
-                af = alpha / (1 - 1 / (3 * alpha))
+                alpha_f = alpha / (1 - 1 / (3 * alpha))
+                if verbose:
+                    print(f"alpha_f = {alpha} / (1 - 1 / (3 * {alpha}))")
             else:
                 raise ValueError("Configuration not valid for two-way bending")
         elif openings is True and vert_supports == 2:
             if alpha <= 1:
-                af = 1 / (
+                alpha_f = 1 / (
                     (1 - alpha / 3) + opening_length / design_length * (1 - alpha / 2)
                 )
+                if verbose:
+                    print(
+                        f"alpha_f = 1 / ((1 - {alpha} / 3) + {opening_length} / {design_length} * (1 - {alpha} / 2))"
+                    )
             elif alpha > 1:
-                af = alpha / (
+                alpha_f = alpha / (
                     (1 - 1 / (3 * alpha)) + opening_length / (2 * design_length)
                 )
+                if verbose:
+                    print(
+                        f"alpha_f = {alpha} / ((1 - 1 / (3 * {alpha})) + {opening_length} / (2 * {design_length}))"
+                    )
             else:
                 raise ValueError("Configuration not valid for two-way bending")
         else:
             raise ValueError("Configuration not valid for two-way bending")
-        af = round_half_up(af, self.epsilon)
+        alpha_f = round_half_up(alpha_f, self.epsilon)
         if verbose:
-            print(f"alpha_f: {af}")
-        return af
+            print(f"alpha_f: {alpha_f}")
+        return alpha_f
 
     def _calc_k1(
         self,
@@ -1267,8 +1296,12 @@ class _Masonry(ABC):
     ):
         if openings is False and vert_supports == 2 and alpha <= 1:
             k1 = (rot_rest_1 + rot_rest_2) / 2 + 1 - alpha
+            if verbose:
+                print(f"k1 = ({rot_rest_1} + {rot_rest_2}) / 2 + 1 - {alpha}")
         elif openings is False and vert_supports == 2 and alpha < 1:
             k1 = (rot_rest_1 + rot_rest_2) / 2
+            if verbose:
+                print(f"k1 = ({rot_rest_1} + {rot_rest_2}) / 2")
         else:
             k1 = rot_rest_1
         k1 = round_half_up(k1, self.epsilon)
@@ -1279,8 +1312,12 @@ class _Masonry(ABC):
     def _calc_k2(self, alpha: float, crack_slope: float, verbose: bool) -> float:
         if alpha <= 1:
             k2 = alpha * (1 + 1 / crack_slope**2)
+            if verbose:
+                print(f"k2 = {alpha} * (1 + 1 / {crack_slope}**2)")
         else:
             k2 = alpha * (1 + 1 / crack_slope**2)
+            if verbose:
+                print(f"k2 = {alpha} * (1 + 1 / {crack_slope}**2)")
         k2 = round_half_up(k2, self.epsilon)
         if verbose:
             print(f"k2: {k2}")
@@ -1313,11 +1350,9 @@ class _Masonry(ABC):
             Two-way bending capacity of the wall in KPa : float
 
         """
-        if verbose:
-            print("Diagonal Bending Capacity, refer Cl 7.4.4.3 AS3700")
-            print("====================================================")
-        ft = self._calc_ft(fd=fd, verbose=verbose)
+
         zt = self._calc_zt(crack_slope=crack_slope, verbose=verbose)
+        ft = self._calc_ft(fd=fd, verbose=verbose)
         diagonal_bending_cap = round_half_up(
             self.phi_bending * ft * zt * 10**-6, self.epsilon
         )
@@ -1329,7 +1364,8 @@ class _Masonry(ABC):
         """Returns the equivalent characteristic torsional strength, refer Cl. 7.4.4.3"""
         ft = round_half_up(2.25 * math.sqrt(self.fmt) + 0.15 * fd, self.epsilon)
         if verbose:
-            print(f"f't: {ft} MPa")
+            print(f"2.25 * math.sqrt({self.fmt}) + 0.15 * {fd}")
+            print(f"f't: {ft} MPa, refer AS3700 Cl. 7.4.4.3")
         return ft
 
     @abstractmethod
@@ -1404,15 +1440,27 @@ class _Masonry(ABC):
                 zd = (
                     2 * self.length * (self.face_shell_thickness - self.raking) ** 2 / 6
                 )
+                if verbose:
+                    print(
+                        f"zd = (2 * {self.length} * ({self.face_shell_thickness} - {self.raking}) ** 2 / 6)"
+                    )
             else:
                 raise ValueError("bedding type not bool")
         elif horizontal is False:
             if self.bedding_type is True:
                 zd = (self.height) * (self.thickness - 2 * self.raking) ** 2 / 6
+                if verbose:
+                    print(
+                        f"zd = ({self.height}) * ({self.thickness} - 2 * {self.raking}) ** 2 / 6"
+                    )
             elif self.bedding_type is False:
                 zd = (
                     2 * self.height * (self.face_shell_thickness - self.raking) ** 2 / 6
                 )
+                if verbose:
+                    print(
+                        f"zd = (2 * {self.height} * ({self.face_shell_thickness} - {self.raking}) ** 2 / 6)"
+                    )
             else:
                 raise ValueError("bedding type not bool")
         else:
