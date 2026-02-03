@@ -1,10 +1,6 @@
 """Contains tests for unreinforced hollow concrete masonry in two way bending"""
 
-from toms_structures.unreinforced_masonry import HollowConcrete
-
-
-class TestUnreinforcedDiagonalBending:
-    """ """
+from toms_structures.unreinforced_masonry import Clay
 
 
 class TestUnreinforcedMasonryTwoWayBending:
@@ -15,7 +11,7 @@ class TestUnreinforcedMasonryTwoWayBending:
         Design a wall panel 4 m long and 3 m high with simple supports on all four
         sides for an applied lateral load of 1.0 kPa.
         """
-        wall = HollowConcrete(
+        wall = Clay(
             length=4000,
             height=3000,
             thickness=110,
@@ -31,4 +27,4 @@ class TestUnreinforcedMasonryTwoWayBending:
             fd=0,
             verbose=True,
         )
-        #assert cap == 1.11
+        assert cap == 1.11
