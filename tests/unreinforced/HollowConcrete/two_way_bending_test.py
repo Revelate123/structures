@@ -4,8 +4,16 @@ from toms_structures.unreinforced_masonry import HollowConcrete
 
 
 class TestUnreinforcedDiagonalBending:
-    """ """
+    """Tests for diagonal bending capacity, in accordance with AS3700:2018 Cl 7.4.3.3"""
 
+    def test_b_greater_t(self):
+        pass
+
+    def test_b_less_t(self):
+        pass
+
+    def test_hollow(self):
+        pass
 
 class TestUnreinforcedMasonryTwoWayBending:
     """Tests"""
