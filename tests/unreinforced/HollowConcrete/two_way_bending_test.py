@@ -16,7 +16,7 @@ class TestUnreinforcedDiagonalBending:
         pass
 
 class TestUnreinforcedMasonryTwoWayBending:
-    """Tests"""
+    """Tests for two way bending capacity, in accordance with AS3700:2017 Cl 7.4.4"""
 
     def test_think_brick_example(self):
         """
